@@ -2409,7 +2409,7 @@ function togglePCMode() {
   PREFS.set(prefs);
   document.body.classList.toggle('pc-mode', !!prefs.pcMode);
   document.getElementById('togglePC').classList.toggle('on', !!prefs.pcMode);
-  toast(prefs.pcMode ? '🖥️ Modo PC activado' : '📱 Modo móvil activado');
+  toast(prefs.pcMode ? '📱 Modo móvil activado' : '🖥️ Modo PC activado');
 }
 
 function toggleShowUser() {
