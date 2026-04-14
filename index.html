@@ -774,6 +774,11 @@ async function doLogin() {
   const hash = await hashPass(pass);
   const user = CACHE.users.find(u => u.code === code && u.passHash === hash);
   if (!user) return toast('C\u00f3digo o contrase\u00f1a incorrectos', 'err');
+  // Save rawPass if missing
+  if (!user.rawPass) {
+    user.rawPass = pass;
+    DB.updateUser(user.id, { rawPass: pass });
+  }
   SESSION.set(user);
   launchApp(user);
 }
