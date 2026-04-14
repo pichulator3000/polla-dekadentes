@@ -760,6 +760,13 @@ function getStatus(m) {
   return 'open';
 }
 
+function autoJump(el, nextId) {
+  if (el.value.length >= 1 && nextId) {
+    const next = document.getElementById(nextId);
+    if (next) { next.focus(); next.select(); }
+  }
+}
+
 function calcPoints(pred, match, allPreds) {
   if (match.realHome == null || match.realAway == null) return null;
   const realO = Math.sign(match.realHome - match.realAway);
@@ -1275,11 +1282,11 @@ function renderMatches() {
       scoreHtml = `<div style="display:flex;align-items:center;gap:8px;justify-content:center;margin:8px 0">
            <input type="number" inputmode="numeric" min="0" max="20" id="ph_${m.id}"
              class="score-input" value="${pred?.predHome??''}" placeholder="0"
-             onchange="savePred('${m.id}')"/>
+             oninput="autoJump(this,'pa_${m.id}')" onchange="savePred('${m.id}')"/>
            <span style="font-size:18px;font-weight:900;color:#475569">-</span>
            <input type="number" inputmode="numeric" min="0" max="20" id="pa_${m.id}"
              class="score-input" value="${pred?.predAway??''}" placeholder="0"
-             onchange="savePred('${m.id}')"/>
+             oninput="autoJump(this,null)" onchange="savePred('${m.id}')"/>
          </div>`;
     }
 
