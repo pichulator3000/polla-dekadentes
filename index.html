@@ -665,6 +665,13 @@ function onAllLoaded() {
   if (dbReady) return;
   if (!LOADED.users || !LOADED.matches || !LOADED.preds || !LOADED.podio) return;
   dbReady = true;
+  // Migrate: add closesAtMs to existing matches that lack it
+  CACHE.matches.forEach(m => {
+    if (!m.closesAtMs && m.datetime) {
+      m.closesAtMs = new Date(m.datetime).getTime();
+      DB.updateMatch(m.id, { closesAtMs: m.closesAtMs });
+    }
+  });
   tryAutoLogin();
 }
 
@@ -1957,7 +1964,7 @@ async function addMatch() {
   const asUTC = Date.UTC(dtParsed.getFullYear(), dtParsed.getMonth(), dtParsed.getDate(),
                          dtParsed.getHours(), dtParsed.getMinutes(), 0);
   const dtISO = new Date(asUTC + 4 * 3600000).toISOString();
-  const m = {id:'m'+Date.now(),home:h,away:a,datetime:dtISO,
+  const m = {id:'m'+Date.now(),home:h,away:a,datetime:dtISO,closesAtMs:new Date(dtISO).getTime(),
              tournament:t||'Amistoso',stage:s||'\u2014',realHome:null,realAway:null};
   await DB.saveMatch(m);
   toast('\u2713 Partido agregado');
@@ -2050,6 +2057,7 @@ async function importarExcel(input) {
           home:       local,
           away:       visita,
           datetime:   dtISO,
+          closesAtMs: new Date(dtISO).getTime(),
           tournament: torneo,
           stage:      fase + (sede ? ' \u00b7 ' + sede.split(',')[0] : ''),
           realHome:   null,

@@ -1,0 +1,32 @@
+{
+  "rules": {
+    "pf": {
+      "preds": {
+        "$key": {
+          ".read": true,
+          ".write": "!data.exists() && root.child('pf/matches/' + newData.child('matchId').val() + '/closesAtMs').val() > now || data.exists() && root.child('pf/matches/' + data.child('matchId').val() + '/closesAtMs').val() > now"
+        }
+      },
+      "users": {
+        ".read": true,
+        ".write": true
+      },
+      "matches": {
+        ".read": true,
+        ".write": true
+      },
+      "podio": {
+        ".read": true,
+        ".write": true
+      },
+      "settings": {
+        ".read": true,
+        ".write": true
+      },
+      "pending": {
+        ".read": true,
+        ".write": true
+      }
+    }
+  }
+}
