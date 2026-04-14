@@ -117,6 +117,33 @@
     /* ── Misc ── */
     .rank-1{color:#facc15} .rank-2{color:#94a3b8} .rank-3{color:#cd7c2f}
     .admin-badge{background:#7c3aed22;color:#a78bfa;border:1px solid #7c3aed;border-radius:6px;padding:2px 8px;font-size:11px}
+    /* ── Glowing border animation for predictions panel ── */
+    @property --glow-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+    @keyframes glowSpin { to { --glow-angle: 360deg; } }
+    .glow-border {
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .glow-border::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 10px;
+      padding: 2px;
+      background: conic-gradient(from var(--glow-angle), #facc15, #60a5fa, #c084fc, #4ade80, #fb923c, #f87171, #facc15);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .glow-border.glow-active::before {
+      opacity: 1;
+      animation: glowSpin 2.5s linear infinite;
+    }
+
     .toast-wrap { position:fixed; bottom:calc(60px + env(safe-area-inset-bottom,0px)); left:50%; transform:translateX(-50%); z-index:9999; pointer-events:none; }
 
     /* ── Scrollbar (visible everywhere) ── */
@@ -1334,6 +1361,63 @@ function renderMatches() {
       }
     }
 
+    // ══ PLAYER: predictions panel (visible only when match is locked/live/done) ══
+    let playerPredsPanel = '';
+    if (!isAdm && locked) {
+      const ppOpen = _openPlayerPreds.has(m.id);
+      const matchPreds = preds.filter(p => p.matchId === m.id);
+      const hasDone = m.realHome != null;
+
+      playerPredsPanel = `<div style="text-align:center;margin-top:6px">
+        <button onclick="togglePlayerPreds('${m.id}')" 
+          style="background:#0f172a;border:1px solid ${ppOpen?'#facc15':'#334155'};border-radius:8px;
+                 padding:4px 14px;color:${ppOpen?'#facc15':'#94a3b8'};font-size:10px;font-weight:700;
+                 cursor:pointer;transition:all 0.2s">
+          \ud83d\udc40 Apuestas ${ppOpen?'\u25b2':'\u25bc'}
+        </button>
+      </div>`;
+
+      if (ppOpen) {
+        const allPlayers = CACHE.users.filter(u => !u.isAdmin);
+        playerPredsPanel += `<div class="glow-border glow-active" style="margin-top:8px;background:#0f172a;border-radius:10px;overflow:hidden">
+          <div style="position:relative;z-index:1;background:#0f172a;border-radius:8px;margin:2px;overflow:hidden">
+          <table style="width:100%;border-collapse:collapse;font-size:11px">
+            <thead><tr style="background:#1a1a2e;color:#64748b;font-size:9px;text-transform:uppercase">
+              <th style="padding:5px 8px;text-align:left">Jugador</th>
+              <th style="padding:5px 4px;text-align:center">Apuesta</th>
+              ${hasDone ? '<th style="padding:5px 4px;text-align:center">Pts</th>' : ''}
+            </tr></thead><tbody>`;
+
+        allPlayers.forEach((u, i) => {
+          const p = matchPreds.find(x => x.userId === u.id);
+          const bg = i % 2 === 0 ? '#0f172a' : '#111827';
+          const isMine = u.id === currentUser.id;
+          const rowStyle = isMine ? 'background:#1e3a5f' : `background:${bg}`;
+          const predText = p ? `<b>${p.predHome}-${p.predAway}</b>` : `<span style="color:#334155">\u2014</span>`;
+          let ptsText = '';
+          let predColor = '#94a3b8';
+          if (p && hasDone) {
+            const pts = calcPoints(p, m, preds);
+            const isExact = p.predHome===m.realHome && p.predAway===m.realAway;
+            predColor = isExact ? '#facc15' : pts > 0 ? '#4ade80' : '#f87171';
+            ptsText = `<td style="padding:5px 4px;text-align:center"><span style="color:${predColor};font-weight:900">${pts}</span></td>`;
+          } else if (hasDone) {
+            ptsText = `<td style="padding:5px 4px;text-align:center;color:#334155">\u2014</td>`;
+          }
+
+          playerPredsPanel += `<tr style="${rowStyle}">
+            <td style="padding:5px 8px;font-weight:${isMine?'900':'600'};color:${isMine?'#facc15':'#e2e8f0'};font-size:11px">
+              ${u.name}${isMine?' <span style="font-size:9px;color:#facc15">(t\u00fa)</span>':''}
+            </td>
+            <td style="padding:5px 4px;text-align:center;color:${predColor};font-weight:700">${predText}</td>
+            ${ptsText}
+          </tr>`;
+        });
+
+        playerPredsPanel += `</tbody></table></div></div>`;
+      }
+    }
+
     const savedHtml = isAdm ? ''
       : (!locked && pred
         ? `<div style="text-align:center;font-size:10px;color:#4ade80;margin-top:2px">✓ Guardado</div>`
@@ -1388,6 +1472,7 @@ function renderMatches() {
         </div>
         <div style="flex:1;text-align:left;font-weight:800;font-size:13px;line-height:1.2">${m.away}</div>
       </div>
+      ${playerPredsPanel}
     </div>`;
     });
 
@@ -1919,6 +2004,7 @@ function buildAdminGestion() {
 const ACTIVITY_KEY = 'polla_admin_activity';
 const _revealed = new Set();
 const _openPredPanels = new Set();
+const _openPlayerPreds = new Set();
 
 function togglePredPanel(matchId) {
   if (_openPredPanels.has(matchId)) {
@@ -1928,6 +2014,12 @@ function togglePredPanel(matchId) {
     const m = CACHE.matches.find(x => x.id === matchId);
     if (m) logActivity(currentUser.code, `Abri\u00f3 predicciones de ${m.home} vs ${m.away}`);
   }
+  renderMatches();
+}
+
+function togglePlayerPreds(matchId) {
+  if (_openPlayerPreds.has(matchId)) _openPlayerPreds.delete(matchId);
+  else _openPlayerPreds.add(matchId);
   renderMatches();
 }
 
