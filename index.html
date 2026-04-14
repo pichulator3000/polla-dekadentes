@@ -443,12 +443,6 @@
         </div>
       </div>
 
-      <!-- Predicciones de Participantes (solo admin) -->
-      <div id="predsCard" class="card" style="padding:16px;margin-bottom:12px;display:none">
-        <h3 style="margin:0 0 12px;font-size:14px;font-weight:800;color:#c084fc">🔍 Predicciones de Participantes</h3>
-        <div id="predsViewer"></div>
-      </div>
-
       <!-- Actividad Admin (solo admin) -->
       <div id="actividadCard" class="card" style="padding:16px;margin-bottom:12px;display:none">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -1204,18 +1198,82 @@ function renderMatches() {
          </div>`;
     }
 
-    // ══ ADMIN: prediction participation stats ══
+    // ══ ADMIN: prediction participation + predictions panel ══
     let participHtml = '';
+    let predsPanel = '';
     if (isAdm) {
       const totalPlayers = CACHE.users.filter(u => !u.isAdmin).length;
-      const predCount = preds.filter(p => p.matchId === m.id).length;
+      const matchPreds = preds.filter(p => p.matchId === m.id);
+      const predCount = matchPreds.length;
       const pct = totalPlayers ? Math.round((predCount / totalPlayers) * 100) : 0;
       const pctColor = pct === 100 ? '#4ade80' : pct >= 50 ? '#facc15' : '#f87171';
-      participHtml = `<div style="text-align:center;font-size:10px;margin-top:4px">
+      const panelOpen = _openPredPanels.has(m.id);
+
+      participHtml = `<div style="text-align:center;font-size:10px;margin-top:6px;display:flex;flex-direction:column;align-items:center;gap:4px">
         <span style="background:#1e293b;color:${pctColor};padding:2px 8px;border-radius:4px;font-weight:800">
-          📋 ${predCount}/${totalPlayers} (${pct}%)
+          \ud83d\udccb ${predCount}/${totalPlayers} (${pct}%)
         </span>
+        <button onclick="togglePredPanel('${m.id}')" 
+          style="background:${panelOpen?'#1a0a2e':'#0f172a'};border:1px solid ${panelOpen?'#7c3aed':'#334155'};border-radius:6px;
+                 padding:4px 12px;color:${panelOpen?'#c084fc':'#94a3b8'};font-size:10px;font-weight:700;cursor:pointer">
+          \ud83d\udd0d Predicciones ${panelOpen?'\u25b2':'\u25bc'}
+        </button>
       </div>`;
+
+      if (panelOpen) {
+        const allPlayers = CACHE.users.filter(u => !u.isAdmin);
+        const hasDone = m.realHome != null;
+        predsPanel = `<div style="margin-top:8px;background:#0f172a;border:1px solid #7c3aed;border-radius:8px;overflow:hidden">
+          <div style="padding:8px 10px;font-size:12px;font-weight:800;color:#c084fc;border-bottom:1px solid #1e293b">\ud83d\udd2e Predicciones \u2014 ${m.home} vs ${m.away}</div>
+          <table style="width:100%;border-collapse:collapse;font-size:11px">
+            <thead><tr style="background:#1e293b;color:#64748b;font-size:9px;text-transform:uppercase">
+              <th style="padding:6px 8px;text-align:left">Jugador</th>
+              <th style="padding:6px 4px;text-align:center">Pred</th>
+              <th style="padding:6px 4px;text-align:center">Real</th>
+              <th style="padding:6px 4px;text-align:center">Pts</th>
+              <th style="padding:6px 4px;text-align:center">\u270f\ufe0f</th>
+            </tr></thead><tbody>`;
+
+        allPlayers.forEach((u, i) => {
+          const p = matchPreds.find(x => x.userId === u.id);
+          const bg = i % 2 === 0 ? '#0f172a' : '#1a1a2e';
+          const predText = p ? `<b>${p.predHome}-${p.predAway}</b>` : `<span style="color:#334155;font-style:italic">\u2014</span>`;
+          const realText = hasDone ? `<b style="color:#f1f5f9">${m.realHome}-${m.realAway}</b>` : `<span style="color:#334155">\u2014</span>`;
+          let ptsText = `<span style="color:#334155">\u2014</span>`;
+          let predColor = '#94a3b8';
+          if (p && hasDone) {
+            const pts = calcPoints(p, m, preds);
+            const isExact = p.predHome===m.realHome && p.predAway===m.realAway;
+            predColor = isExact ? '#facc15' : pts > 0 ? '#4ade80' : '#f87171';
+            ptsText = `<span style="color:${predColor};font-weight:900">${pts}</span>`;
+          }
+
+          predsPanel += `<tr style="background:${bg}">
+            <td style="padding:6px 8px;font-weight:700;color:#f1f5f9">${u.name}</td>
+            <td style="padding:6px 4px;text-align:center;color:${predColor}">${predText}</td>
+            <td style="padding:6px 4px;text-align:center">${realText}</td>
+            <td style="padding:6px 4px;text-align:center">${ptsText}</td>
+            <td style="padding:4px;text-align:center">
+              <div style="display:flex;align-items:center;gap:2px;justify-content:center">
+                <input type="number" inputmode="numeric" min="0" max="20" id="fp_h_${u.id}_${m.id}"
+                  style="width:28px;height:24px;background:#1e293b;border:1px solid #334155;border-radius:4px;
+                         color:#f1f5f9;text-align:center;font-size:11px;font-weight:700"
+                  value="${p?p.predHome:''}" placeholder="-"/>
+                <span style="color:#475569;font-size:9px">-</span>
+                <input type="number" inputmode="numeric" min="0" max="20" id="fp_a_${u.id}_${m.id}"
+                  style="width:28px;height:24px;background:#1e293b;border:1px solid #334155;border-radius:4px;
+                         color:#f1f5f9;text-align:center;font-size:11px;font-weight:700"
+                  value="${p?p.predAway:''}" placeholder="-"/>
+                <button onclick="saveFixturePred('${u.id}','${m.id}')" 
+                  style="background:#7c3aed;border:none;border-radius:4px;padding:2px 6px;
+                         color:#fff;font-size:9px;cursor:pointer;font-weight:700">\u2714</button>
+              </div>
+            </td>
+          </tr>`;
+        });
+
+        predsPanel += `</tbody></table></div>`;
+      }
     }
 
     const savedHtml = isAdm ? ''
@@ -1268,6 +1326,7 @@ function renderMatches() {
           ${ptsHtml}
           ${savedHtml}
           ${participHtml}
+          ${predsPanel}
         </div>
         <div style="flex:1;text-align:left;font-weight:800;font-size:13px;line-height:1.2">${m.away}</div>
       </div>
@@ -1542,70 +1601,6 @@ function renderStats() {
     html += `</details>`;
   }
 
-  // ══ VER PREDICCIONES DE OTROS JUGADORES ══
-  const closedMatches = [...CACHE.matches]
-    .filter(m => { const s=getStatus(m); return s==='done'||s==='live'||s==='locked'; })
-    .sort((a,b) => new Date(a.datetime)-new Date(b.datetime));
-
-  if (closedMatches.length && users.length) {
-    const selVal = document.getElementById('predViewerSel')?.value || '';
-    html += `
-    <h3 style="font-weight:800;font-size:14px;margin:14px 0 8px;color:#facc15">🔍 Predicciones por Jugador</h3>
-    <div class="card" style="padding:12px;margin-bottom:10px">
-      <select id="predViewerSel" onchange="renderStats()"
-        style="width:100%;background:#0f172a;border:1px solid #334155;border-radius:8px;
-               padding:10px 12px;color:#f1f5f9;font-size:14px;font-weight:700">
-        <option value="">Selecciona un jugador...</option>
-        ${users.map(u=>`<option value="${u.id}" ${u.id===selVal?'selected':''}>${u.name} (@${u.code})</option>`).join('')}
-      </select>
-    </div>`;
-
-    if (selVal) {
-      const viewUser = users.find(u=>u.id===selVal);
-      html += `<div style="display:flex;flex-direction:column;gap:6px">`;
-      closedMatches.forEach(m => {
-        const pred = preds.find(p=>p.userId===selVal && p.matchId===m.id);
-        const status = getStatus(m);
-        const isLive = status==='live';
-        const borderCol = isLive ? '#dc2626' : '#1e293b';
-        const hasDone = m.realHome != null;
-
-        let predText;
-        if (!pred) {
-          predText = `<span style="color:#334155;font-style:italic;font-size:12px">Sin predicci\u00f3n</span>`;
-        } else {
-          const pH = pred.predHome, pA = pred.predAway;
-          let predColor = '#94a3b8';
-          let predIcon = '';
-          if (hasDone) {
-            const isExact = pH===m.realHome && pA===m.realAway;
-            const isOk = Math.sign(pH-pA)===Math.sign(m.realHome-m.realAway);
-            if (isExact) { predColor='#facc15'; predIcon='🥇 '; }
-            else if (isOk) { predColor='#4ade80'; predIcon='\u2705 '; }
-            else { predColor='#f87171'; predIcon='\u274c '; }
-          }
-          predText = `<span style="font-size:16px;font-weight:900;color:${predColor}">${predIcon}${pH} - ${pA}</span>`;
-        }
-
-        const resultText = hasDone
-          ? `<span style="font-size:11px;color:#64748b">Resultado: <b style="color:#f1f5f9">${m.realHome}-${m.realAway}</b></span>`
-          : '';
-
-        html += `<div style="background:#0f172a;border:1px solid ${borderCol};border-radius:10px;padding:10px 12px">
-          <div style="display:flex;justify-content:spaceetween;align-items:center;margin-bottom:4px">
-            <span style="font-weight:800;font-size:12px;color:#f1f5f9">${m.home} <span style="color:#475569;font-weight:400">vs</span> ${m.away}</span>
-            ${isLive?'<span style="color:#f87171;font-size:10px;font-weight:800">\u25cf EN VIVO</span>':''}
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            ${predText}
-            ${resultText}
-          </div>
-        </div>`;
-      });
-      html += `</div>`;
-    }
-  }
-
   document.getElementById('statsContent').innerHTML = html;
 }
 
@@ -1734,25 +1729,10 @@ let adminSubTab = 'gestion';
 function renderAdmin() {
   if (!currentUser?.isAdmin) return;
 
-  // Sub-nav
-  const subNav = `
-  <div style="display:flex;gap:6px;margin-bottom:14px;background:#0f172a;border-radius:10px;padding:4px">
-    <button onclick="setAdminTab('gestion')" id="sat-gestion"
-      style="flex:1;padding:8px;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;
-             background:${adminSubTab==='gestion'?'#1e3a5f':'transparent'};
-             color:${adminSubTab==='gestion'?'#60a5fa':'#64748b'}">
-      ⚙️ Gestión
-    </button>
-    <button onclick="setAdminTab('spy')" id="sat-spy"
-      style="flex:1;padding:8px;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;
-             background:${adminSubTab==='spy'?'#1a0a2e':'transparent'};
-             color:${adminSubTab==='spy'?'#c084fc':'#64748b'}">
-      🔍 Participantes
-    </button>
-  </div>`;
+  const subNav = '';
 
   document.getElementById('adminContent').innerHTML =
-    subNav + (adminSubTab==='gestion' ? buildAdminGestion() : buildAdminSpy());
+    subNav + buildAdminGestion();
 }
 
 function setAdminTab(t) { adminSubTab=t; renderAdmin(); }
@@ -1821,39 +1801,6 @@ function buildAdminGestion() {
   if (!users.length) html += `<p style="color:#475569;text-align:center;padding:16px">Sin participantes</p>`;
   html += `</div></div>
 
-  <!-- Todas las predicciones -->
-  <div class="card" style="padding:16px;overflow-x:auto">
-    <h3 style="font-weight:800;font-size:14px;color:#facc15;margin:0 0 12px">🔍 Todas las Predicciones</h3>
-    <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:320px">
-      <thead><tr style="color:#64748b;text-transform:uppercase;font-size:10px">
-        <th style="padding:6px;text-align:left">Jugador</th>
-        <th style="padding:6px;text-align:left">Partido</th>
-        <th style="padding:6px;text-align:center">Pred</th>
-        <th style="padding:6px;text-align:center">Real</th>
-        <th style="padding:6px;text-align:center">Pts</th>
-      </tr></thead>
-      <tbody>`;
-
-  preds.forEach(p => {
-    const u = CACHE.users.find(x=>x.id===p.userId);
-    const m = CACHE.matches.find(x=>x.id===p.matchId);
-    if(!u||!m) return;
-    const pt = m.realHome!=null ? calcPoints(p,m,preds) : null;
-    const ptStr = pt===null ? '<span style="color:#334155">—</span>' :
-      pt>0&&p.predHome===m.realHome&&p.predAway===m.realAway ? `<b style="color:#facc15">${pt}🥇</b>` :
-      pt>0 ? `<span style="color:#4ade80">${pt}✅</span>` :
-      `<span style="color:#475569">0❌</span>`;
-    html += `<tr style="border-top:1px solid #1e293b">
-      <td style="padding:8px 6px">${u.name}</td>
-      <td style="padding:8px 6px;color:#64748b">${m.home.split(' ')[0]} vs ${m.away.split(' ')[0]}</td>
-      <td style="padding:8px 6px;text-align:center;font-weight:700">${p.predHome}-${p.predAway}</td>
-      <td style="padding:8px 6px;text-align:center">${m.realHome!=null?m.realHome+'-'+m.realAway:'<span style="color:#334155">—</span>'}</td>
-      <td style="padding:8px 6px;text-align:center">${ptStr}</td>
-    </tr>`;
-  });
-  if(!preds.length) html+=`<tr><td colspan="5" style="text-align:center;padding:20px;color:#475569">Sin predicciones</td></tr>`;
-  html+=`</tbody></table></div>`;
-
   // Agregar partido (colapsable, al fondo)
   html += `
   <div class="card" style="padding:16px;margin-bottom:12px">
@@ -1904,7 +1851,25 @@ function buildAdminGestion() {
 
 // ══ SPY: Resultados de Participantes (solo admin) ══
 const ACTIVITY_KEY = 'polla_admin_activity';
-const _revealed = new Set(); // in-memory only, clears on reload
+const _revealed = new Set();
+const _openPredPanels = new Set();
+
+function togglePredPanel(matchId) {
+  if (_openPredPanels.has(matchId)) _openPredPanels.delete(matchId);
+  else _openPredPanels.add(matchId);
+  renderMatches();
+}
+
+async function saveFixturePred(userId, matchId) {
+  const h = parseInt(document.getElementById(`fp_h_${userId}_${matchId}`)?.value);
+  const a = parseInt(document.getElementById(`fp_a_${userId}_${matchId}`)?.value);
+  if (isNaN(h) || isNaN(a) || h<0 || a<0 || h>20 || a>20) return toast('Resultado inv\u00e1lido', 'err');
+  await DB.savePred({ userId, matchId, predHome: h, predAway: a });
+  const u = CACHE.users.find(x=>x.id===userId);
+  const m = CACHE.matches.find(x=>x.id===matchId);
+  logActivity(currentUser.code, `Edit\u00f3 pred ${m?.home||'?'} vs ${m?.away||'?'}`, `Jugador: ${u?.name||'?'} - ${h}-${a}`);
+  toast('\u2713 Predicci\u00f3n editada');
+}
 
 function logActivity(adminCode, action, detail) {
   const log = JSON.parse(localStorage.getItem(ACTIVITY_KEY)||'[]');
@@ -1916,140 +1881,6 @@ function logActivity(adminCode, action, detail) {
   });
   if(log.length > 200) log.splice(200);
   localStorage.setItem(ACTIVITY_KEY, JSON.stringify(log));
-}
-
-function buildAdminSpy() {
-  const users   = CACHE.users.filter(u=>!u.isAdmin);
-  const matches = [...CACHE.matches]
-    .filter(m=>{ const s=getStatus(m); return s==='done'||s==='live'||s==='locked'; })
-    .sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
-  const preds   = CACHE.preds;
-
-  if(!users.length) return `<div class="card" style="padding:24px;text-align:center;color:#475569">Sin participantes registrados</div>`;
-  if(!matches.length) return `<div class="card" style="padding:24px;text-align:center;color:#475569">Sin partidos cerrados a\u00fan</div>`;
-
-  const selId = 'spyUserSel';
-  const selVal = document.getElementById(selId)?.value || '';
-
-  // Count predictions per user for closed matches
-  const userPredCounts = {};
-  users.forEach(u => {
-    userPredCounts[u.id] = preds.filter(p => p.userId===u.id && matches.find(m=>m.id===p.matchId)).length;
-  });
-
-  let html = `
-  <details style="margin-bottom:10px">
-    <summary class="group-summary">
-      <span>\ud83d\udd0d Predicciones de Participantes</span>
-      <span class="group-chevron">${users.length} jugadores \u25bc</span>
-    </summary>
-    <div style="margin-top:8px">
-      <div class="card" style="padding:12px;margin-bottom:10px">
-        <label style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase;display:block;margin-bottom:6px">Participante</label>
-        <select id="${selId}" onchange="renderAdmin()"
-          style="width:100%;background:#0f172a;border:1px solid #334155;border-radius:8px;
-                 padding:10px 12px;color:#f1f5f9;font-size:14px;font-weight:700">
-          <option value="">Selecciona un jugador...</option>
-          ${users.map(u=>`<option value="${u.id}" ${u.id===selVal?'selected':''}>${u.name} (@${u.code}) \u2014 ${userPredCounts[u.id]}/${matches.length}</option>`).join('')}
-        </select>
-      </div>`;
-
-  if (selVal) {
-    const user = users.find(u=>u.id===selVal);
-    if (!user) { html += `</div></details>`; return html; }
-
-    html += `<div style="display:flex;flex-direction:column;gap:4px">`;
-
-    matches.forEach(m => {
-      const pred = preds.find(p=>p.userId===user.id && p.matchId===m.id);
-      const isLive = getStatus(m)==='live';
-      const hasDone = m.realHome != null;
-      const revealId = `spy_${user.id}_${m.id}`;
-      const revealed = _revealed.has(revealId);
-
-      // Status badge
-      const statusBadge = isLive
-        ? `<span style="color:#f87171;font-size:9px;font-weight:800">\u25cf EN VIVO</span>`
-        : hasDone
-        ? `<span style="color:#4ade80;font-size:9px;font-weight:800">\u2713 FIN</span>`
-        : `<span style="color:#64748b;font-size:9px;font-weight:800">\ud83d\udd12</span>`;
-
-      // Prediction indicator
-      const predIndicator = !pred
-        ? `<span style="color:#334155;font-size:10px">\u2014</span>`
-        : revealed
-        ? `<span style="color:#c084fc;font-size:10px;font-weight:700">\ud83d\udc41\ufe0f</span>`
-        : `<span style="color:#facc15;font-size:10px">\u2714</span>`;
-
-      if (!revealed) {
-        // Collapsed row — click to reveal
-        html += `<div onclick="${pred ? `revealPred('${user.id}','${user.name}','${m.id}','${m.home}','${m.away}')` : ''}"
-          style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;
-                 background:#0f172a;border:1px solid ${isLive?'#dc2626':'#1e293b'};border-radius:8px;
-                 ${pred?'cursor:pointer':''}">
-          <div style="display:flex;align-items:center;gap:8px">
-            ${statusBadge}
-            <span style="font-weight:700;font-size:12px;color:#f1f5f9">${m.home} <span style="color:#475569">vs</span> ${m.away}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px">
-            ${predIndicator}
-            ${pred ? `<span style="color:#64748b;font-size:10px">\ud83d\udc41\ufe0f Ver</span>` : `<span style="color:#334155;font-size:10px;font-style:italic">Sin pred</span>`}
-          </div>
-        </div>`;
-      } else {
-        // Expanded — show prediction + edit inputs
-        const spH = `spy_h_${user.id}_${m.id}`, spA = `spy_a_${user.id}_${m.id}`;
-        const resultText = hasDone ? `<span style="font-size:11px;color:#64748b">Real: <b style="color:#f1f5f9">${m.realHome}-${m.realAway}</b></span>` : '';
-
-        html += `<div style="background:#0f172a;border:1px solid ${isLive?'#dc2626':'#7c3aed'};border-radius:8px;padding:12px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <div style="display:flex;align-items:center;gap:8px">
-              ${statusBadge}
-              <span style="font-weight:800;font-size:12px;color:#f1f5f9">${m.home} <span style="color:#475569">vs</span> ${m.away}</span>
-            </div>
-            ${resultText}
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            <input type="number" inputmode="numeric" min="0" max="20" id="${spH}"
-              class="score-input" style="width:40px;height:40px;font-size:15px;border-color:#c084fc"
-              value="${pred.predHome}" placeholder="L"/>
-            <span style="font-weight:900;color:#475569">-</span>
-            <input type="number" inputmode="numeric" min="0" max="20" id="${spA}"
-              class="score-input" style="width:40px;height:40px;font-size:15px;border-color:#c084fc"
-              value="${pred.predAway}" placeholder="V"/>
-            <button onclick="saveSpyEdit('${user.id}','${m.id}')" class="btn-sm"
-              style="font-size:10px;padding:6px 10px;background:#7c3aed">\u270f\ufe0f Editar</button>
-          </div>
-        </div>`;
-      }
-    });
-
-    html += `</div>`;
-  }
-
-  html += `</div></details>`;
-  return html;
-}
-
-function revealPred(userId, userName, matchId, home, away) {
-  const revealId = `spy_${userId}_${matchId}`;
-  const pred = CACHE.preds.find(p=>p.userId===userId && p.matchId===matchId);
-  if(!pred) return;
-  _revealed.add(revealId);
-  logActivity(currentUser.code, `Ha visto prediccion ${home} vs ${away}`, `Jugador: ${userName} - Pred: ${pred.predHome}-${pred.predAway}`);
-  renderAdmin();
-}
-
-async function saveSpyEdit(userId, matchId) {
-  const h = parseInt(document.getElementById(`spy_h_${userId}_${matchId}`)?.value);
-  const a = parseInt(document.getElementById(`spy_a_${userId}_${matchId}`)?.value);
-  if (isNaN(h) || isNaN(a) || h<0 || a<0 || h>20 || a>20) return toast('Resultado inv\u00e1lido', 'err');
-  await DB.savePred({ userId, matchId, predHome: h, predAway: a });
-  const u = CACHE.users.find(x=>x.id===userId);
-  const m = CACHE.matches.find(x=>x.id===matchId);
-  logActivity(currentUser.code, `Ha editado prediccion ${m?.home||'?'} vs ${m?.away||'?'}`, `Jugador: ${u?.name||'?'} - Nueva pred: ${h}-${a}`);
-  toast('\u2713 Predicci\u00f3n editada por admin');
-  renderAdmin();
 }
 
 async function addMatch() {
@@ -2238,8 +2069,6 @@ function renderAjustes() {
   }
   actCard.style.display = 'block';
   document.getElementById('credsCard').style.display = 'block';
-  document.getElementById('predsCard').style.display = 'block';
-  renderPredsViewer();
 
   // ══ Controls: registration lock + approval mode ══
   const s = CACHE.settings;
@@ -2346,121 +2175,7 @@ function revealCred(revKey, userName) {
   renderAjustes();
 }
 
-function renderPredsViewer() {
-  const users   = CACHE.users.filter(u => !u.isAdmin);
-  const matches = [...CACHE.matches]
-    .filter(m => { const s = getStatus(m); return s==='done' || s==='live' || s==='locked'; })
-    .sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
-  const preds   = CACHE.preds;
-  const el      = document.getElementById('predsViewer');
 
-  if (!users.length || !matches.length) {
-    el.innerHTML = `<div style="color:#475569;text-align:center;padding:12px;font-size:12px">Sin datos disponibles</div>`;
-    return;
-  }
-
-  const selVal = document.getElementById('ajPredSel')?.value || '';
-
-  // Prediction counts per user
-  const counts = {};
-  users.forEach(u => {
-    counts[u.id] = preds.filter(p => p.userId===u.id && matches.find(m=>m.id===p.matchId)).length;
-  });
-
-  let html = `
-    <select id="ajPredSel" onchange="renderPredsViewer()"
-      style="width:100%;background:#0f172a;border:1px solid #334155;border-radius:8px;
-             padding:10px 12px;color:#f1f5f9;font-size:14px;font-weight:700;margin-bottom:10px">
-      <option value="">Selecciona un jugador...</option>
-      ${users.map(u => `<option value="${u.id}" ${u.id===selVal?'selected':''}>${u.name} (@${u.code}) \u2014 ${counts[u.id]}/${matches.length}</option>`).join('')}
-    </select>`;
-
-  if (selVal) {
-    const user = users.find(u => u.id === selVal);
-    if (!user) { el.innerHTML = html; return; }
-
-    html += `<div style="display:flex;flex-direction:column;gap:4px">`;
-
-    matches.forEach(m => {
-      const pred = preds.find(p => p.userId===user.id && p.matchId===m.id);
-      const isLive = getStatus(m) === 'live';
-      const hasDone = m.realHome != null;
-      const revKey = `ajpred_${user.id}_${m.id}`;
-      const revealed = _revealed.has(revKey);
-
-      const statusBadge = isLive
-        ? `<span style="color:#f87171;font-size:9px;font-weight:800">\u25cf VIVO</span>`
-        : hasDone
-        ? `<span style="color:#4ade80;font-size:9px;font-weight:800">\u2713 FIN</span>`
-        : `<span style="color:#64748b;font-size:9px;font-weight:800">\ud83d\udd12</span>`;
-
-      if (!pred) {
-        // No prediction
-        html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;
-                   background:#0f172a;border:1px solid #1e293b;border-radius:8px;opacity:0.5">
-          <div style="display:flex;align-items:center;gap:8px">
-            ${statusBadge}
-            <span style="font-size:12px;color:#64748b">${m.home} vs ${m.away}</span>
-          </div>
-          <span style="color:#334155;font-size:10px;font-style:italic">Sin pred</span>
-        </div>`;
-      } else if (!revealed) {
-        // Hidden — click to reveal
-        html += `<div onclick="revealAjPred('${user.id}','${user.name}','${m.id}','${m.home}','${m.away}')"
-          style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;
-                 background:#0f172a;border:1px solid ${isLive?'#dc2626':'#1e293b'};border-radius:8px;cursor:pointer">
-          <div style="display:flex;align-items:center;gap:8px">
-            ${statusBadge}
-            <span style="font-weight:700;font-size:12px;color:#f1f5f9">${m.home} <span style="color:#475569">vs</span> ${m.away}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:4px">
-            <span style="background:#1e293b;color:#94a3b8;font-size:11px;padding:3px 10px;border-radius:4px;border:1px dashed #334155">\ud83d\udc41\ufe0f Ver</span>
-          </div>
-        </div>`;
-      } else {
-        // Revealed — show prediction + edit
-        const inputH = `ajp_h_${user.id}_${m.id}`, inputA = `ajp_a_${user.id}_${m.id}`;
-        const resultText = hasDone
-          ? `<span style="font-size:10px;color:#64748b">Real: <b style="color:#f1f5f9">${m.realHome}-${m.realAway}</b></span>`
-          : '';
-
-        html += `<div style="background:#0f172a;border:1px solid ${isLive?'#dc2626':'#7c3aed'};border-radius:8px;padding:10px 12px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <div style="display:flex;align-items:center;gap:8px">
-              ${statusBadge}
-              <span style="font-weight:800;font-size:12px;color:#f1f5f9">${m.home} <span style="color:#475569">vs</span> ${m.away}</span>
-            </div>
-            ${resultText}
-          </div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <input type="number" inputmode="numeric" min="0" max="20" id="${inputH}"
-              class="score-input" style="width:40px;height:40px;font-size:15px;border-color:#c084fc"
-              value="${pred.predHome}" placeholder="L"/>
-            <span style="font-weight:900;color:#475569">-</span>
-            <input type="number" inputmode="numeric" min="0" max="20" id="${inputA}"
-              class="score-input" style="width:40px;height:40px;font-size:15px;border-color:#c084fc"
-              value="${pred.predAway}" placeholder="V"/>
-            <button onclick="saveAjPredEdit('${user.id}','${m.id}')" class="btn-sm"
-              style="font-size:10px;padding:6px 10px;background:#7c3aed">\u270f\ufe0f</button>
-          </div>
-        </div>`;
-      }
-    });
-
-    html += `</div>`;
-  }
-
-  el.innerHTML = html;
-}
-
-function revealAjPred(userId, userName, matchId, home, away) {
-  const revKey = `ajpred_${userId}_${matchId}`;
-  const pred = CACHE.preds.find(p => p.userId===userId && p.matchId===matchId);
-  if (!pred) return;
-  _revealed.add(revKey);
-  logActivity(currentUser.code, `Ha visto prediccion ${home} vs ${away}`, `Jugador: ${userName} - Pred: ${pred.predHome}-${pred.predAway}`);
-  renderPredsViewer();
-}
 
 async function saveAjPredEdit(userId, matchId) {
   const h = parseInt(document.getElementById(`ajp_h_${userId}_${matchId}`)?.value);
