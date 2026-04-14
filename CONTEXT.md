@@ -170,3 +170,35 @@ local | visita | torneo | fase | fecha_hora_chile
 - Actualizar este `CONTEXT.md` cuando haya cambios estructurales relevantes (nuevas features, bugs resueltos, cambios de arquitectura).
 - El lenguaje del código y UI es **español chileno** (informal).
 - Hacer `git push` solo si el usuario lo pide explícitamente.
+
+
+## Reglas de trabajo (siempre seguir)
+
+### Plan antes de ejecutar
+Para cualquier tarea de 3+ pasos, presenta un plan y espera confirmación explícita antes de escribir código. Si algo sale mal: detente y replantea.
+
+### Cambios mínimos
+- Solo toca lo necesario. Sin side effects. Sin introducir nuevos bugs al arreglar otros.
+- Busca causas raíz. Sin parches temporales.
+- Si puedes borrar líneas en vez de agregar: hazlo.
+
+### Contexto limpio
+- Avisa cuando el contexto llegue al ~50%
+- Usa subagentes para tareas independientes
+- Si hay muchas correcciones sin resultado, dilo para hacer /clear y replantear
+
+### Feedback loop
+- Corre tests/lint después de cada cambio relevante
+- Reporta el resultado antes de continuar
+
+### Autoaprendizaje
+- Si te corrijo algo, aplícalo para el resto de la sesión
+- Si es una regla reutilizable o lección aprendida, agrégala directamente en context.md bajo una sección "## Lecciones aprendidas"
+
+### Niveles de razonamiento
+Usa "think hard" para problemas complejos. Usa "ultrathink" solo cuando sea crítico.
+
+---
+
+## Lecciones aprendidas
+_(Claude va agregando acá cada vez que aprende algo nuevo en sesión)_
