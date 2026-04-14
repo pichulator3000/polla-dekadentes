@@ -1200,6 +1200,20 @@ function renderMatches() {
          </div>`;
     }
 
+    // ══ ADMIN: prediction participation stats ══
+    let participHtml = '';
+    if (isAdm) {
+      const totalPlayers = CACHE.users.filter(u => !u.isAdmin).length;
+      const predCount = preds.filter(p => p.matchId === m.id).length;
+      const pct = totalPlayers ? Math.round((predCount / totalPlayers) * 100) : 0;
+      const pctColor = pct === 100 ? '#4ade80' : pct >= 50 ? '#facc15' : '#f87171';
+      participHtml = `<div style="text-align:center;font-size:10px;margin-top:4px">
+        <span style="background:#1e293b;color:${pctColor};padding:2px 8px;border-radius:4px;font-weight:800">
+          📋 ${predCount}/${totalPlayers} (${pct}%)
+        </span>
+      </div>`;
+    }
+
     const savedHtml = isAdm ? ''
       : (!locked && pred
         ? `<div style="text-align:center;font-size:10px;color:#4ade80;margin-top:2px">✓ Guardado</div>`
@@ -1230,6 +1244,7 @@ function renderMatches() {
           ${resultHtml}
           ${ptsHtml}
           ${savedHtml}
+          ${participHtml}
         </div>
         <div style="flex:1;text-align:left;font-weight:800;font-size:13px;line-height:1.2">${m.away}</div>
       </div>
