@@ -1591,51 +1591,81 @@ function renderStats() {
   });
   const teams = Object.values(ts).sort((a,b)=>b.gf-a.gf);
 
-  // Player stats
+  // Player stats (with contrarian index + max streak)
   const ps = users.map(u => {
     const up=preds.filter(p=>p.userId===u.id);
-    let pts=0,ex=0,ok=0,no=0,pj=0;
-    up.forEach(p=>{const m=done.find(x=>x.id===p.matchId);if(!m)return;pj++;const pt=calcPoints(p,m,preds);pts+=pt;const ie=p.predHome===m.realHome&&p.predAway===m.realAway;const io=Math.sign(p.predHome-p.predAway)===Math.sign(m.realHome-m.realAway);if(ie)ex++;else if(io)ok++;else no++;});
+    let pts=0,ex=0,ok=0,no=0,pj=0,contrarian=0,contTotal=0,streak=0,maxStreak=0;
+    // Sort by match datetime for streak calc
+    const sorted = [...done].sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
+    sorted.forEach(m=>{
+      const p=up.find(x=>x.matchId===m.id); if(!p)return; pj++;
+      const pt=calcPoints(p,m,preds);
+      pts+=pt;
+      const ie=p.predHome===m.realHome&&p.predAway===m.realAway;
+      const io=Math.sign(p.predHome-p.predAway)===Math.sign(m.realHome-m.realAway);
+      if(ie)ex++; else if(io)ok++; else no++;
+      // Streak
+      if(ie||io){streak++;if(streak>maxStreak)maxStreak=streak;}else{streak=0;}
+      // Contrarian: did they bet with the minority?
+      const mp=preds.filter(x=>x.matchId===m.id);
+      const predSign=Math.sign(p.predHome-p.predAway);
+      const counts={1:0,0:0,'-1':0};
+      mp.forEach(x=>{counts[Math.sign(x.predHome-x.predAway)]++;});
+      const total=mp.length;
+      if(total>1){contTotal++;const myPct=counts[predSign]/total;if(myPct<0.5)contrarian++;}
+    });
     const pct=pj?Math.round((ex+ok)/pj*100):0;
-    return{...u,pts,ex,ok,no,pj,pct};
+    const contPct=contTotal?Math.round(contrarian/contTotal*100):0;
+    return{...u,pts,ex,ok,no,pj,pct,contPct,maxStreak};
   }).sort((a,b)=>b.pts-a.pts);
 
+  // Global contrarian & streak stats
+  const avgContrarian = ps.length ? Math.round(ps.reduce((s,p)=>s+p.contPct,0)/ps.length) : 0;
+  const bestStreak = ps.length ? Math.max(...ps.map(p=>p.maxStreak)) : 0;
+  const streakPlayer = ps.find(p=>p.maxStreak===bestStreak);
+
   let html = `
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-    <div class="card" style="padding:12px;text-align:center"><div style="font-size:22px;font-weight:900;color:#facc15">${done.length}</div><div style="font-size:11px;color:#64748b;margin-top:2px">Partidos jugados</div></div>
-    <div class="card" style="padding:12px;text-align:center"><div style="font-size:22px;font-weight:900;color:#60a5fa">${totalPreds}</div><div style="font-size:11px;color:#64748b;margin-top:2px">Predicciones</div></div>
-    <div class="card" style="padding:12px;text-align:center"><div style="font-size:22px;font-weight:900;color:#4ade80">${totalExact}</div><div style="font-size:11px;color:#64748b;margin-top:2px">Exactos totales</div></div>
-    <div class="card" style="padding:12px;text-align:center"><div style="font-size:22px;font-weight:900;color:#fb923c">${avgGoals}</div><div style="font-size:11px;color:#64748b;margin-top:2px">Goles por partido</div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:14px">
+    <div class="card" style="padding:10px 6px;text-align:center"><div style="font-size:18px;font-weight:900;color:#facc15">${done.length}</div><div style="font-size:10px;color:#64748b;margin-top:2px">Jugados</div></div>
+    <div class="card" style="padding:10px 6px;text-align:center"><div style="font-size:18px;font-weight:900;color:#60a5fa">${totalPreds}</div><div style="font-size:10px;color:#64748b;margin-top:2px">Predicciones</div></div>
+    <div class="card" style="padding:10px 6px;text-align:center"><div style="font-size:18px;font-weight:900;color:#4ade80">${totalExact}</div><div style="font-size:10px;color:#64748b;margin-top:2px">Exactos</div></div>
+    <div class="card" style="padding:10px 6px;text-align:center"><div style="font-size:18px;font-weight:900;color:#fb923c">${avgGoals}</div><div style="font-size:10px;color:#64748b;margin-top:2px">Goles/partido</div></div>
+    <div class="card" style="padding:10px 6px;text-align:center"><div style="font-size:18px;font-weight:900;color:#c084fc">${avgContrarian}%</div><div style="font-size:10px;color:#64748b;margin-top:2px">Contrarian avg</div></div>
+    <div class="card" style="padding:10px 6px;text-align:center"><div style="font-size:18px;font-weight:900;color:#f87171">${bestStreak}🔥</div><div style="font-size:10px;color:#64748b;margin-top:2px">${streakPlayer?streakPlayer.name.split(' ')[0]:''}</div></div>
   </div>
 
-  <h3 style="font-weight:800;font-size:14px;margin:0 0 8px;color:#facc15">👤 Por Jugador</h3>
+  <h3 style="font-weight:800;font-size:14px;margin:0 0 8px;color:#facc15">\ud83d\udc64 Por Jugador</h3>
   <div class="card" style="overflow-x:auto;margin-bottom:14px">
-    <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:300px">
-      <thead><tr style="background:#0f172a;color:#64748b;font-size:10px;text-transform:uppercase">
-        <th style="padding:8px 10px;text-align:left">Jugador</th>
-        <th style="padding:8px 6px;text-align:center">Pts</th>
-        <th style="padding:8px 6px;text-align:center">🥇</th>
-        <th style="padding:8px 6px;text-align:center">✅</th>
-        <th style="padding:8px 6px;text-align:center">❌</th>
-        <th style="padding:8px 6px;text-align:center">%</th>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:420px">
+      <thead><tr style="background:#0f172a;color:#64748b;font-size:9px;text-transform:uppercase">
+        <th style="padding:8px 8px;text-align:left">Jugador</th>
+        <th style="padding:8px 4px;text-align:center">Pts</th>
+        <th style="padding:8px 4px;text-align:center">\ud83e\udd47</th>
+        <th style="padding:8px 4px;text-align:center">\u2705</th>
+        <th style="padding:8px 4px;text-align:center">\u274c</th>
+        <th style="padding:8px 4px;text-align:center">%</th>
+        <th style="padding:8px 4px;text-align:center" title="% veces que apost\u00f3 por la minor\u00eda">\ud83c\udfb2</th>
+        <th style="padding:8px 4px;text-align:center" title="Racha m\u00e1xima de aciertos">\ud83d\udd25</th>
       </tr></thead>
       <tbody>`;
 
   ps.forEach(s => {
     const isMine = s.id===currentUser.id;
+    const contColor = s.contPct>=50?'#c084fc':s.contPct>=30?'#fb923c':'#64748b';
     html += `<tr style="${isMine?'background:#1e3a5f':''}">
-      <td style="padding:10px 10px">
-        <div style="font-weight:700">${s.name}${isMine?' <span style="color:#facc15;font-size:10px">(tú)</span>':''}</div>
-        <div style="color:#475569;font-size:10px">@${s.code}</div>
+      <td style="padding:8px 8px">
+        <div style="font-weight:700;font-size:11px">${s.name}${isMine?' <span style="color:#facc15;font-size:9px">(t\u00fa)</span>':''}</div>
       </td>
-      <td style="padding:10px 6px;text-align:center;font-weight:900;color:#facc15">${s.pts}</td>
-      <td style="padding:10px 6px;text-align:center;color:#facc15">${s.ex}</td>
-      <td style="padding:10px 6px;text-align:center;color:#4ade80">${s.ok}</td>
-      <td style="padding:10px 6px;text-align:center;color:#f87171">${s.no}</td>
-      <td style="padding:10px 6px;text-align:center;color:#94a3b8">${s.pct}%</td>
+      <td style="padding:8px 4px;text-align:center;font-weight:900;color:#facc15">${s.pts}</td>
+      <td style="padding:8px 4px;text-align:center;color:#facc15">${s.ex}</td>
+      <td style="padding:8px 4px;text-align:center;color:#4ade80">${s.ok}</td>
+      <td style="padding:8px 4px;text-align:center;color:#f87171">${s.no}</td>
+      <td style="padding:8px 4px;text-align:center;color:#94a3b8">${s.pct}%</td>
+      <td style="padding:8px 4px;text-align:center;color:${contColor};font-weight:700" title="% veces que apost\u00f3 por la minor\u00eda">${s.contPct}%</td>
+      <td style="padding:8px 4px;text-align:center;color:${s.maxStreak>=3?'#f87171':'#94a3b8'};font-weight:700">${s.maxStreak}\ud83d\udd25</td>
     </tr>`;
   });
-  if(!ps.length) html+=`<tr><td colspan="6" style="text-align:center;padding:24px;color:#475569">Sin datos</td></tr>`;
+  if(!ps.length) html+=`<tr><td colspan="8" style="text-align:center;padding:24px;color:#475569">Sin datos</td></tr>`;
   html += `</tbody></table></div>
 
   <h3 style="font-weight:800;font-size:14px;margin:0 0 8px;color:#facc15">⚽ Goles por Equipo</h3>
