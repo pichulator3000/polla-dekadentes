@@ -1225,6 +1225,24 @@ function renderMatches() {
         ? `<span style="background:#7f1d1d;color:#fca5a5;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;margin-left:6px">🔒 Cerrado</span>`
         : '';
 
+    // ══ Bet distribution for closed matches ══
+    let betDistHtml = '';
+    if (locked) {
+      const mPreds = preds.filter(p => p.matchId === m.id);
+      const homeW = mPreds.filter(p => p.predHome > p.predAway).length;
+      const draw  = mPreds.filter(p => p.predHome === p.predAway).length;
+      const awayW = mPreds.filter(p => p.predHome < p.predAway).length;
+      const total = mPreds.length;
+      if (total > 0) {
+        const hPct = Math.round(homeW/total*100), dPct = Math.round(draw/total*100), aPct = Math.round(awayW/total*100);
+        betDistHtml = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;padding:4px 8px;background:#0f172a;border-radius:6px;font-size:10px;font-weight:700">
+          <span style="color:#60a5fa">${homeW} (${hPct}%)</span>
+          <span style="color:#64748b">${draw} emp (${dPct}%)</span>
+          <span style="color:#f87171">${awayW} (${aPct}%)</span>
+        </div>`;
+      }
+    }
+
     html += `
     <div class="card-match" style="padding:10px 12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
@@ -1235,6 +1253,7 @@ function renderMatches() {
         <span style="font-size:12px;font-weight:700;color:${timeColor}">📅 ${fmtDate(m.datetime)}</span>
         ${closeBadge}
       </div>
+      ${betDistHtml}
       <div style="display:flex;align-items:center;gap:6px">
         <div style="flex:1;text-align:right;font-weight:800;font-size:13px;line-height:1.2">${m.home}</div>
         <div style="flex-shrink:0">
@@ -1515,6 +1534,70 @@ function renderStats() {
       html += `<p style="color:#475569;text-align:center;padding:16px;font-size:12px">Nadie hizo predicción de podio</p>`;
     }
     html += `</details>`;
+  }
+
+  // ══ VER PREDICCIONES DE OTROS JUGADORES ══
+  const closedMatches = [...CACHE.matches]
+    .filter(m => { const s=getStatus(m); return s==='done'||s==='live'||s==='locked'; })
+    .sort((a,b) => new Date(a.datetime)-new Date(b.datetime));
+
+  if (closedMatches.length && users.length) {
+    const selVal = document.getElementById('predViewerSel')?.value || '';
+    html += `
+    <h3 style="font-weight:800;font-size:14px;margin:14px 0 8px;color:#facc15">🔍 Predicciones por Jugador</h3>
+    <div class="card" style="padding:12px;margin-bottom:10px">
+      <select id="predViewerSel" onchange="renderStats()"
+        style="width:100%;background:#0f172a;border:1px solid #334155;border-radius:8px;
+               padding:10px 12px;color:#f1f5f9;font-size:14px;font-weight:700">
+        <option value="">Selecciona un jugador...</option>
+        ${users.map(u=>`<option value="${u.id}" ${u.id===selVal?'selected':''}>${u.name} (@${u.code})</option>`).join('')}
+      </select>
+    </div>`;
+
+    if (selVal) {
+      const viewUser = users.find(u=>u.id===selVal);
+      html += `<div style="display:flex;flex-direction:column;gap:6px">`;
+      closedMatches.forEach(m => {
+        const pred = preds.find(p=>p.userId===selVal && p.matchId===m.id);
+        const status = getStatus(m);
+        const isLive = status==='live';
+        const borderCol = isLive ? '#dc2626' : '#1e293b';
+        const hasDone = m.realHome != null;
+
+        let predText;
+        if (!pred) {
+          predText = `<span style="color:#334155;font-style:italic;font-size:12px">Sin predicci\u00f3n</span>`;
+        } else {
+          const pH = pred.predHome, pA = pred.predAway;
+          let predColor = '#94a3b8';
+          let predIcon = '';
+          if (hasDone) {
+            const isExact = pH===m.realHome && pA===m.realAway;
+            const isOk = Math.sign(pH-pA)===Math.sign(m.realHome-m.realAway);
+            if (isExact) { predColor='#facc15'; predIcon='🥇 '; }
+            else if (isOk) { predColor='#4ade80'; predIcon='\u2705 '; }
+            else { predColor='#f87171'; predIcon='\u274c '; }
+          }
+          predText = `<span style="font-size:16px;font-weight:900;color:${predColor}">${predIcon}${pH} - ${pA}</span>`;
+        }
+
+        const resultText = hasDone
+          ? `<span style="font-size:11px;color:#64748b">Resultado: <b style="color:#f1f5f9">${m.realHome}-${m.realAway}</b></span>`
+          : '';
+
+        html += `<div style="background:#0f172a;border:1px solid ${borderCol};border-radius:10px;padding:10px 12px">
+          <div style="display:flex;justify-content:spaceetween;align-items:center;margin-bottom:4px">
+            <span style="font-weight:800;font-size:12px;color:#f1f5f9">${m.home} <span style="color:#475569;font-weight:400">vs</span> ${m.away}</span>
+            ${isLive?'<span style="color:#f87171;font-size:10px;font-weight:800">\u25cf EN VIVO</span>':''}
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            ${predText}
+            ${resultText}
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
   }
 
   document.getElementById('statsContent').innerHTML = html;
