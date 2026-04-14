@@ -1,256 +1,353 @@
-# 🏆 Polla Dekadentes — Contexto del Proyecto
+# 🏆 Polla Dekadentes — Contexto Completo del Proyecto
 
-> **Estado actual:** ✅ EN PRODUCCIÓN — App web real con Firebase + Netlify
-> **Meta:** App web multijugador para ~20 amigos, Mundial 2026
-> **Última revisión:** Abril 2025 (por Terminator 🐶)
+> **Estado:** ✅ EN PRODUCCIÓN  
+> **URL:** https://pichulator3000.github.io/polla-dekadentes  
+> **Repo:** https://github.com/pichulator3000/polla-dekadentes  
+> **Backend:** Firebase Realtime Database (plan Spark/gratis)  
+> **Hosting:** GitHub Pages (estático)  
+> **Meta:** App web multijugador para ~30 amigos, predicciones de fútbol  
+> **Última revisión:** Abril 2025
 
 ---
 
 ## ¿Qué es esto?
 
-Una **polla deportiva** (quiniela) donde un grupo cerrado de ~20 amigos predice
-resultados de partidos de fútbol. Cada partido tiene un pozo de 30 puntos que
-se reparte entre los que aciertan el resultado (ganador/empate). Acertar el
-marcador exacto duplica tu parte.
+Una **polla deportiva** (quiniela) donde un grupo cerrado de amigos predice
+resultados de partidos de fútbol. Soporta múltiples torneos simultáneamente
+(Mundial 2026, Copa Libertadores, etc.).
 
-Los partidos **se cierran solos a la hora de inicio** — sin excepciones, sin
-editar después. El admin carga los resultados reales y el sistema calcula los
-puntos automáticamente.
-
----
-
-## 🌐 URLs y Credenciales de Producción
-
-| Qué | Valor |
-|---|---|
-| **App (Netlify)** | https://polla-dekadentes.netlify.app |
-| **Firebase proyecto** | `polla-dekadentes` |
-| **Firebase DB URL** | `https://polla-dekadentes-default-rtdb.firebaseio.com` |
-| **Firebase consola** | https://console.firebase.google.com → polla-dekadentes |
-| **Admin login** | código `admin` / contraseña `admin123` |
-
-> ⚠️ Cambiar la contraseña de admin antes de compartir con los participantes.
+**Sistema de puntos:**
+- Cada partido tiene un pozo de **30 puntos**
+- Se reparte entre los que aciertan el resultado (local/empate/visita)
+- Acertar el **marcador exacto** duplica tu parte
+- Fallar = 0 puntos (sin puntos negativos)
+- Los partidos **se cierran automáticamente** a la hora de inicio
 
 ---
 
-## ✅ Módulos implementados y en producción
+## 🔑 Cuentas Admin
 
-| Módulo | Descripción |
-|---|---|
-| **Auth** | Login/registro con código único + contraseña (SHA-256, Web Crypto API) |
-| **Firebase Realtime DB** | Backend gratuito, datos sincronizados en tiempo real |
-| **Netlify hosting** | HTML estático, HTTPS incluido, gratis para siempre |
-| **Fixture por grupos** | Partidos agrupados por fase en acordeones desplegables (Grupo A…Final) |
-| **Predicciones** | Se guardan en Firebase; cierre automático a la hora exacta del partido |
-| **Cálculo de puntos** | `calcPoints()`: pozo 30 pts ÷ N acertadores; exacto ×2 |
-| **Ranking** | Tabla en tiempo real con pts, exactos, correctos, partidos jugados |
-| **Estadísticas globales** | Goles por equipo, % acierto por jugador, resumen global |
-| **Distribución de apuestas** | Por partido: "4 México · 10 Empate · 6 Ecuador" (solo jugados/en vivo) |
-| **Admin — Gestión** | Agregar/eliminar partidos, cargar resultados, eliminar usuarios |
-| **Admin — Importar Excel** | Sube `mundial_2026.xlsx` y carga los 104 partidos de una vez a Firebase |
-| **Admin — Resultados Participantes** | Ve predicciones ajenas ocultas; se revelan con click (queda en log) |
-| **Ajustes — Actividad Admin** | Historial de qué predicciones ajenas vio el admin (localStorage, 200 reg.) |
-| **UI mobile-first** | App shell con header + scroll central + bottom nav; safe-area iOS |
-| **Auto-login** | Sesión guardada en localStorage (persiste entre tabs y recargas) |
-| **Modo PC** | Override CSS para pantallas grandes |
+| Usuario | Contraseña | Nombre |
+|---|---|---|
+| `tomasadmin` | `admin123` | Tomas (Admin) |
+| `pabloadmin` | `admin123` | Pablo (Admin) |
+| `raiadmin` | `admin123` | Rai (Admin) |
+
+- Los 3 admins se crean automáticamente al cargar la app (función `seedAdmin()`)
+- Si no existen, se crean; si ya existen, no se duplican
+- La cuenta legacy `admin` se elimina automáticamente si existe
+- **Los admins NO participan** en el juego (excluidos del ranking y stats)
 
 ---
 
-## 🏗️ Arquitectura actual
+## 🏗️ Arquitectura
 
 ```
-[index.html en Netlify]  ←→  [Firebase Realtime Database]
-       ↑                           ↑
-  HTML + CSS + JS             pf/users/{id}
-  (sin servidor propio)       pf/matches/{id}
-  CACHE local en RAM          pf/preds/{userId}__{matchId}
-  actualizado por listeners
+[index.html en GitHub Pages]  ←→  [Firebase Realtime Database]
+         ↑                              ↑
+    HTML + CSS + JS                pf/users/{id}
+    Todo en un solo archivo        pf/matches/{id}
+    CACHE local en RAM             pf/preds/{userId}__{matchId}
+    Actualizado por listeners      pf/podio/{userId}
+    ~2300 líneas                   pf/settings/{key}
+                                   pf/pending/{code}
 ```
 
-**Flujo de datos:**
-1. Al abrir la app → Firebase listeners actualizan `CACHE`
-2. Todos los renders leen de `CACHE` (sync, rápido)
-3. Cualquier write → va a Firebase → Firebase notifica a todos
-4. El admin carga resultados → todos ven los puntos al instante
+### Flujo de datos
+1. Al abrir la app → Firebase listeners (`on('value')`) cargan todo a `CACHE`
+2. Todos los renders leen de `CACHE` (sync, instantáneo)
+3. Cualquier write → va a Firebase → Firebase notifica a todos los clientes
+4. El admin carga resultados → todos ven los puntos al instante (real-time)
 
-**Librerías CDN usadas:**
-- Firebase App + Realtime DB compat `v10.12.0`
-- SheetJS `xlsx-0.20.2` — para leer Excel en el browser (importación masiva)
-- Tailwind CSS (vía CDN)
+### Librerías CDN
+- **Firebase App + Realtime DB** compat `v10.12.0`
+- **SheetJS** `xlsx-0.20.2` — lectura de Excel en browser (importación masiva)
+- **Tailwind CSS** vía CDN
+- **Chart.js** `v4` — gráfico de evolución en Home
 
----
-
-## 📁 Archivos del proyecto
-
-```
-polla-futbolera/
-├── index.html          ← App completa (todo en uno, ~1500 líneas)
-├── mundial_2026.xlsx   ← 104 partidos del Mundial 2026 listos para importar
-├── scrape_mundial.py   ← Script Python que genera el Excel (hardcodeado, wiki bloqueada en Walmart)
-└── CONTEXTO.md         ← Este archivo ← LEE ESTO PRIMERO
-```
-
----
-
-## 🗂️ Fixture — Cómo funcionan los grupos
-
-Los partidos se agrupan por `m.stage` usando `normStage()`:
-
+### Firebase Config
 ```js
-const STAGE_ORDER = [
-  'Grupo A'...'Grupo L',
-  'Ronda de 32','Octavos','Cuartos de Final','Semifinal','Tercer Puesto','Final'
-];
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyBaYaTnX5M9U-0n_Igj6Us5ks4x8kKv-E0",
+  authDomain:        "polla-dekadentes.firebaseapp.com",
+  databaseURL:       "https://polla-dekadentes-default-rtdb.firebaseio.com",
+  projectId:         "polla-dekadentes",
+  storageBucket:     "polla-dekadentes.firebasestorage.app",
+  messagingSenderId: "649846580120",
+  appId:             "1:649846580120:web:85196725aa315749d881ed"
+};
 ```
 
-El stage en Firebase viene como `"Grupo A · Estadio Azteca"` (fase + sede).
-`normStage()` extrae solo `"Grupo A"` para agrupar correctamente.
+---
+
+## 🗂️ Estructura de datos en Firebase
+
+```
+pf/
+├── users/{id}
+│   ├── id, code, name, passHash (SHA-256)
+│   ├── rawPass (texto plano, para que admin vea contraseñas)
+│   └── isAdmin (boolean)
+│
+├── matches/{id}
+│   ├── id, home, away, datetime (ISO 8601 UTC)
+│   ├── tournament ("Mundial 2026", "Copa Libertadores 2025")
+│   ├── stage ("Grupo A", "Octavos", "Final")
+│   ├── realHome, realAway (null = no jugado, number = resultado)
+│   └── venue (opcional, sede)
+│
+├── preds/{userId}__{matchId}
+│   ├── userId, matchId
+│   └── predHome, predAway
+│
+├── podio/{userId}
+│   ├── userId, champion, runner, scorer
+│   └── (predicción de campeón/subcampeón/goleador)
+│
+├── settings/
+│   ├── regLocked (boolean - inscripciones cerradas)
+│   └── regApproval (boolean - modo aprobación)
+│
+└── pending/{code}
+    └── name, code, passHash, rawPass (cola de aprobación)
+```
+
+---
+
+## 📱 Pestañas de la App (navegación)
+
+### Bottom Nav (visible para todos)
+| Tab | Icono | Descripción |
+|---|---|---|
+| **Home** | 🏠 | Saludo, mini stats con KPIs y gráfico de evolución, grid de accesos rápidos, próximos partidos |
+| **Fixture** | ⚽ | Partidos agrupados por fase en `<details>`, predicciones, resultados |
+| **Ranking** | 🏆 | Tabla de posiciones con puntos, exactos, aciertos |
+| **Stats** | 📊 | Resumen global, % acierto por jugador, goles por equipo, distribución de apuestas |
+
+### Header Nav (iconos arriba a la derecha)
+| Tab | Icono | Descripción |
+|---|---|---|
+| **Podio** | 🏅 | Predicción de campeón, subcampeón y goleador (se cierra al comenzar el torneo) |
+| **Reglas** | 📋 | Explicación del sistema de puntos |
+| **Admin** | 🛡️ | Solo admin: gestión de partidos, importar Excel |
+| **Ajustes** | ⚙️ | Perfil, formato pantalla, gestión usuarios (admin), actividad admin |
+
+---
+
+## 🏟️ Fixture — Comportamiento detallado
+
+### Estados de un partido (`getStatus()`)
+| Estado | Condición | Visual |
+|---|---|---|
+| `open` | Aún no empieza | Badge verde "● Abierto", inputs habilitados |
+| `locked` | Ya empezó pero sin resultado | Badge gris "🔒 Cerrado", inputs bloqueados |
+| `live` | Empezó hace menos de 105 min | Badge rojo "🔴 En vivo", animación blink |
+| `done` | Tiene `realHome` y `realAway` | Badge "✓ Fin", muestra puntos |
+
+### Agrupación por fase
+- `normStage()` extrae la fase del string (ej: `"Grupo A · Estadio Azteca"` → `"Grupo A"`)
+- Orden: Grupo A→L, Ronda de 32, Octavos, Cuartos, Semifinal, Tercer Puesto, Final
+- Los `<details>` **preservan su estado abierto/cerrado** al re-renderizar (`data-stage`)
+
+### Multi-torneo
+- Pills de torneos arriba del fixture (ej: "Mundial 2026" | "Libertadores 2025")
+- Variable `selectedTournament` filtra los partidos
+
+### Distribución de apuestas (partidos cerrados)
+- Barra compacta sobre el resultado: `3 (38%) | 2 emp (25%) | 3 (38%)`
+- Solo aparece cuando el partido está cerrado/vivo/finalizado
+
+### Panel de Predicciones (solo admin)
+- Cada partido muestra `📋 3/5 (60%)` — participación
+- Botón **"🔍 Predicciones ▼"** expande tabla con:
+  - Todos los jugadores, su predicción, resultado real, puntos
+  - Inputs editables para que el admin corrija predicciones
+  - Se registra en el log de actividad qué admin abrió qué partido
+- Set `_openPredPanels` (in-memory) — se cierra al recargar
+
+### Vista del jugador (no admin)
+- Inputs para poner marcador en partidos abiertos
+- Se guarda automáticamente con `onchange`
+- Partidos cerrados muestran candado con la predicción en opacidad baja
+- Partidos finalizados muestran los puntos ganados (🥇 exacto, ✅ acierto, ❌ fallo)
+
+---
+
+## 🏆 Ranking
+
+- Tabla ordenada por puntos (desc), exactos (desc), aciertos (desc)
+- Columnas: #, Nombre, PTS, Exactos, OK, Fail, Partidos jugados
+- El líder tiene corona dorada 👑
+- Badge de posición con colores (🥇🥈🥉)
+- Excluye admins
+
+---
+
+## 📊 Stats
+
+- **KPIs globales:** Total partidos, finalizados, predicciones, exactos
+- **% Acierto por jugador:** Tabla con nombre, partidos, aciertos, fallos, porcentaje
+- **Goles por equipo:** Tabla con PJ, G, E, P, GF, GC, DG
+- **Distribución de apuestas:** Por partido cerrado, cuántos apostaron local/empate/visita
+
+---
+
+## 🏅 Podio
+
+- Cada jugador predice: **Campeón**, **Subcampeón**, **Goleador**
+- Se bloquea automáticamente cuando el primer partido del torneo empieza (`isPodioLocked()`)
+- Tabla con las predicciones de todos los jugadores (visible después del bloqueo)
+- En Stats también aparece la tabla de predicciones de podio
+
+---
+
+## 🛡️ Admin — Gestión
+
+- **Partidos existentes:** Cards con edición (nombre, fecha, sede), botón eliminar, inputs de resultado
+- **Agregar partido manual:** Formulario con local, visita, torneo, fase, fecha/hora
+- **Importar Excel:** Sube `.xlsx` con columnas: `local`, `visita`, `torneo`, `fase`, `fecha_hora_chile`
+- **Borrar todos los partidos:** Botón destructivo con doble confirmación
+
+---
+
+## ⚙️ Ajustes
+
+### Para todos
+- **Editar perfil:** Cambiar nombre y contraseña
+- **Modo PC:** Diseño más ancho para desktop
+- **Mostrar usuario:** Toggle para mostrar/ocultar código en header
+
+### Solo admin
+- **🗂️ Actividad Admin:** Log de qué admin abrió predicciones de qué partido, quién editó qué. Máximo 200 registros. Formato: `@tomasadmin Abrió predicciones de Boca vs Barcelona a las 18:55`
+- **🔒 Cerrar inscripciones:** Bloquea nuevos registros
+- **✅ Modo aprobación:** Nuevos usuarios van a cola de aprobación
+- **👥 Gestión de usuarios:** Tabla con nombre, código, contraseña (oculta con reveal), botón eliminar
 
 ---
 
 ## 📥 Importar partidos desde Excel
 
-El Excel `mundial_2026.xlsx` tiene estas columnas:
+### Formato del Excel
+| Columna | Descripción | Ejemplo |
+|---|---|---|
+| `local` | Equipo local | México |
+| `visita` | Equipo visita | Ecuador |
+| `torneo` | Nombre del torneo | Mundial 2026 |
+| `fase` | Fase o grupo | Grupo A |
+| `fecha_hora_chile` | Fecha/hora Santiago (Chile) | 2026-06-11T18:00 |
 
-| Columna | Descripción |
+### Excels actuales en el repo
+- `mundial_2026.xlsx` — 104 partidos del Mundial 2026
+- `mundial_2026_v2.xlsx` — Versión actualizada
+- `libertadores_2026.xlsx` — Partidos Copa Libertadores 2025
+
+### Comportamiento al importar
+- Partidos con equipo "Por definir" se **omiten** automáticamente
+- Se genera un `id` único con timestamp + nombres
+- Detecta y avisa partidos duplicados
+- La fecha se convierte de hora Chile (UTC-4) a UTC internamente
+
+---
+
+## 🔐 Autenticación
+
+- **Login:** Código único (ej: `tomas22`) + contraseña
+- **Registro:** Nombre + código + contraseña
+- **Hash:** SHA-256 con Web Crypto API (client-side)
+- **Sesión:** `localStorage` (persiste entre tabs y recargas)
+- **Auto-login:** Al abrir, intenta restaurar sesión guardada
+- **rawPass:** Se guarda en texto plano en Firebase para que admin pueda ver contraseñas olvidadas
+
+---
+
+## 🎨 Diseño Visual
+
+### Paleta de colores
+| Uso | Color | Hex |
+|---|---|---|
+| Background principal | Slate 900 | `#0f172a` |
+| Cards / elementos | Slate 800 | `#1e293b` |
+| Texto principal | Slate 100 | `#f1f5f9` |
+| Texto secundario | Slate 500 | `#64748b` |
+| Bordes | Slate 700 | `#334155` |
+| Acento dorado | Amber | `#facc15` |
+| Éxito/acierto | Green | `#4ade80` |
+| Error/fallo | Red | `#f87171` |
+| Admin/editar | Purple | `#7c3aed` / `#c084fc` |
+| Links/info | Blue | `#60a5fa` |
+
+### Layout
+- **Mobile-first** con app shell (header fijo + scroll central + bottom nav fija)
+- **Safe-area** para iOS (notch, home indicator)
+- **Modo PC** opcional (max-width 700px, centrado)
+- Cards con `border-radius: 12px`, `background: #1e293b`
+- Font: `-apple-system, 'Segoe UI', sans-serif`
+
+### Componentes recurrentes
+- `<details>` con `class="group-summary"` para acordeones
+- `.card-match` para tarjetas de partido
+- `.score-input` para inputs de marcador (60×60px, centered, bold)
+- `.badge-open/lock/live/done` para estados
+- `.toggle` para switches on/off
+- Toast notifications (arriba, con colores por tipo)
+
+---
+
+## 📁 Archivos del Proyecto
+
+```
+polla-futbolera/
+├── index.html              ← App completa (~2300 líneas, todo en uno)
+├── CONTEXTO.md             ← Este archivo
+├── mundial_2026.xlsx       ← Partidos del Mundial
+├── mundial_2026_v2.xlsx    ← Versión actualizada
+├── libertadores_2026.xlsx  ← Partidos Libertadores
+├── gen_libertadores.py     ← Script para generar Excel de Libertadores
+├── scrape_mundial.py       ← Script scraper partidos Mundial
+├── .gitignore              ← Ignora ~$* (temp Excel), __pycache__
+└── deploy/                 ← Carpeta sincronizada con GitHub Pages
+    └── (mismos archivos)
+```
+
+---
+
+## ⚙️ Funciones JS Clave
+
+| Función | Descripción |
 |---|---|
-| `local` | Equipo local |
-| `visita` | Equipo visita |
-| `torneo` | "Mundial 2026" |
-| `fase` | Grupo A … Final |
-| `sede` | Estadio y ciudad |
-| `fecha_hora_chile` | Hora Santiago UTC-4 (YYYY-MM-DDTHH:MM) ← **la app usa esta** |
-| `fecha_hora_utc` | Hora UTC (referencia) |
-
-**Cómo importar:**
-1. Entrar como `admin` → pestaña **⚙️ Admin** → sub-pestaña **Gestión**
-2. Usar el bloque verde **📥 Importar Partidos desde Excel**
-3. Seleccionar `mundial_2026.xlsx`
-4. Esperar ~30s — sube solo los partidos con equipos definidos (omite "Por definir")
-
-> 📝 Los partidos eliminatorios (Octavos en adelante) vienen como "Por definir"
-> y se omiten al importar. Se cargan manualmente cuando se sepa quién juega.
-
----
-
-## 🔍 Panel "Resultados Participantes" (admin)
-
-- Admin → sub-pestaña **🔍 Participantes**
-- Dropdown para elegir jugador
-- Muestra todos sus partidos cerrados/en vivo con predicción tapada
-- Click en **👁️ Ver predicción** → revela el marcador predicho
-- Cada revelación queda registrada en `localStorage` bajo la clave `polla_admin_activity`
-- Las revelaciones duran solo la sesión (sessionStorage) — al recargar se tapan de nuevo
+| `getStatus(m)` | Retorna `open/locked/live/done` según hora y resultado |
+| `calcPoints(pred, match, allPreds)` | Calcula puntos: 30÷N acertadores, exacto ×2 |
+| `renderMatches()` | Renderiza fixture completo con grupos, preserva estado abierto |
+| `renderRanking()` | Tabla de posiciones ordenada |
+| `renderStats()` | Estadísticas globales |
+| `renderAdmin()` | Panel admin con gestión de partidos |
+| `renderAjustes()` | Ajustes + gestión usuarios + actividad |
+| `renderUpcoming()` | Próximos partidos en Home |
+| `renderHomeStats()` | KPIs + gráfico evolución en Home |
+| `renderPodio()` | Predicción de podio |
+| `seedAdmin()` | Crea 3 admins si no existen, elimina admin legacy |
+| `importarExcel(input)` | Lee .xlsx y sube partidos a Firebase |
+| `togglePredPanel(matchId)` | Abre/cierra panel predicciones en fixture (admin) |
+| `saveFixturePred(userId, matchId)` | Admin edita predicción de un jugador |
+| `logActivity(adminCode, action, detail)` | Registra actividad admin en localStorage |
+| `normStage(raw)` | Normaliza fase para agrupar partidos |
+| `fmtDate(iso)` | Formatea fecha a hora Chile |
+| `timeUntil(iso)` | "2h 30m" o "3d" hasta el partido |
 
 ---
 
-## 🗂️ Actividad Admin (Ajustes)
-
-- Solo visible para el admin en **⚙️ Ajustes**
-- Muestra: timestamp · jugador espiado · partido · predicción revelada
-- Máximo 200 registros, FIFO
-- Botón **Limpiar** para resetear
-
----
-
-## 📊 Distribución de apuestas (Estadísticas)
-
-- Sección al final de **📊 Stats**
-- Solo muestra partidos `done` o `live`
-- Orden: finalizados primero por fecha, en vivo al final con punto rojo 🔴
-- Formato compacto: `4 México · 10 Empate · 6 Ecuador`
-- Partidos futuros no aparecen
-
----
-
-## ⚠️ Limitaciones actuales
+## ⚠️ Limitaciones y Decisiones
 
 - **Contraseñas SHA-256 en cliente** — OK para grupo cerrado de confianza
-- **Reglas Firebase abiertas** — todos pueden leer/escribir; OK para amigos
-- **Cierre evaluado en cliente** — con reloj del browser; mejorar con Cloud Functions si se necesita
-- **Colaboración Netlify** — el plan gratis no permite múltiples cuentas en el mismo sitio; alternativa recomendada = GitHub + Netlify auto-deploy
-
----
-
-## 💡 Decisiones de diseño ya tomadas (respetar)
-
-- **Código único de usuario** (ej: `tomas22`) como identificador principal
-- **Admin tiene credenciales fijas** (`admin` / `admin123`) — cambiar antes de producción real
-- **Pozo de 30 pts** por partido, dividido entre acertadores, exacto ×2
-- **Sin puntos negativos** — fallar da 0
-- **Cierre en el minuto exacto de inicio** del partido
-- **Partido dura 105 min** (90 + 15 descuento) para el badge "en vivo"
-- **El admin no juega** (`isAdmin: true` excluido del ranking y stats)
-- **Modo PC** — override CSS para pantallas grandes
+- **Reglas Firebase abiertas** — todos pueden leer/escribir; aceptable para amigos
+- **Cierre evaluado en cliente** — con reloj del browser
+- **Zona horaria Chile** — UTC-4 (horario invierno junio/julio)
+- **Admin no juega** — `isAdmin: true` excluido de ranking/stats
 - **Sin confirmación de email** — grupo cerrado, código es suficiente
-- **Zona horaria Chile** — UTC-4 en junio/julio (CLT, horario invierno)
+- **Partido dura 105 min** (90 + 15) para badge "en vivo"
+- **Max ~100 conexiones simultáneas** (límite Firebase Spark)
+- **Log de actividad en localStorage** — solo persiste en el browser del admin que lo generó
 
 ---
 
-## 🔄 Plan de migración a FastAPI (cuando sea el momento)
-
-### Stack sugerido
-
-```
-Backend : Python 3.12 + FastAPI
-Template: Jinja2 (o HTMX para actualizaciones parciales)
-Estilos : Tailwind CSS (ya lo usa el prototipo vía CDN)
-BD      : SQLite (para empezar) → PostgreSQL (si escala)
-Auth    : sessions simples con JWT
-Deploy  : Railway / Render / VPS con dominio propio
-```
-
-### Modelo de datos
-
-```sql
-CREATE TABLE users (
-    id        TEXT PRIMARY KEY,
-    code      TEXT UNIQUE NOT NULL,
-    name      TEXT NOT NULL,
-    pass_hash TEXT NOT NULL,  -- bcrypt, NO SHA-256
-    is_admin  INTEGER DEFAULT 0
-);
-
-CREATE TABLE matches (
-    id         TEXT PRIMARY KEY,
-    home       TEXT NOT NULL,
-    away       TEXT NOT NULL,
-    datetime   TEXT NOT NULL,  -- ISO 8601, UTC
-    tournament TEXT,
-    stage      TEXT,
-    real_home  INTEGER,        -- NULL = no jugado aún
-    real_away  INTEGER
-);
-
-CREATE TABLE predictions (
-    user_id   TEXT REFERENCES users(id)   ON DELETE CASCADE,
-    match_id  TEXT REFERENCES matches(id) ON DELETE CASCADE,
-    pred_home INTEGER NOT NULL,
-    pred_away INTEGER NOT NULL,
-    PRIMARY KEY (user_id, match_id)
-);
-```
-
-### Pasos de migración (en orden)
-
-1. `uv venv` + estructura de carpetas
-2. Modelos SQLite (igual al schema de arriba)
-3. Auth endpoint — copiar validaciones del JS actual
-4. Endpoints de matches y predictions — copiar lógica de `calcPoints`, `getStatus`
-5. Convertir `index.html` a Jinja2 — reemplazar `DB.*` por llamadas al server
-6. Deploy en Railway/Render con dominio propio
-
----
-
-## ❓ Preguntas pendientes
-
-- [ ] ¿Notificaciones? (ej: WhatsApp bot cuando cierra un partido)
-- [ ] ¿Múltiples torneos o siempre uno a la vez?
-- [ ] ¿Historial de temporadas anteriores?
-- [ ] ¿Se permite al admin editar partidos ya iniciados? (ej: posposición)
-- [ ] ¿Configurar GitHub + Netlify auto-deploy para colaborar sin drag & drop?
-- [ ] Cambiar contraseña de admin antes de abrir al grupo
-
----
-
-*Documentado por Terminator 🐶 — el perro código de Tomas*
+*Documentado por Terminator 🐶 — Abril 2025*
