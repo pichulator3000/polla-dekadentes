@@ -344,12 +344,14 @@
     <!-- RANKING -->
     <div id="tabRanking" style="display:none;padding-top:4px">
       <h2 style="margin:0 0 12px;font-size:17px;font-weight:900">🏆 Ranking</h2>
+      <div id="rankingPills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
       <div id="rankingTable"></div>
     </div>
 
     <!-- STATS -->
     <div id="tabStats" style="display:none;padding-top:4px">
       <h2 style="margin:0 0 12px;font-size:17px;font-weight:900">📊 Estadísticas</h2>
+      <div id="statsPills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
       <div id="statsContent"></div>
     </div>
 
@@ -1079,7 +1081,31 @@ const STAGE_ORDER = [
   'Grupo G','Grupo H','Grupo I','Grupo J','Grupo K','Grupo L',
   'Ronda de 32','Octavos','Cuartos de Final','Semifinal','Tercer Puesto','Final'
 ];
-let selectedTournament = null; // null = first tournament found
+let selectedTournament = null;
+let selectedRankTournament = '__all__';
+let selectedStatsTournament = '__all__';
+
+function setRankTournament(t) { selectedRankTournament = t; renderRanking(); }
+function setStatsTournament(t) { selectedStatsTournament = t; renderStats(); }
+
+function buildTournamentPills(containerId, selected, setter) {
+  const tournaments = [...new Set(CACHE.matches.map(m => m.tournament || 'Sin Torneo'))];
+  if (tournaments.length <= 1) { document.getElementById(containerId).style.display = 'none'; return; }
+  const pills = [`<button onclick="${setter}('__all__')"
+    style="padding:6px 14px;font-size:12px;font-weight:700;border-radius:20px;
+    background:${selected==='__all__'?'#0053e2':'#1e293b'};color:${selected==='__all__'?'#fff':'#94a3b8'};
+    border:1px solid ${selected==='__all__'?'#0053e2':'#334155'};cursor:pointer">Todos</button>`];
+  tournaments.forEach(t => {
+    const active = t === selected;
+    pills.push(`<button onclick="${setter}('${t.replace(/'/g,"\\\'")}')" 
+      style="padding:6px 14px;font-size:12px;font-weight:700;border-radius:20px;
+      background:${active?'#0053e2':'#1e293b'};color:${active?'#fff':'#94a3b8'};
+      border:1px solid ${active?'#0053e2':'#334155'};cursor:pointer">${t}</button>`);
+  });
+  const el = document.getElementById(containerId);
+  el.innerHTML = pills.join('');
+  el.style.display = 'flex';
+}
 
 function normStage(raw) {
   if (!raw) return 'Otros';
@@ -1379,8 +1405,11 @@ async function savePred(matchId) {
 
 // ═══ RANKING ═══
 function renderRanking() {
+  buildTournamentPills('rankingPills', selectedRankTournament, 'setRankTournament');
   const users   = CACHE.users.filter(u => !u.isAdmin);
-  const matches = CACHE.matches;
+  const matches = selectedRankTournament === '__all__'
+    ? CACHE.matches
+    : CACHE.matches.filter(m => (m.tournament || 'Sin Torneo') === selectedRankTournament);
   const preds   = CACHE.preds;
 
   const scores = users.map(u => {
@@ -1435,10 +1464,15 @@ function renderRanking() {
 
 // ═══ STATS ═══
 function renderStats() {
+  buildTournamentPills('statsPills', selectedStatsTournament, 'setStatsTournament');
   const users  = CACHE.users.filter(u => !u.isAdmin);
-  const all    = CACHE.matches;
+  const allMatches = selectedStatsTournament === '__all__'
+    ? CACHE.matches
+    : CACHE.matches.filter(m => (m.tournament || 'Sin Torneo') === selectedStatsTournament);
+  const all    = allMatches;
   const done   = all.filter(m => m.realHome != null);
-  const preds  = CACHE.preds;
+  const allPreds = CACHE.preds;
+  const preds  = allPreds.filter(p => allMatches.find(m => m.id === p.matchId));
 
   const totalGoals = done.reduce((s,m) => s+m.realHome+m.realAway, 0);
   const avgGoals   = done.length ? (totalGoals/done.length).toFixed(1) : '—';
@@ -1537,7 +1571,7 @@ function renderStats() {
   html+=`</tbody></table></div>`;
 
   // ══ DISTRIBUCIÓN DE APUESTAS POR PARTIDO ══
-  const matchesDist = [...CACHE.matches]
+  const matchesDist = [...allMatches]
     .filter(m => { const s=getStatus(m); return s==='done'||s==='live'; })
     .sort((a,b)=>{
       const sa=getStatus(a),sb=getStatus(b);
