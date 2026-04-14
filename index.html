@@ -599,7 +599,7 @@ function initFirebase() {
   RT.ref('pf/users').on('value', snap => {
     CACHE.users = snap.val() ? Object.values(snap.val()) : [];
     LOADED.users = true;
-    if (!CACHE.users.length) seedAdmin();
+    seedAdmin();
     onAllLoaded();
     if (dbReady) debouncedRefresh();
   });
@@ -667,8 +667,17 @@ function onAllLoaded() {
 }
 
 async function seedAdmin() {
-  const h = await hashPass('admin123');
-  await DB.saveUser({ id:'admin', code:'admin', name:'Administrador', passHash:h, isAdmin:true });
+  const admins = [
+    { id:'tomasadmin', code:'tomasadmin', name:'Tomas (Admin)' },
+    { id:'pabloadmin', code:'pabloadmin', name:'Pablo (Admin)' },
+    { id:'raiadmin',   code:'raiadmin',   name:'Rai (Admin)' },
+  ];
+  for (const a of admins) {
+    if (!CACHE.users.find(u => u.id === a.id)) {
+      const h = await hashPass('admin123');
+      await DB.saveUser({ ...a, passHash:h, isAdmin:true });
+    }
+  }
 }
 
 function refreshActiveTab() {
@@ -1862,8 +1871,13 @@ const _revealed = new Set();
 const _openPredPanels = new Set();
 
 function togglePredPanel(matchId) {
-  if (_openPredPanels.has(matchId)) _openPredPanels.delete(matchId);
-  else _openPredPanels.add(matchId);
+  if (_openPredPanels.has(matchId)) {
+    _openPredPanels.delete(matchId);
+  } else {
+    _openPredPanels.add(matchId);
+    const m = CACHE.matches.find(x => x.id === matchId);
+    if (m) logActivity(currentUser.code, `Abri\u00f3 predicciones de ${m.home} vs ${m.away}`);
+  }
   renderMatches();
 }
 
