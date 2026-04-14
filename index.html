@@ -1289,11 +1289,11 @@ function renderMatches() {
     } else {
       scoreHtml = `<div style="display:flex;align-items:center;gap:8px;justify-content:center;margin:8px 0">
            <input type="number" inputmode="numeric" min="0" max="20" id="ph_${m.id}"
-             class="score-input" value="${pred?.predHome??''}" placeholder="0"
+             class="score-input" value="${pred?.predHome??''}" placeholder="-"
              oninput="autoJump(this,'pa_${m.id}')" onchange="savePred('${m.id}')"/>
            <span style="font-size:18px;font-weight:900;color:#475569">-</span>
            <input type="number" inputmode="numeric" min="0" max="20" id="pa_${m.id}"
-             class="score-input" value="${pred?.predAway??''}" placeholder="0"
+             class="score-input" value="${pred?.predAway??''}" placeholder="-"
              oninput="autoJump(this,null)" onchange="savePred('${m.id}')"/>
          </div>`;
     }
