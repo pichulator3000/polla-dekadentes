@@ -443,6 +443,12 @@
         </div>
       </div>
 
+      <!-- Predicciones de Participantes (solo admin) -->
+      <div id="predsCard" class="card" style="padding:16px;margin-bottom:12px;display:none">
+        <h3 style="margin:0 0 12px;font-size:14px;font-weight:800;color:#c084fc">🔍 Predicciones de Participantes</h3>
+        <div id="predsViewer"></div>
+      </div>
+
       <!-- Actividad Admin (solo admin) -->
       <div id="actividadCard" class="card" style="padding:16px;margin-bottom:12px;display:none">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -2232,6 +2238,8 @@ function renderAjustes() {
   }
   actCard.style.display = 'block';
   document.getElementById('credsCard').style.display = 'block';
+  document.getElementById('predsCard').style.display = 'block';
+  renderPredsViewer();
 
   // ══ Controls: registration lock + approval mode ══
   const s = CACHE.settings;
@@ -2336,6 +2344,134 @@ function revealCred(revKey, userName) {
   _revealed.add(revKey);
   logActivity(currentUser.code, `Ha visto contrasena de ${userName}`);
   renderAjustes();
+}
+
+function renderPredsViewer() {
+  const users   = CACHE.users.filter(u => !u.isAdmin);
+  const matches = [...CACHE.matches]
+    .filter(m => { const s = getStatus(m); return s==='done' || s==='live' || s==='locked'; })
+    .sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
+  const preds   = CACHE.preds;
+  const el      = document.getElementById('predsViewer');
+
+  if (!users.length || !matches.length) {
+    el.innerHTML = `<div style="color:#475569;text-align:center;padding:12px;font-size:12px">Sin datos disponibles</div>`;
+    return;
+  }
+
+  const selVal = document.getElementById('ajPredSel')?.value || '';
+
+  // Prediction counts per user
+  const counts = {};
+  users.forEach(u => {
+    counts[u.id] = preds.filter(p => p.userId===u.id && matches.find(m=>m.id===p.matchId)).length;
+  });
+
+  let html = `
+    <select id="ajPredSel" onchange="renderPredsViewer()"
+      style="width:100%;background:#0f172a;border:1px solid #334155;border-radius:8px;
+             padding:10px 12px;color:#f1f5f9;font-size:14px;font-weight:700;margin-bottom:10px">
+      <option value="">Selecciona un jugador...</option>
+      ${users.map(u => `<option value="${u.id}" ${u.id===selVal?'selected':''}>${u.name} (@${u.code}) \u2014 ${counts[u.id]}/${matches.length}</option>`).join('')}
+    </select>`;
+
+  if (selVal) {
+    const user = users.find(u => u.id === selVal);
+    if (!user) { el.innerHTML = html; return; }
+
+    html += `<div style="display:flex;flex-direction:column;gap:4px">`;
+
+    matches.forEach(m => {
+      const pred = preds.find(p => p.userId===user.id && p.matchId===m.id);
+      const isLive = getStatus(m) === 'live';
+      const hasDone = m.realHome != null;
+      const revKey = `ajpred_${user.id}_${m.id}`;
+      const revealed = _revealed.has(revKey);
+
+      const statusBadge = isLive
+        ? `<span style="color:#f87171;font-size:9px;font-weight:800">\u25cf VIVO</span>`
+        : hasDone
+        ? `<span style="color:#4ade80;font-size:9px;font-weight:800">\u2713 FIN</span>`
+        : `<span style="color:#64748b;font-size:9px;font-weight:800">\ud83d\udd12</span>`;
+
+      if (!pred) {
+        // No prediction
+        html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;
+                   background:#0f172a;border:1px solid #1e293b;border-radius:8px;opacity:0.5">
+          <div style="display:flex;align-items:center;gap:8px">
+            ${statusBadge}
+            <span style="font-size:12px;color:#64748b">${m.home} vs ${m.away}</span>
+          </div>
+          <span style="color:#334155;font-size:10px;font-style:italic">Sin pred</span>
+        </div>`;
+      } else if (!revealed) {
+        // Hidden — click to reveal
+        html += `<div onclick="revealAjPred('${user.id}','${user.name}','${m.id}','${m.home}','${m.away}')"
+          style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;
+                 background:#0f172a;border:1px solid ${isLive?'#dc2626':'#1e293b'};border-radius:8px;cursor:pointer">
+          <div style="display:flex;align-items:center;gap:8px">
+            ${statusBadge}
+            <span style="font-weight:700;font-size:12px;color:#f1f5f9">${m.home} <span style="color:#475569">vs</span> ${m.away}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="background:#1e293b;color:#94a3b8;font-size:11px;padding:3px 10px;border-radius:4px;border:1px dashed #334155">\ud83d\udc41\ufe0f Ver</span>
+          </div>
+        </div>`;
+      } else {
+        // Revealed — show prediction + edit
+        const inputH = `ajp_h_${user.id}_${m.id}`, inputA = `ajp_a_${user.id}_${m.id}`;
+        const resultText = hasDone
+          ? `<span style="font-size:10px;color:#64748b">Real: <b style="color:#f1f5f9">${m.realHome}-${m.realAway}</b></span>`
+          : '';
+
+        html += `<div style="background:#0f172a;border:1px solid ${isLive?'#dc2626':'#7c3aed'};border-radius:8px;padding:10px 12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="display:flex;align-items:center;gap:8px">
+              ${statusBadge}
+              <span style="font-weight:800;font-size:12px;color:#f1f5f9">${m.home} <span style="color:#475569">vs</span> ${m.away}</span>
+            </div>
+            ${resultText}
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input type="number" inputmode="numeric" min="0" max="20" id="${inputH}"
+              class="score-input" style="width:40px;height:40px;font-size:15px;border-color:#c084fc"
+              value="${pred.predHome}" placeholder="L"/>
+            <span style="font-weight:900;color:#475569">-</span>
+            <input type="number" inputmode="numeric" min="0" max="20" id="${inputA}"
+              class="score-input" style="width:40px;height:40px;font-size:15px;border-color:#c084fc"
+              value="${pred.predAway}" placeholder="V"/>
+            <button onclick="saveAjPredEdit('${user.id}','${m.id}')" class="btn-sm"
+              style="font-size:10px;padding:6px 10px;background:#7c3aed">\u270f\ufe0f</button>
+          </div>
+        </div>`;
+      }
+    });
+
+    html += `</div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function revealAjPred(userId, userName, matchId, home, away) {
+  const revKey = `ajpred_${userId}_${matchId}`;
+  const pred = CACHE.preds.find(p => p.userId===userId && p.matchId===matchId);
+  if (!pred) return;
+  _revealed.add(revKey);
+  logActivity(currentUser.code, `Ha visto prediccion ${home} vs ${away}`, `Jugador: ${userName} - Pred: ${pred.predHome}-${pred.predAway}`);
+  renderPredsViewer();
+}
+
+async function saveAjPredEdit(userId, matchId) {
+  const h = parseInt(document.getElementById(`ajp_h_${userId}_${matchId}`)?.value);
+  const a = parseInt(document.getElementById(`ajp_a_${userId}_${matchId}`)?.value);
+  if (isNaN(h) || isNaN(a) || h<0 || a<0 || h>20 || a>20) return toast('Resultado inv\u00e1lido', 'err');
+  await DB.savePred({ userId, matchId, predHome: h, predAway: a });
+  const u = CACHE.users.find(x => x.id===userId);
+  const m = CACHE.matches.find(x => x.id===matchId);
+  logActivity(currentUser.code, `Ha editado prediccion ${m?.home||'?'} vs ${m?.away||'?'}`, `Jugador: ${u?.name||'?'} - Nueva pred: ${h}-${a}`);
+  toast('\u2713 Predicci\u00f3n editada');
+  renderPredsViewer();
 }
 
 async function toggleRegSetting(key) {
