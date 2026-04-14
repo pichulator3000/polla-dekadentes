@@ -112,7 +112,7 @@
       -webkit-appearance: none;
       appearance: none;
     }
-    .auth-input:focus { border-color: #facc15; outline: none; }
+    .auth-input:focus { border-color: #60a5fa; outline: none; }
 
     /* ── Misc ── */
     .rank-1{color:#facc15} .rank-2{color:#94a3b8} .rank-3{color:#cd7c2f}
@@ -230,7 +230,7 @@
     <!-- Toggle login / register -->
     <div style="display:flex;background:#1e293b;border-radius:12px;padding:4px;margin-bottom:16px">
       <button onclick="showAuth('login')" id="btnLogin"
-        style="flex:1;padding:10px;border-radius:9px;border:none;cursor:pointer;font-weight:700;font-size:14px;background:#facc15;color:#0f172a;transition:all .2s">
+        style="flex:1;padding:10px;border-radius:9px;border:none;cursor:pointer;font-weight:700;font-size:14px;background:#60a5fa;color:#0f172a;transition:all .2s">
         Iniciar Sesión
       </button>
       <button onclick="showAuth('register')" id="btnRegister"
@@ -251,7 +251,7 @@
         <input id="loginPass" class="auth-input" type="password" placeholder="••••••" autocomplete="current-password" name="password"
           style="margin-top:6px"/>
       </div>
-      <button type="submit" class="btn-primary">Entrar ⚡</button>
+      <button type="submit" class="btn-primary" style="background:#60a5fa">Entrar ⚡</button>
     </form>
 
     <!-- Register -->
@@ -269,7 +269,7 @@
         <input id="regPass" class="auth-input" type="password" placeholder="mínimo 4 caracteres" autocomplete="new-password" name="password"
           style="margin-top:6px"/>
       </div>
-      <button type="submit" class="btn-primary">Crear Cuenta 🚀</button>
+      <button type="submit" class="btn-primary" style="background:#60a5fa">Crear Cuenta 🚀</button>
     </form>
 
   </div>
@@ -807,9 +807,9 @@ function showAuth(tab) {
   const isLogin = tab === 'login';
   document.getElementById('panelLogin').style.display    = isLogin ? 'block' : 'none';
   document.getElementById('panelRegister').style.display = isLogin ? 'none'  : 'block';
-  document.getElementById('btnLogin').style.background    = isLogin ? '#facc15' : 'transparent';
+  document.getElementById('btnLogin').style.background    = isLogin ? '#60a5fa' : 'transparent';
   document.getElementById('btnLogin').style.color         = isLogin ? '#0f172a' : '#64748b';
-  document.getElementById('btnRegister').style.background = isLogin ? 'transparent' : '#facc15';
+  document.getElementById('btnRegister').style.background = isLogin ? 'transparent' : '#60a5fa';
   document.getElementById('btnRegister').style.color      = isLogin ? '#64748b' : '#0f172a';
 }
 
