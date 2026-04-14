@@ -667,6 +667,10 @@ function onAllLoaded() {
 }
 
 async function seedAdmin() {
+  // Remove legacy admin account
+  if (CACHE.users.find(u => u.id === 'admin')) {
+    await RT.ref('pf/users/admin').remove();
+  }
   const admins = [
     { id:'tomasadmin', code:'tomasadmin', name:'Tomas (Admin)' },
     { id:'pabloadmin', code:'pabloadmin', name:'Pablo (Admin)' },
