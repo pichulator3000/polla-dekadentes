@@ -1818,14 +1818,13 @@ function buildAdminGestion() {
 // ══ SPY: Resultados de Participantes (solo admin) ══
 const ACTIVITY_KEY = 'polla_admin_activity';
 
-function logActivity(adminCode, userName, matchHome, matchAway, predH, predA) {
+function logActivity(adminCode, action, detail) {
   const log = JSON.parse(localStorage.getItem(ACTIVITY_KEY)||'[]');
   log.unshift({
-    ts:        new Date().toISOString(),
-    admin:     adminCode,
-    jugador:   userName,
-    partido:   `${matchHome} vs ${matchAway}`,
-    pred:      `${predH}-${predA}`
+    ts:     new Date().toISOString(),
+    admin:  adminCode,
+    action: action,
+    detail: detail || ''
   });
   if(log.length > 200) log.splice(200);
   localStorage.setItem(ACTIVITY_KEY, JSON.stringify(log));
@@ -1910,7 +1909,7 @@ function revealPred(userId, userName, matchId, home, away) {
   const pred = CACHE.preds.find(p=>p.userId===userId && p.matchId===matchId);
   if(!pred) return;
   localStorage.setItem(revealId,'1');
-  logActivity(currentUser.code, userName, home, away, pred.predHome, pred.predAway);
+  logActivity(currentUser.code, `Ha visto prediccion ${home} vs ${away}`, `Jugador: ${userName} - Pred: ${pred.predHome}-${pred.predAway}`);
   renderAdmin();
 }
 
@@ -2169,7 +2168,7 @@ function renderAjustes() {
     const pw = u.rawPass
       ? (revealed
         ? `<span style="color:#fbbf24;font-family:monospace;font-weight:700">${u.rawPass}</span>`
-        : `<button onclick="localStorage.setItem('${revKey}','1');renderAjustes()" style="background:none;border:1px dashed #334155;border-radius:4px;padding:2px 8px;color:#94a3b8;font-size:10px;cursor:pointer">👁️ Revelar</button>`)
+        : `<button onclick="revealCred('${revKey}','${u.name}')" style="background:none;border:1px dashed #334155;border-radius:4px;padding:2px 8px;color:#94a3b8;font-size:10px;cursor:pointer">👁️ Revelar</button>`)
       : '<span style="color:#334155;font-style:italic;font-size:10px">hasheada</span>';
     credsHtml += `<tr style="background:${bg}">
       <td style="padding:8px 10px;font-weight:700">${u.name}</td>
@@ -2192,11 +2191,15 @@ function renderAjustes() {
   }
   list.innerHTML = log.map(e => {
     const dt = new Date(e.ts);
-    const timeStr = dt.toLocaleDateString('es-CL')+' '+dt.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+    const timeStr = dt.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+    const dateStr = dt.toLocaleDateString('es-CL');
+    // Support old format (jugador/partido/pred) and new format (action/detail)
+    const actionText = e.action || `Ha visto prediccion ${e.partido} de ${e.jugador} (${e.pred})`;
+    const detailText = e.detail || '';
     return `<div style="background:#0f172a;border-radius:8px;padding:10px;border-left:3px solid #7c3aed">
-      <div style="font-size:11px;color:#64748b;margin-bottom:2px">${timeStr} · admin: <b style="color:#c084fc">${e.admin}</b></div>
-      <div style="font-size:13px;font-weight:700;color:#f1f5f9">${e.jugador}</div>
-      <div style="font-size:11px;color:#94a3b8;margin-top:2px">${e.partido} → <b style="color:#facc15">${e.pred}</b></div>
+      <div style="font-size:11px;color:#64748b;margin-bottom:4px">${dateStr}</div>
+      <div style="font-size:13px;font-weight:700;color:#f1f5f9">${actionText} <span style="color:#64748b">a las</span> <span style="color:#facc15">${timeStr}</span></div>
+      ${detailText ? `<div style="font-size:11px;color:#94a3b8;margin-top:2px">${detailText}</div>` : ''}
     </div>`;
   }).join('');
 }
@@ -2206,6 +2209,12 @@ function clearActivity() {
   localStorage.removeItem(ACTIVITY_KEY);
   renderAjustes();
   toast('Actividad limpiada');
+}
+
+function revealCred(revKey, userName) {
+  localStorage.setItem(revKey, '1');
+  logActivity(currentUser.code, `Ha visto contrasena de ${userName}`);
+  renderAjustes();
 }
 
 async function toggleRegSetting(key) {
