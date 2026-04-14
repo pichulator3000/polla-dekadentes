@@ -1118,20 +1118,27 @@ function renderMatches() {
     return ia - ib;
   });
 
+  // Preserve open state of group details
+  const prevOpen = new Set();
+  document.querySelectorAll('#matchList details[data-stage]').forEach(d => {
+    if (d.open) prevOpen.add(d.dataset.stage);
+  });
+
   let outerHtml = '';
 
   sortedStages.forEach(stage => {
     const sMatches = groups[stage];
     const hasLive  = sMatches.some(m => getStatus(m)==='live');
     const hasOpen  = sMatches.some(m => getStatus(m)==='open');
-    const openAttr = hasLive ? ' open' : '';  // collapsed by default, open only if live
+    const shouldOpen = prevOpen.has(stage) || hasLive;
+    const openAttr = shouldOpen ? ' open' : '';
     const badge = hasLive
       ? `<span style="background:#dc2626;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:6px;animation:blink 1.5s infinite">EN VIVO</span>`
       : hasOpen
       ? `<span style="background:#16a34a;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:6px">ABIERTO</span>`
       : `<span style="background:#334155;color:#64748b;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:6px">CERRADO</span>`;
 
-    outerHtml += `<details${openAttr} style="margin-bottom:8px">
+    outerHtml += `<details${openAttr} data-stage="${stage}" style="margin-bottom:8px">
       <summary class="group-summary">
         <span>${stage}${badge}</span>
         <span class="group-chevron">${sMatches.length} ▼</span>
