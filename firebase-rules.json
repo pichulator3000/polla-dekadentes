@@ -2,8 +2,8 @@
   "rules": {
     "pf": {
       "preds": {
+        ".read": true,
         "$key": {
-          ".read": true,
           ".write": "!data.exists() && root.child('pf/matches/' + newData.child('matchId').val() + '/closesAtMs').val() > now || data.exists() && root.child('pf/matches/' + data.child('matchId').val() + '/closesAtMs').val() > now"
         }
       },
