@@ -1616,7 +1616,8 @@ function renderStats() {
     });
     const pct=pj?Math.round((ex+ok)/pj*100):0;
     const contPct=contTotal?Math.round(contrarian/contTotal*100):0;
-    return{...u,pts,ex,ok,no,pj,pct,contPct,maxStreak};
+    const streakIsLive = streak > 0 && streak === maxStreak;
+    return{...u,pts,ex,ok,no,pj,pct,contPct,maxStreak,streakIsLive};
   }).sort((a,b)=>b.pts-a.pts);
 
   // Global contrarian & streak stats
@@ -1662,7 +1663,16 @@ function renderStats() {
       <td style="padding:8px 4px;text-align:center;color:#f87171">${s.no}</td>
       <td style="padding:8px 4px;text-align:center;color:#94a3b8">${s.pct}%</td>
       <td style="padding:8px 4px;text-align:center;color:${contColor};font-weight:700" title="% veces que apost\u00f3 por la minor\u00eda">${s.contPct}%</td>
-      <td style="padding:8px 4px;text-align:center;color:${s.maxStreak>=3?'#f87171':'#94a3b8'};font-weight:700">${s.maxStreak}\ud83d\udd25</td>
+      <td style="padding:4px 2px;text-align:center">
+        ${s.streakIsLive && s.maxStreak > 0
+          ? `<div class="glow-border glow-active" style="display:inline-block;border-radius:8px">
+              <div style="position:relative;z-index:1;background:#0f172a;border-radius:6px;margin:2px;padding:2px 6px">
+                <span style="color:#f87171;font-weight:900;font-size:12px">${s.maxStreak}\ud83d\udd25</span>
+              </div>
+            </div>`
+          : `<span style="color:${s.maxStreak>=3?'#f87171':'#94a3b8'};font-weight:700">${s.maxStreak}\ud83d\udd25</span>`
+        }
+      </td>
     </tr>`;
   });
   if(!ps.length) html+=`<tr><td colspan="8" style="text-align:center;padding:24px;color:#475569">Sin datos</td></tr>`;
