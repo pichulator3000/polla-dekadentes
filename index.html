@@ -2148,11 +2148,17 @@ function renderAjustes() {
     const bg = i % 2 === 0 ? '#1e293b' : '#182030';
     const revKey = 'cred_reveal_' + u.id;
     const revealed = _revealed.has(revKey);
-    const pw = u.rawPass
-      ? (revealed
+    let pw;
+    if (revealed) {
+      pw = u.rawPass
         ? `<span style="color:#fbbf24;font-family:monospace;font-weight:700">${u.rawPass}</span>`
-        : `<button onclick="revealCred('${revKey}','${u.name}')" style="background:none;border:1px dashed #334155;border-radius:4px;padding:2px 8px;color:#94a3b8;font-size:10px;cursor:pointer">👁️ Revelar</button>`)
-      : '<span style="color:#334155;font-style:italic;font-size:10px">hasheada</span>';
+        : `<span style="color:#f87171;font-size:10px">No disponible (hasheada)</span>`;
+    } else {
+      pw = `<button onclick="revealCred('${revKey}','${u.name}')" 
+        style="background:#0f172a;border:1px dashed #334155;border-radius:6px;padding:4px 12px;
+               color:#94a3b8;font-size:10px;cursor:pointer;font-weight:700">
+        \ud83d\udc41\ufe0f Ver contrase\u00f1a</button>`;
+    }
     credsHtml += `<tr style="background:${bg}">
       <td style="padding:8px 10px;font-weight:700">${u.name}</td>
       <td style="padding:8px 6px;color:#60a5fa;font-weight:700">@${u.code}</td>
