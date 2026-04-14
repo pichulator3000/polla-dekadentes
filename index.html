@@ -1898,6 +1898,7 @@ function buildAdminGestion() {
 
 // ══ SPY: Resultados de Participantes (solo admin) ══
 const ACTIVITY_KEY = 'polla_admin_activity';
+const _revealed = new Set(); // in-memory only, clears on reload
 
 function logActivity(adminCode, action, detail) {
   const log = JSON.parse(localStorage.getItem(ACTIVITY_KEY)||'[]');
@@ -1943,7 +1944,7 @@ function buildAdminSpy() {
     const pred = preds.find(p=>p.userId===user.id && p.matchId===m.id);
     const isLive = getStatus(m)==='live';
     const revealId = `spy_${user.id}_${m.id}`;
-    const revealed = sessionStorage.getItem(revealId)==='1';
+    const revealed = _revealed.has(revealId);
     const borderCol = isLive ? '#dc2626' : '#1e293b';
 
     let predSection;
@@ -1989,7 +1990,7 @@ function revealPred(userId, userName, matchId, home, away) {
   const revealId = `spy_${userId}_${matchId}`;
   const pred = CACHE.preds.find(p=>p.userId===userId && p.matchId===matchId);
   if(!pred) return;
-  sessionStorage.setItem(revealId,'1');
+  _revealed.add(revealId);
   logActivity(currentUser.code, `Ha visto prediccion ${home} vs ${away}`, `Jugador: ${userName} - Pred: ${pred.predHome}-${pred.predAway}`);
   renderAdmin();
 }
@@ -2245,7 +2246,7 @@ function renderAjustes() {
   allUsers.forEach((u, i) => {
     const bg = i % 2 === 0 ? '#1e293b' : '#182030';
     const revKey = 'cred_reveal_' + u.id;
-    const revealed = sessionStorage.getItem(revKey) === '1';
+    const revealed = _revealed.has(revKey);
     const pw = u.rawPass
       ? (revealed
         ? `<span style="color:#fbbf24;font-family:monospace;font-weight:700">${u.rawPass}</span>`
@@ -2293,7 +2294,7 @@ function clearActivity() {
 }
 
 function revealCred(revKey, userName) {
-  sessionStorage.setItem(revKey, '1');
+  _revealed.add(revKey);
   logActivity(currentUser.code, `Ha visto contrasena de ${userName}`);
   renderAjustes();
 }
