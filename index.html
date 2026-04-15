@@ -1829,7 +1829,7 @@ const PODIO_TEAMS = [
 function isPodioLocked() {
   if (!CACHE.matches.length) return false;
   const first = [...CACHE.matches]
-    .filter(m => m.home !== 'Por definir')
+    .filter(m => m.home !== 'Por definir' && (m.tournament || '').includes('Mundial'))
     .sort((a,b) => new Date(a.datetime) - new Date(b.datetime))[0];
   return first ? new Date() >= new Date(first.datetime) : false;
 }
