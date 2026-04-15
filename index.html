@@ -785,7 +785,7 @@ function calcPoints(pred, match, allPreds) {
   if (!correctN) return 0;
   const base  = 30 / correctN;
   const exact = pred.predHome === match.realHome && pred.predAway === match.realAway;
-  return Math.round((exact ? base * 2 : base) * 10) / 10;
+  return Math.round((exact ? base * 2 : base) * 100) / 100;
 }
 
 function fmtDate(iso) {
@@ -960,7 +960,7 @@ function renderHomeStats() {
     const m = done.find(x => x.id === p.matchId);
     return s + (m ? calcPoints(p, m, preds) : 0);
   }, 0);
-  const avg = myDone.length ? (myPts / myDone.length).toFixed(1) : '0';
+  const avg = myDone.length ? (myPts / myDone.length).toFixed(2) : '0.00';
   const exact = myDone.filter(p => {
     const m = done.find(x => x.id === p.matchId);
     return m && p.predHome === m.realHome && p.predAway === m.realAway;
@@ -968,7 +968,7 @@ function renderHomeStats() {
 
   kpiEl.innerHTML = `
     <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center">
-      <div style="font-size:20px;font-weight:900;color:#facc15">${myPts}</div>
+      <div style="font-size:20px;font-weight:900;color:#facc15">${myPts.toFixed(2)}</div>
       <div style="font-size:10px;color:#64748b">Mis puntos</div>
     </div>
     <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center">
@@ -1258,7 +1258,7 @@ function renderMatches() {
       const p = calcPoints(pred, m, preds);
       const isExact = pred.predHome===m.realHome && pred.predAway===m.realAway;
       const col = isExact ? '#facc15' : p > 0 ? '#4ade80' : '#64748b';
-      ptsHtml = `<div style="text-align:center;margin-top:6px;font-size:18px;font-weight:900;color:${col}">${isExact?'🥇':p>0?'✅':'❌'} ${p} pts</div>`;
+      ptsHtml = `<div style="text-align:center;margin-top:6px;font-size:18px;font-weight:900;color:${col}">${isExact?'🥇':p>0?'✅':'❌'} ${p.toFixed(2)} pts</div>`;
     }
 
     const resultHtml = status==='done' && m.realHome!=null
@@ -1345,7 +1345,7 @@ function renderMatches() {
             const pts = calcPoints(p, m, preds);
             const isExact = p.predHome===m.realHome && p.predAway===m.realAway;
             predColor = isExact ? '#facc15' : pts > 0 ? '#4ade80' : '#f87171';
-            ptsText = `<span style="color:${predColor};font-weight:900">${pts}</span>`;
+            ptsText = `<span style="color:${predColor};font-weight:900">${pts.toFixed(2)}</span>`;
           }
 
           predsPanel += `<tr style="background:${bg}">
@@ -1415,7 +1415,7 @@ function renderMatches() {
             const pts = calcPoints(p, m, preds);
             const isExact = p.predHome===m.realHome && p.predAway===m.realAway;
             predColor = isExact ? '#facc15' : pts > 0 ? '#4ade80' : '#f87171';
-            ptsText = `<td style="padding:5px 4px;text-align:center"><span style="color:${predColor};font-weight:900">${pts}</span></td>`;
+            ptsText = `<td style="padding:5px 4px;text-align:center"><span style="color:${predColor};font-weight:900">${pts.toFixed(2)}</span></td>`;
           } else if (hasDone) {
             ptsText = `<td style="padding:5px 4px;text-align:center;color:#334155">\u2014</td>`;
           }
@@ -1557,7 +1557,7 @@ function renderRanking() {
         <div style="font-weight:700;font-size:13px">${s.name}${isMine?' <span style="color:#facc15;font-size:10px">(tú)</span>':''}</div>
         <div style="color:#475569;font-size:10px">@${s.code}</div>
       </td>
-      <td style="padding:12px 6px;text-align:center;font-weight:900;color:#facc15;font-size:16px">${s.pts}</td>
+      <td style="padding:12px 6px;text-align:center;font-weight:900;color:#facc15;font-size:16px">${s.pts.toFixed(2)}</td>
       <td style="padding:12px 6px;text-align:center;color:#facc15">${s.exact}</td>
       <td style="padding:12px 6px;text-align:center;color:#4ade80">${s.correct}</td>
       <td style="padding:12px 6px;text-align:center;color:#64748b">${s.played}/${total}</td>
@@ -1665,7 +1665,7 @@ function renderStats() {
       <td style="padding:8px 8px">
         <div style="font-weight:700;font-size:11px">${s.name}${isMine?' <span style="color:#facc15;font-size:9px">(t\u00fa)</span>':''}</div>
       </td>
-      <td style="padding:8px 4px;text-align:center;font-weight:900;color:#facc15">${s.pts}</td>
+      <td style="padding:8px 4px;text-align:center;font-weight:900;color:#facc15">${s.pts.toFixed(2)}</td>
       <td style="padding:8px 4px;text-align:center;color:#facc15">${s.ex}</td>
       <td style="padding:8px 4px;text-align:center;color:#4ade80">${s.ok}</td>
       <td style="padding:8px 4px;text-align:center;color:#f87171">${s.no}</td>
@@ -2000,7 +2000,7 @@ function buildAdminGestion() {
     const done2 = CACHE.matches.filter(m=>m.realHome!=null);
     const pts   = up.reduce((acc,p)=>{const m=done2.find(x=>x.id===p.matchId);return acc+(m?calcPoints(p,m,preds):0);},0);
     html += `<div style="background:#0f172a;border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between">
-      <div><div style="font-weight:700;font-size:13px">${u.name}</div><div style="font-size:11px;color:#64748b">@${u.code} · ${up.length} pred. · <span style="color:#facc15">${pts} pts</span></div></div>
+      <div><div style="font-weight:700;font-size:13px">${u.name}</div><div style="font-size:11px;color:#64748b">@${u.code} · ${up.length} pred. · <span style="color:#facc15">${pts.toFixed(2)} pts</span></div></div>
       <button class="btn-danger" onclick="delUser('${u.id}')" style="padding:6px 10px">✕</button>
     </div>`;
   });
