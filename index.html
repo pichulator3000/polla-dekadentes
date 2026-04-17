@@ -338,6 +338,11 @@
           <div style="font-weight:900;color:#f1f5f9;font-size:15px">Reglas</div>
           <div style="font-size:11px;color:#64748b;margin-top:4px">Pa que no webeen</div>
         </button>
+        <button onclick="showTab('resultados')" class="card" style="padding:20px 12px;text-align:center;border:none;cursor:pointer;width:100%">
+          <div style="font-size:36px;margin-bottom:8px">🔍</div>
+          <div style="font-weight:900;color:#f1f5f9;font-size:15px">Resultados</div>
+          <div style="font-size:11px;color:#64748b;margin-top:4px">Historial por jugador</div>
+        </button>
       </div>
       <button id="homeAdminBtn" onclick="showTab('admin')" class="card"
         style="display:none;width:100%;margin-top:10px;padding:16px;text-align:left;border:none;cursor:pointer;flex-direction:row;align-items:center;gap:12px">
@@ -434,6 +439,31 @@
           <div><b style="color:#f87171;font-size:14px">Cualquier queja...</b><br/><span style="font-size:16px;font-weight:900;color:#f1f5f9">Chupen la que cuelga.</span></div>
         </div>
       </div>
+    </div>
+
+    <!-- RESULTADOS -->
+    <div id="tabResultados" style="display:none;padding-top:4px">
+      <h2 style="margin:0 0 14px;font-size:17px;font-weight:900">🔍 Resultados por Jugador</h2>
+
+      <!-- Filtros -->
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+        <input id="resSearch" type="text" placeholder="🔍 Buscar jugador..."
+          oninput="renderResultados()"
+          style="width:100%;padding:10px 12px;font-size:14px;background:#1e293b;
+                 border:1.5px solid #334155;border-radius:10px;color:#f1f5f9;
+                 -webkit-appearance:none;box-sizing:border-box"/>
+        <select id="resTournament" onchange="renderResultados()"
+          style="width:100%;padding:10px 12px;font-size:14px;background:#1e293b;
+                 border:1.5px solid #334155;border-radius:10px;color:#f1f5f9;">
+          <option value="__all__">Todos los torneos</option>
+        </select>
+      </div>
+
+      <!-- Selector de jugador -->
+      <div id="resPlayerList" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+
+      <!-- Tabla de partidos -->
+      <div id="resTable"></div>
     </div>
 
     <!-- AJUSTES -->
@@ -734,9 +764,10 @@ function refreshActiveTab() {
   if (currentTab === 'partidos') renderMatches();
   if (currentTab === 'ranking')  renderRanking();
   if (currentTab === 'stats')    renderStats();
-  if (currentTab === 'podio')    renderPodio();
-  if (currentTab === 'admin')    renderAdmin();
-  if (currentTab === 'ajustes')  renderAjustes();
+  if (currentTab === 'podio')      renderPodio();
+  if (currentTab === 'admin')      renderAdmin();
+  if (currentTab === 'ajustes')    renderAjustes();
+  if (currentTab === 'resultados') renderResultados();
 }
 
 function tryAutoLogin() {
@@ -902,9 +933,9 @@ function updateClock() {
 }
 
 // ═══ NAVIGATION ═══
-const ALL_TABS = ['home','partidos','ranking','stats','podio','admin','reglas','ajustes'];
+const ALL_TABS = ['home','partidos','ranking','stats','podio','admin','reglas','ajustes','resultados'];
 const NAV_MAP  = { home:'nb-home', partidos:'nb-partidos', ranking:'nb-ranking',
-                   stats:'nb-stats', podio:'nb-podio', reglas:'nb-reglas', admin:'nb-admin' };
+                   stats:'nb-stats', podio:'nb-podio', reglas:'nb-reglas', admin:'nb-admin', resultados:null };
 
 function showHome() {
   ALL_TABS.forEach(t => document.getElementById('tab'+cap(t)).style.display = 'none');
@@ -925,12 +956,13 @@ function showTab(tab) {
   if (nbtn) nbtn.classList.add('nav-active');
   document.getElementById('mainContent').scrollTop = 0;
   currentTab = tab;
-  if (tab === 'partidos') renderMatches();
-  if (tab === 'ranking')  renderRanking();
-  if (tab === 'stats')    renderStats();
-  if (tab === 'admin')    renderAdmin();
-  if (tab === 'podio')    renderPodio();
-  if (tab === 'ajustes')  renderAjustes();
+  if (tab === 'partidos')   renderMatches();
+  if (tab === 'ranking')    renderRanking();
+  if (tab === 'stats')      renderStats();
+  if (tab === 'admin')      renderAdmin();
+  if (tab === 'podio')      renderPodio();
+  if (tab === 'ajustes')    renderAjustes();
+  if (tab === 'resultados') renderResultados();
 }
 
 // ═══ UPCOMING MATCHES (Home) ═══
@@ -1825,6 +1857,127 @@ const PODIO_TEAMS = [
   'Portugal','RD Congo','Uzbekistán','Colombia',
   'Inglaterra','Croacia','Ghana','Panamá'
 ].sort();
+
+// ═══ RESULTADOS ═══
+let _resSelectedUser = null;
+
+function renderResultados() {
+  const users    = CACHE.users.filter(u => !u.isAdmin);
+  const preds    = CACHE.preds;
+  const search   = (document.getElementById('resSearch')?.value || '').toLowerCase().trim();
+  const tourSel  = document.getElementById('resTournament')?.value || '__all__';
+
+  // Populate tournament dropdown (once)
+  const sel = document.getElementById('resTournament');
+  if (sel) {
+    const tours = ['__all__', ...new Set(CACHE.matches.map(m => m.tournament || 'Sin Torneo').filter(Boolean))];
+    const curVal = sel.value;
+    if (sel.options.length !== tours.length) {
+      sel.innerHTML = tours.map(t =>
+        `<option value="${t}">${t === '__all__' ? 'Todos los torneos' : t}</option>`
+      ).join('');
+      sel.value = curVal;
+    }
+  }
+
+  // Filtered + sorted users list
+  const filtered = users.filter(u => !search || u.name.toLowerCase().includes(search) || u.code.toLowerCase().includes(search));
+
+  // If selected user was filtered out, reset
+  if (_resSelectedUser && !filtered.find(u => u.id === _resSelectedUser)) _resSelectedUser = null;
+  if (!_resSelectedUser && filtered.length) _resSelectedUser = filtered[0].id;
+
+  // Player chips
+  const chipContainer = document.getElementById('resPlayerList');
+  if (chipContainer) {
+    chipContainer.innerHTML = filtered.map(u => {
+      const isSel = u.id === _resSelectedUser;
+      return `<button onclick="_resSelectedUser='${u.id}';renderResultados()"
+        style="padding:5px 12px;border-radius:20px;border:1.5px solid ${isSel?'#60a5fa':'#334155'};
+               background:${isSel?'#1e3a5f':'#1e293b'};color:${isSel?'#60a5fa':'#94a3b8'};
+               font-size:12px;font-weight:${isSel?'800':'600'};cursor:pointer">
+        ${u.name}
+      </button>`;
+    }).join('');
+  }
+
+  const tableEl = document.getElementById('resTable');
+  if (!tableEl) return;
+
+  const user = CACHE.users.find(u => u.id === _resSelectedUser);
+  if (!user) {
+    tableEl.innerHTML = `<p style="color:#475569;text-align:center;padding:24px">Sin jugadores</p>`;
+    return;
+  }
+
+  // Matches filtered by tournament, sorted by datetime
+  const matches = CACHE.matches
+    .filter(m => tourSel === '__all__' || (m.tournament || 'Sin Torneo') === tourSel)
+    .sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
+
+  const done    = matches.filter(m => m.realHome != null);
+  const userPreds = preds.filter(p => p.userId === user.id);
+
+  // Total pts
+  const totalPts = done.reduce((acc, m) => {
+    const p = userPreds.find(x => x.matchId === m.id);
+    return acc + (p ? calcPoints(p, m, preds) : 0);
+  }, 0);
+
+  let html = `
+  <div style="background:#1e293b;border-radius:12px;padding:10px 12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+    <span style="font-weight:800;font-size:14px;color:#f1f5f9">${user.name}</span>
+    <span style="color:#facc15;font-weight:900;font-size:14px">${totalPts.toFixed(2)} pts</span>
+  </div>
+  <div class="card" style="overflow:hidden">
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead>
+        <tr style="background:#0f172a;color:#64748b;font-size:9px;text-transform:uppercase">
+          <th style="padding:6px 8px;text-align:left">Partido</th>
+          <th style="padding:6px 4px;text-align:center">Fecha</th>
+          <th style="padding:6px 4px;text-align:center">Real</th>
+          <th style="padding:6px 4px;text-align:center">Pred</th>
+          <th style="padding:6px 4px;text-align:center">Pts</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+  matches.forEach((m, i) => {
+    const p       = userPreds.find(x => x.matchId === m.id);
+    const isDone  = m.realHome != null;
+    const pts     = (p && isDone) ? calcPoints(p, m, preds) : null;
+    const isExact = pts !== null && p.predHome===m.realHome && p.predAway===m.realAway;
+    const isOk    = pts !== null && !isExact && pts > 0;
+    const bg      = i % 2 === 0 ? '#1e293b' : '#182030';
+
+    const ptsColor = isExact ? '#facc15' : isOk ? '#4ade80' : pts === 0 ? '#f87171' : '#334155';
+    const ptsText  = pts !== null ? pts.toFixed(2) : (p ? '—' : '');
+    const icon     = isExact ? '\uD83E\uDD47' : isOk ? '\u2705' : (pts === 0 ? '\u274C' : '');
+
+    const realText = isDone ? `${m.realHome}-${m.realAway}` : `<span style="color:#334155">—</span>`;
+    const predText = p ? `${p.predHome}-${p.predAway}` : `<span style="color:#334155">—</span>`;
+
+    // Date short format
+    const d = new Date(m.datetime);
+    const dateStr = d.toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',timeZone:'America/Santiago'})
+                  + ' ' + d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Santiago'});
+
+    html += `<tr style="background:${bg}">
+      <td style="padding:5px 8px;font-weight:700;font-size:10px;max-width:110px">
+        <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f1f5f9">${m.home} v ${m.away}</div>
+        <div style="color:#475569;font-size:9px">${m.tournament||''}</div>
+      </td>
+      <td style="padding:5px 4px;text-align:center;color:#64748b;font-size:9px;white-space:nowrap">${dateStr}</td>
+      <td style="padding:5px 4px;text-align:center;font-weight:700;color:#94a3b8">${realText}</td>
+      <td style="padding:5px 4px;text-align:center;font-weight:700;color:${p?'#60a5fa':'#334155'}">${predText}</td>
+      <td style="padding:5px 4px;text-align:center;font-weight:900;color:${ptsColor}">${icon} ${ptsText}</td>
+    </tr>`;
+  });
+
+  if (!matches.length) html += `<tr><td colspan="5" style="text-align:center;padding:20px;color:#475569">Sin partidos</td></tr>`;
+  html += `</tbody></table></div>`;
+  tableEl.innerHTML = html;
+}
 
 function isPodioLocked() {
   if (!CACHE.matches.length) return false;
