@@ -510,13 +510,10 @@
         </div>
       </div>
 
-      <!-- Actividad Admin (solo admin) -->
+      <!-- Actividad Admin -->
       <div id="actividadCard" class="card" style="padding:16px;margin-bottom:12px;display:none">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="margin-bottom:12px">
           <h3 style="margin:0;font-size:14px;font-weight:800;color:#c084fc">🗂️ Actividad Admin</h3>
-          <button onclick="clearActivity()"
-            style="background:none;border:1px solid #334155;border-radius:6px;padding:4px 8px;
-                   color:#64748b;font-size:11px;cursor:pointer">Limpiar</button>
         </div>
         <div id="actividadList" style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto"></div>
       </div>
@@ -2432,14 +2429,14 @@ function renderAjustes() {
   document.getElementById('togglePC').classList.toggle('on', !!prefs.pcMode);
   document.getElementById('toggleShowUser').classList.toggle('on', prefs.showUser !== false);
 
-  // Actividad: solo visible para admin
-  const actCard = document.getElementById('actividadCard');
+  // Actividad: visible para todos
+  document.getElementById('actividadCard').style.display = 'block';
+
+  // Gestión usuarios: solo admin
   if (!currentUser?.isAdmin) {
-    actCard.style.display='none';
-    document.getElementById('credsCard').style.display='none';
+    document.getElementById('credsCard').style.display = 'none';
     return;
   }
-  actCard.style.display = 'block';
   document.getElementById('credsCard').style.display = 'block';
 
   // ══ Controls: registration lock + approval mode ══
