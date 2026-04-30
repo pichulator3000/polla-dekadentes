@@ -17,7 +17,10 @@ resultados de partidos de fútbol. Soporta múltiples torneos simultáneamente
 (Mundial 2026, Copa Libertadores, etc.).
 
 **Sistema de puntos:**
-- Cada partido tiene un pozo de **30 puntos**
+- Cada partido tiene un pozo de **puntos variable según la fase** (editable desde Admin)
+- Defaults: Grupos 30, R32 35, Octavos 40, Cuartos 50, **Semifinal 60, Tercer Puesto 50, Final 100**
+- Los admins pueden editar cualquier pozo en vivo desde "Pozos por Fase" en pestaña Admin
+- Cambios se aplican retroactivamente a todos los partidos de esa fase
 - Se reparte entre los que aciertan el resultado (local/empate/visita)
 - Acertar el **marcador exacto** duplica tu parte
 - Fallar = 0 puntos (sin puntos negativos)
@@ -106,7 +109,8 @@ pf/
 │
 ├── settings/
 │   ├── regLocked (boolean - inscripciones cerradas)
-│   └── regApproval (boolean - modo aprobación)
+│   ├── regApproval (boolean - modo aprobación)
+│   └── stagePoints/{Fase} (number - pozo personalizado por fase)
 │
 └── pending/{code}
     └── name, code, passHash, rawPass (cola de aprobación)
@@ -316,7 +320,13 @@ polla-futbolera/
 | Función | Descripción |
 |---|---|
 | `getStatus(m)` | Retorna `open/locked/live/done` según hora y resultado |
-| `calcPoints(pred, match, allPreds)` | Calcula puntos: 30÷N acertadores, exacto ×2 |
+| `getPoolForStage(stage)` | Retorna el pozo de puntos para esa fase (custom o default) |
+| `getStagesEnUso()` | Lista de fases únicas presentes en partidos cargados, ordenadas |
+| `saveStagePool(stage, pts)` | Admin guarda pozo personalizado en Firebase |
+| `resetStagePool(stage)` | Admin restaura pozo de una fase a su default |
+| `renderReglasPozos()` | Tabla de pozos en pestaña Reglas (visible para todos) |
+| `buildAdminPozos()` | Panel admin con inputs editables por fase |
+| `calcPoints(pred, match, allPreds)` | Calcula puntos: pozo÷N acertadores, exacto ×2 |
 | `renderMatches()` | Renderiza fixture completo con grupos, preserva estado abierto |
 | `renderRanking()` | Tabla de posiciones ordenada |
 | `renderStats()` | Estadísticas globales |
