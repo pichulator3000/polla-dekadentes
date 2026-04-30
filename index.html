@@ -428,6 +428,14 @@
           <div><b style="color:#f1f5f9;font-size:14px">Exacto = tu parte ×2</b><br/><span style="font-size:12px;color:#64748b">Adivinas el marcador exacto → tus puntos se duplican.</span></div>
         </div>
         <div class="card" style="padding:14px;display:flex;gap:12px;align-items:flex-start">
+          <span style="font-size:24px;flex-shrink:0">🏅</span>
+          <div style="flex:1">
+            <b style="color:#f1f5f9;font-size:14px">Pronóstico de Podio (puntos fijos)</b><br/>
+            <span style="font-size:12px;color:#64748b">Acertar campeón, subcampeón o goleador del Mundial te da puntos <b>fijos</b>. <b>NO se reparten</b>: si 5 personas aciertan, los 5 reciben los puntos completos.</span>
+            <div id="reglasPodioTabla" style="margin-top:10px"></div>
+          </div>
+        </div>
+        <div class="card" style="padding:14px;display:flex;gap:12px;align-items:flex-start">
           <span style="font-size:24px;flex-shrink:0">🚧</span>
           <div><b style="color:#f1f5f9;font-size:14px">Solo 90 minutos</b><br/><span style="font-size:12px;color:#64748b">Solo cuenta el resultado de los 90 minutos reglamentarios. Tiempo extra y penales no se consideran.</span></div>
         </div>
@@ -1189,6 +1197,46 @@ function getPoolForStage(rawStage) {
   return STAGE_POOL_FALLBACK;
 }
 
+// ═══ PODIO POINTS ═══
+// Puntos FIJOS (no se reparten) por acertar campeon, subcampeon, goleador
+const PODIO_POINTS_DEFAULT = { champion: 100, runner: 50, scorer: 50 };
+
+function getPodioPoints() {
+  const o = (CACHE.settings && CACHE.settings.podioPoints) || {};
+  return {
+    champion: o.champion != null && !isNaN(Number(o.champion)) ? Number(o.champion) : PODIO_POINTS_DEFAULT.champion,
+    runner:   o.runner   != null && !isNaN(Number(o.runner))   ? Number(o.runner)   : PODIO_POINTS_DEFAULT.runner,
+    scorer:   o.scorer   != null && !isNaN(Number(o.scorer))   ? Number(o.scorer)   : PODIO_POINTS_DEFAULT.scorer,
+  };
+}
+
+function getPodioOficial() {
+  const o = (CACHE.settings && CACHE.settings.podioOficial) || {};
+  return {
+    champion: (o.champion || '').trim(),
+    runner:   (o.runner   || '').trim(),
+    scorer:   (o.scorer   || '').trim(),
+  };
+}
+
+function calcPodioPoints(userPodio) {
+  if (!userPodio) return { total: 0, champion: 0, runner: 0, scorer: 0 };
+  const oficial = getPodioOficial();
+  const pts = getPodioPoints();
+  const eq = (a, b) => (a || '').trim().toLowerCase() === (b || '').trim().toLowerCase();
+  const result = { total: 0, champion: 0, runner: 0, scorer: 0 };
+  if (oficial.champion && eq(userPodio.champion, oficial.champion)) { result.champion = pts.champion; result.total += pts.champion; }
+  if (oficial.runner   && eq(userPodio.runner,   oficial.runner))   { result.runner   = pts.runner;   result.total += pts.runner;   }
+  if (oficial.scorer   && eq(userPodio.scorer,   oficial.scorer))   { result.scorer   = pts.scorer;   result.total += pts.scorer;   }
+  return result;
+}
+
+// El podio aplica al torneo "Mundial" (mismo criterio que isPodioLocked)
+function podioAplicaATorneo(torneo) {
+  if (torneo === '__all__') return true;
+  return (torneo || '').toLowerCase().includes('mundial');
+}
+
 // Lista de fases unicas usadas en partidos actuales (para mostrar solo las relevantes)
 function getStagesEnUso() {
   const set = new Set();
@@ -1221,6 +1269,135 @@ async function resetStagePool(stage) {
   toast(`${stage} restaurado al default ↩️`, 'ok');
 }
 
+// ══ SAVE: Puntos del podio (champion/runner/scorer)
+async function savePodioPointsAll() {
+  const c = Number(document.getElementById('podPts_champion').value);
+  const r = Number(document.getElementById('podPts_runner').value);
+  const s = Number(document.getElementById('podPts_scorer').value);
+  if (![c, r, s].every(v => Number.isFinite(v) && v >= 0 && v <= 10000)) {
+    return toast('Valores invalidos (0-10000)', 'err');
+  }
+  await RT.ref('pf/settings/podioPoints').set({ champion: c, runner: r, scorer: s });
+  if (currentUser?.isAdmin) {
+    logActivity(currentUser.code, 'EditarPuntosPodio', `🥇 ${c} · 🥈 ${r} · ⚽ ${s}`);
+  }
+  toast('Puntos del podio guardados ✅', 'ok');
+}
+
+async function resetPodioPoints() {
+  if (!confirm('Restaurar puntos del podio al default (100/50/50)?')) return;
+  await RT.ref('pf/settings/podioPoints').remove();
+  toast('Puntos del podio restaurados ↩️', 'ok');
+}
+
+// ══ SAVE: Resultado oficial del podio (cuando el torneo termine)
+async function savePodioOficialAll() {
+  const champion = (document.getElementById('podOf_champion').value || '').trim();
+  const runner   = (document.getElementById('podOf_runner').value   || '').trim();
+  const scorer   = (document.getElementById('podOf_scorer').value   || '').trim();
+  if (champion && runner && champion.toLowerCase() === runner.toLowerCase()) {
+    return toast('Campeon y subcampeon no pueden ser el mismo', 'err');
+  }
+  await RT.ref('pf/settings/podioOficial').set({ champion, runner, scorer });
+  if (currentUser?.isAdmin) {
+    logActivity(currentUser.code, 'PodioOficial',
+      `🥇 ${champion||'—'} · 🥈 ${runner||'—'} · ⚽ ${scorer||'—'}`);
+  }
+  toast('Resultado oficial del podio guardado ✅ (puntos recalculan en vivo)', 'ok');
+}
+
+async function clearPodioOficial() {
+  if (!confirm('Borrar resultado oficial del podio?\n\n(Se quitan los puntos de podio de todos)')) return;
+  await RT.ref('pf/settings/podioOficial').remove();
+  toast('Resultado oficial borrado', 'info');
+}
+
+function buildAdminPodio() {
+  const pts = getPodioPoints();
+  const of  = getPodioOficial();
+  const teamOptions = ['<option value="">-- Sin definir --</option>']
+    .concat(PODIO_TEAMS.map(t => `<option value="${t}" ${t===of.champion?'selected':''}>${t}</option>`));
+  const teamOptionsRunner = ['<option value="">-- Sin definir --</option>']
+    .concat(PODIO_TEAMS.map(t => `<option value="${t}" ${t===of.runner?'selected':''}>${t}</option>`));
+
+  return `<div class="card" style="padding:16px;margin-bottom:12px">
+    <details>
+      <summary class="group-summary" style="margin-bottom:8px">
+        <span>🏅 Puntos del Podio &amp; Resultado Oficial</span>
+        <span class="group-chevron">▼</span>
+      </summary>
+      <p style="font-size:11px;color:#64748b;margin:6px 0 12px">
+        Puntos <b>fijos</b> que recibe cada jugador que acierta. <b>NO se reparten</b>:
+        si 5 personas aciertan campeon, los 5 reciben los puntos completos.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="background:#0f172a;border-radius:8px;padding:10px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:20px">🥇</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:#facc15">Campeon</div>
+            <div style="font-size:10px;color:#64748b">default ${PODIO_POINTS_DEFAULT.champion} pts</div>
+          </div>
+          <input id="podPts_champion" type="number" min="0" step="1" value="${pts.champion}"
+            style="width:80px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#f1f5f9;font-size:13px;font-weight:700;text-align:center">
+        </div>
+        <div style="background:#0f172a;border-radius:8px;padding:10px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:20px">🥈</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:#94a3b8">Subcampeon</div>
+            <div style="font-size:10px;color:#64748b">default ${PODIO_POINTS_DEFAULT.runner} pts</div>
+          </div>
+          <input id="podPts_runner" type="number" min="0" step="1" value="${pts.runner}"
+            style="width:80px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#f1f5f9;font-size:13px;font-weight:700;text-align:center">
+        </div>
+        <div style="background:#0f172a;border-radius:8px;padding:10px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:20px">⚽</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:#4ade80">Goleador del torneo</div>
+            <div style="font-size:10px;color:#64748b">default ${PODIO_POINTS_DEFAULT.scorer} pts</div>
+          </div>
+          <input id="podPts_scorer" type="number" min="0" step="1" value="${pts.scorer}"
+            style="width:80px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#f1f5f9;font-size:13px;font-weight:700;text-align:center">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button onclick="savePodioPointsAll()" style="flex:1;padding:8px 12px;border-radius:6px;background:#0053e2;color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer">💾 Guardar Puntos</button>
+          <button onclick="resetPodioPoints()" style="padding:8px 10px;border-radius:6px;background:transparent;border:1px solid #334155;color:#94a3b8;font-size:12px;cursor:pointer" title="Restaurar defaults">↩️</button>
+        </div>
+      </div>
+
+      <hr style="border:none;border-top:1px solid #334155;margin:16px 0">
+
+      <p style="font-size:11px;color:#64748b;margin:0 0 10px">
+        🔖 <b style="color:#facc15">Resultado oficial</b> — define quien fue campeon/subcampeon/goleador.
+        Los jugadores que acertaron reciben los puntos <b>en vivo</b>.
+        Si dejas un campo vacio, ese premio aun no se cuenta.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div>
+          <label style="font-size:11px;color:#facc15;font-weight:700">🥇 Campeon oficial</label>
+          <select id="podOf_champion" style="width:100%;margin-top:4px;padding:8px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#f1f5f9;font-size:13px">
+            ${teamOptions.join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:#94a3b8;font-weight:700">🥈 Subcampeon oficial</label>
+          <select id="podOf_runner" style="width:100%;margin-top:4px;padding:8px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#f1f5f9;font-size:13px">
+            ${teamOptionsRunner.join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:#4ade80;font-weight:700">⚽ Goleador oficial (case-insensitive)</label>
+          <input id="podOf_scorer" type="text" placeholder="Ej: Mbappe" value="${of.scorer.replace(/"/g,'&quot;')}"
+            style="width:100%;margin-top:4px;padding:8px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#f1f5f9;font-size:13px">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button onclick="savePodioOficialAll()" style="flex:1;padding:8px 12px;border-radius:6px;background:#0053e2;color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer">🏷️ Guardar Resultado Oficial</button>
+          <button onclick="clearPodioOficial()" style="padding:8px 10px;border-radius:6px;background:#7f1d1d;border:1px solid #b91c1c;color:#fee2e2;font-size:12px;cursor:pointer" title="Borrar oficial">🗑️</button>
+        </div>
+      </div>
+    </details>
+  </div>`;
+}
+
 // Tabla de pozos en pestana Reglas (vista para todos)
 function renderReglasPozos() {
   const el = document.getElementById('reglasPozosTabla');
@@ -1246,6 +1423,38 @@ function renderReglasPozos() {
   });
   html += '</tbody></table>';
   html += '<p style="font-size:10px;color:#475569;margin-top:6px">✨ = personalizado por admin</p>';
+  el.innerHTML = html;
+  renderReglasPodio();
+}
+
+function renderReglasPodio() {
+  const el = document.getElementById('reglasPodioTabla');
+  if (!el) return;
+  const pts = getPodioPoints();
+  const of  = getPodioOficial();
+  const filas = [
+    { icon: '🥇', label: 'Campeón',    pts: pts.champion, oficial: of.champion, color: '#facc15' },
+    { icon: '🥈', label: 'Subcampeón', pts: pts.runner,   oficial: of.runner,   color: '#94a3b8' },
+    { icon: '⚽', label: 'Goleador',   pts: pts.scorer,   oficial: of.scorer,   color: '#4ade80' },
+  ];
+  let html = `<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:6px">
+    <thead><tr style="color:#94a3b8;font-size:11px">
+      <th style="text-align:left;padding:4px 8px;border-bottom:1px solid #334155">Acierto</th>
+      <th style="text-align:right;padding:4px 8px;border-bottom:1px solid #334155">Puntos</th>
+      <th style="text-align:left;padding:4px 8px;border-bottom:1px solid #334155">Oficial</th>
+    </tr></thead><tbody>`;
+  filas.forEach((f, i) => {
+    const bg = i % 2 === 0 ? '#1e293b' : '#182030';
+    const oficialDisplay = f.oficial
+      ? `<span style="color:#facc15;font-weight:700">${f.oficial}</span>`
+      : `<span style="color:#475569;font-style:italic">por definir</span>`;
+    html += `<tr style="background:${bg}">
+      <td style="padding:6px 8px;color:${f.color};font-weight:700">${f.icon} ${f.label}</td>
+      <td style="padding:6px 8px;text-align:right;color:#facc15;font-weight:700">+${f.pts} pts</td>
+      <td style="padding:6px 8px;font-size:11px">${oficialDisplay}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
   el.innerHTML = html;
 }
 
@@ -1678,6 +1887,7 @@ function renderRanking() {
     ? CACHE.matches
     : CACHE.matches.filter(m => (m.tournament || 'Sin Torneo') === selectedRankTournament);
   const preds   = CACHE.preds;
+  const incluyePodio = podioAplicaATorneo(selectedRankTournament);
 
   const scores = users.map(u => {
     const up = preds.filter(p => p.userId===u.id);
@@ -1691,16 +1901,24 @@ function renderRanking() {
       if (p.predHome===m.realHome && p.predAway===m.realAway) exact++;
       else if (Math.sign(p.predHome-p.predAway)===Math.sign(m.realHome-m.realAway)) correct++;
     });
-    return { ...u, pts, exact, correct, played };
+    let podioPts = 0;
+    if (incluyePodio) {
+      const myPodio = CACHE.podio.find(p => p.userId === u.id);
+      podioPts = calcPodioPoints(myPodio).total;
+      pts += podioPts;
+    }
+    return { ...u, pts, exact, correct, played, podioPts };
   }).sort((a,b) => b.pts-a.pts || b.exact-a.exact);
 
   const total = matches.filter(m => m.realHome!=null).length;
+  const showPodioCol = incluyePodio && scores.some(s => s.podioPts > 0);
   let html = `<div class="card" style="overflow:hidden">
     <table style="width:100%;border-collapse:collapse;font-size:13px">
       <thead><tr style="background:#0f172a;color:#64748b;font-size:11px;text-transform:uppercase">
         <th style="padding:10px 10px;text-align:left">#</th>
         <th style="padding:10px 4px;text-align:left">Jugador</th>
         <th style="padding:10px 6px;text-align:center">Pts</th>
+        ${showPodioCol ? '<th style="padding:10px 6px;text-align:center" title="Puntos por podio">🏅</th>' : ''}
         <th style="padding:10px 6px;text-align:center">🥇</th>
         <th style="padding:10px 6px;text-align:center">✅</th>
         <th style="padding:10px 6px;text-align:center">PJ</th>
@@ -1718,13 +1936,14 @@ function renderRanking() {
         <div style="color:#475569;font-size:10px">@${s.code}</div>
       </td>
       <td style="padding:12px 6px;text-align:center;font-weight:900;color:#facc15;font-size:16px">${s.pts.toFixed(2)}</td>
+      ${showPodioCol ? `<td style="padding:12px 6px;text-align:center;color:${s.podioPts>0?'#facc15':'#475569'};font-weight:700">${s.podioPts>0?('+'+s.podioPts):'—'}</td>` : ''}
       <td style="padding:12px 6px;text-align:center;color:#facc15">${s.exact}</td>
       <td style="padding:12px 6px;text-align:center;color:#4ade80">${s.correct}</td>
       <td style="padding:12px 6px;text-align:center;color:#64748b">${s.played}/${total}</td>
     </tr>`;
   });
 
-  if (!scores.length) html += `<tr><td colspan="6" style="text-align:center;padding:32px;color:#475569">Sin participantes aún</td></tr>`;
+  if (!scores.length) html += `<tr><td colspan="${showPodioCol?7:6}" style="text-align:center;padding:32px;color:#475569">Sin participantes aún</td></tr>`;
   html += `</tbody></table></div>`;
   document.getElementById('rankingTable').innerHTML = html;
 }
@@ -2219,7 +2438,7 @@ function renderAdmin() {
   const subNav = '';
 
   document.getElementById('adminContent').innerHTML =
-    subNav + buildAdminPozos() + buildAdminTorneos() + buildAdminGestion();
+    subNav + buildAdminPozos() + buildAdminPodio() + buildAdminTorneos() + buildAdminGestion();
 }
 
 function setAdminTab(t) { adminSubTab=t; renderAdmin(); }
