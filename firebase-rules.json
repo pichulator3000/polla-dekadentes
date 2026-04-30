@@ -1,32 +1,57 @@
 {
   "rules": {
     "pf": {
+
       "preds": {
         ".read": true,
         "$key": {
-          ".write": "!data.exists() && root.child('pf/matches/' + newData.child('matchId').val() + '/closesAtMs').val() > now || data.exists() && root.child('pf/matches/' + data.child('matchId').val() + '/closesAtMs').val() > now"
+          ".write": "!data.exists() && root.child('pf/matches/' + newData.child('matchId').val() + '/closesAtMs').val() > now || data.exists() && root.child('pf/matches/' + data.child('matchId').val() + '/closesAtMs').val() > now",
+          ".validate": "newData.hasChildren(['userId','matchId','predHome','predAway']) && newData.child('userId').isString() && newData.child('matchId').isString() && newData.child('predHome').isNumber() && newData.child('predHome').val() >= 0 && newData.child('predHome').val() <= 99 && newData.child('predAway').isNumber() && newData.child('predAway').val() >= 0 && newData.child('predAway').val() <= 99"
         }
       },
+
       "users": {
         ".read": true,
-        ".write": true
+        "$uid": {
+          ".write": true,
+          ".validate": "!newData.exists() || (newData.hasChildren(['id','code','name']) && newData.child('id').isString() && newData.child('code').isString() && newData.child('name').isString() && newData.child('name').val().length <= 60 && newData.child('code').val().length <= 40 && (!newData.child('passHash').exists() || (newData.child('passHash').isString() && newData.child('passHash').val().length === 64)) && (!newData.child('isAdmin').exists() || newData.child('isAdmin').val() === false || data.child('isAdmin').val() === true))"
+        }
       },
+
       "matches": {
         ".read": true,
-        ".write": true
+        "$mid": {
+          ".write": true,
+          ".validate": "!newData.exists() || (newData.hasChildren(['id','home','away','datetime']) && newData.child('home').isString() && newData.child('away').isString() && newData.child('datetime').isString() && newData.child('home').val().length <= 60 && newData.child('away').val().length <= 60 && (!newData.child('realHome').exists() || (newData.child('realHome').isNumber() && newData.child('realHome').val() >= 0 && newData.child('realHome').val() <= 99)) && (!newData.child('realAway').exists() || (newData.child('realAway').isNumber() && newData.child('realAway').val() >= 0 && newData.child('realAway').val() <= 99)))"
+        }
       },
+
       "podio": {
         ".read": true,
-        ".write": true
+        "$uid": {
+          ".write": true,
+          ".validate": "!newData.exists() || (newData.hasChild('userId') && newData.child('userId').isString())"
+        }
       },
+
       "settings": {
         ".read": true,
-        ".write": true
+        ".write": true,
+        "stagePoints": {
+          "$stage": {
+            ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000)"
+          }
+        }
       },
+
       "pending": {
         ".read": true,
-        ".write": true
+        "$code": {
+          ".write": true,
+          ".validate": "!newData.exists() || (newData.hasChildren(['code','name']) && newData.child('name').val().length <= 60 && newData.child('code').val().length <= 40)"
+        }
       }
+
     }
   }
 }

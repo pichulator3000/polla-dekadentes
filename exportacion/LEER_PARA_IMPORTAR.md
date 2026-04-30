@@ -26,8 +26,8 @@
 3. **Desactivá Google Analytics** (no lo necesitás) → "Create project"
 4. Una vez creado: barra lateral izquierda → **Build → Realtime Database**
 5. Click **"Create database"** → ubicación: `us-central1` o la más cercana
-6. Modo: **"Start in test mode"** (después lo aseguramos con las rules)
-7. Pestaña **"Rules"** → borrá lo que hay → pegá el contenido de `firebase-rules.json` → **Publish**
+6. Modo: **"Start in test mode"** (las dejamos así temporalmente para el primer login)
+7. **⚠️ IMPORTANTE:** las reglas estrictas de `firebase-rules.json` se aplican en el **paso 6** (después del primer login), NO ahora
 
 ### 2️⃣ Obtener tus credenciales (1 min)
 
@@ -93,6 +93,24 @@ es `cambiame123` (línea de abajo, en `hashPass('cambiame123')`).
 4. **Cambiá tu contraseña** (Ajustes → Editar perfil)
 5. Importá tus partidos desde el Excel o creá manualmente
 
+### 6.5️⃣ 🔒 Aplicar reglas de seguridad estrictas (HACELO YA)
+
+Ahora que ya entraste y los admins existen en la base, **bloqueaá ataques** así:
+
+1. Firebase Console → **Realtime Database** → pestaña **"Rules"** ("Reglas")
+2. Borrá todo lo que hay
+3. Pegá el contenido completo de `firebase-rules.json`
+4. Click **"Publish"** ("Publicar")
+
+✅ Esto bloquea:
+- Creación de admins truchos desde el cliente
+- Borrado masivo de usuarios o partidos
+- Predicciones con valores inválidos (negativos, strings, >99)
+- Sobrescritura de hashes de contraseña con basura
+
+⚠️ Si aplicas las reglas ANTES del primer login, el seed de admins falla
+y te quedas afuera. Por eso el orden importa.
+
 ### 7️⃣ Compartir con tus amigos
 
 - Mandales tu URL
@@ -138,9 +156,14 @@ Para 30-100 amigos sobra mil veces.
 ## 🔒 Seguridad
 
 - Las contraseñas se hashean con SHA-256 en el cliente
-- Las reglas de Firebase actuales son **abiertas** (cualquiera con tu URL podría escribir)
-- Para grupo cerrado de amigos: aceptable
-- Si querés blindarlo más: migrá a Firebase Auth con email/Google
+- Las reglas de Firebase del paso 6.5 bloquean los ataques más comunes:
+  - ❌ No se puede crear un admin trucho desde el cliente
+  - ❌ No se puede borrar usuarios/partidos en masa
+  - ❌ No se pueden inyectar valores raros en predicciones
+- **Adicional recomendado:** restringir tu API key por dominio en
+  Google Cloud Console → APIs & Services → Credentials → HTTP referrers
+- Para grupo cerrado de amigos: más que aceptable
+- Si querés blindarlo a nivel banco: migrá a Firebase Auth con email/Google
 
 ---
 
