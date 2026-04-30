@@ -2219,7 +2219,7 @@ function renderAdmin() {
   const subNav = '';
 
   document.getElementById('adminContent').innerHTML =
-    subNav + buildAdminPozos() + buildAdminGestion();
+    subNav + buildAdminPozos() + buildAdminTorneos() + buildAdminGestion();
 }
 
 function setAdminTab(t) { adminSubTab=t; renderAdmin(); }
@@ -2542,6 +2542,92 @@ async function borrarTodosPartidos() {
   }
   toast(`✓ ${n} partidos eliminados`);
   renderAdmin();
+}
+
+async function eliminarTorneo(tournament) {
+  const matches = CACHE.matches.filter(m => (m.tournament || 'Sin Torneo') === tournament);
+  const n = matches.length;
+  if (!n) return toast(`No hay partidos del torneo "${tournament}"`, 'info');
+
+  const matchIds = new Set(matches.map(m => m.id));
+  const preds = CACHE.preds.filter(p => matchIds.has(p.matchId));
+
+  if (!confirm(`¿Eliminar el torneo "${tournament}"?\n\n` +
+    `Se borrarán:\n` +
+    `  • ${n} partidos\n` +
+    `  • ${preds.length} predicciones de jugadores\n\n` +
+    `Esta acción NO se puede deshacer.`)) return;
+
+  const confirmText = prompt(
+    `Para confirmar, escribe el nombre EXACTO del torneo:\n\n  "${tournament}"`
+  );
+  if (confirmText !== tournament) {
+    return toast('Nombre incorrecto, cancelado', 'err');
+  }
+
+  toast(`Eliminando torneo "${tournament}" (${n} partidos)...`, 'info');
+  for (const m of [...matches]) {
+    await DB.delMatch(m.id);
+  }
+
+  if (currentUser?.isAdmin) {
+    logActivity(currentUser.code, 'EliminoTorneo',
+      `${tournament} (${n} partidos, ${preds.length} preds)`);
+  }
+
+  toast(`✓ Torneo "${tournament}" eliminado completamente`, 'ok');
+  renderAdmin();
+}
+
+function buildAdminTorneos() {
+  // Agrupar partidos por torneo con conteo y stats
+  const grupos = {};
+  CACHE.matches.forEach(m => {
+    const t = m.tournament || 'Sin Torneo';
+    if (!grupos[t]) grupos[t] = { total: 0, jugados: 0 };
+    grupos[t].total++;
+    if (m.realHome != null) grupos[t].jugados++;
+  });
+  const torneos = Object.keys(grupos).sort();
+
+  let html = `<div class="card" style="padding:16px;margin-bottom:12px">
+    <details>
+      <summary class="group-summary" style="margin-bottom:8px">
+        <span>🗂️ Gestionar Torneos (${torneos.length})</span>
+        <span class="group-chevron">▼</span>
+      </summary>
+      <p style="font-size:11px;color:#64748b;margin:6px 0 12px">
+        Eliminar un torneo borra <b style="color:#f87171">todos sus partidos y predicciones</b>. No tiene vuelta atrás.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:6px">`;
+
+  if (!torneos.length) {
+    html += '<p style="font-size:12px;color:#475569">No hay torneos cargados.</p>';
+  } else {
+    torneos.forEach(t => {
+      const g = grupos[t];
+      const matchIds = new Set(
+        CACHE.matches.filter(m => (m.tournament || 'Sin Torneo') === t).map(m => m.id)
+      );
+      const predsCount = CACHE.preds.filter(p => matchIds.has(p.matchId)).length;
+      const safeName = t.replace(/'/g, "\\\'");
+      html += `<div style="background:#0f172a;border-radius:8px;padding:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:180px">
+          <div style="font-size:13px;font-weight:700;color:#f1f5f9">${t}</div>
+          <div style="font-size:10px;color:#64748b">
+            ${g.total} partidos · ${g.jugados} jugados · ${predsCount} predicciones
+          </div>
+        </div>
+        <button onclick="eliminarTorneo('${safeName}')"
+          style="padding:6px 12px;border-radius:6px;background:#7f1d1d;color:#fee2e2;border:1px solid #b91c1c;font-size:11px;font-weight:700;cursor:pointer"
+          title="Borrar torneo + partidos + predicciones">
+          🗑️ Eliminar
+        </button>
+      </div>`;
+    });
+  }
+  html += `</div></details></div>`;
+  return html;
 }
 
 async function delUser(id) {
