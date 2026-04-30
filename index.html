@@ -369,9 +369,10 @@
       <div class="card" style="padding:10px 12px;margin-bottom:10px;font-size:11px;color:#64748b;line-height:1.8">
         ${currentUser?.isAdmin
           ? `👑 <b style="color:#c084fc">Modo Admin</b> — Ingresa los resultados oficiales de cada partido`
-          : `🏆 Pozo <b style="color:#facc15">30 pts</b> por partido &nbsp;·&nbsp;
-        ✅ Aciertas = <b style="color:#4ade80">30 ÷ N</b> &nbsp;·&nbsp;
-        🥇 Exacto = <b style="color:#facc15">tu parte ×2</b>`}
+          : `🏆 Pozo <b style="color:#facc15">varía por fase</b> &nbsp;·&nbsp;
+        ✅ Aciertas = <b style="color:#4ade80">pozo ÷ N</b> &nbsp;·&nbsp;
+        🥇 Exacto = <b style="color:#facc15">tu parte ×2</b> &nbsp;·&nbsp;
+        <a href="#" onclick="event.preventDefault();showTab('reglas')" style="color:#60a5fa;text-decoration:underline">ver pozos</a>`}
       </div>
       <div id="tournamentPills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
       <div id="matchList" style="display:flex;flex-direction:column;gap:10px"></div>
@@ -416,7 +417,11 @@
         </div>
         <div class="card" style="padding:14px;display:flex;gap:12px;align-items:flex-start">
           <span style="font-size:24px;flex-shrink:0">🏆</span>
-          <div><b style="color:#f1f5f9;font-size:14px">Pozo de 30 puntos por partido</b><br/><span style="font-size:12px;color:#64748b">Se reparte en partes iguales entre todos los que aciertan el resultado.</span></div>
+          <div style="flex:1">
+            <b style="color:#f1f5f9;font-size:14px">Pozo según la fase del partido</b><br/>
+            <span style="font-size:12px;color:#64748b">Se reparte en partes iguales entre todos los que aciertan el resultado.</span>
+            <div id="reglasPozosTabla" style="margin-top:10px"></div>
+          </div>
         </div>
         <div class="card" style="padding:14px;display:flex;gap:12px;align-items:flex-start">
           <span style="font-size:24px;flex-shrink:0">🥇</span>
@@ -765,6 +770,7 @@ function refreshActiveTab() {
   if (currentTab === 'admin')      renderAdmin();
   if (currentTab === 'ajustes')    renderAjustes();
   if (currentTab === 'resultados') renderResultados();
+  if (currentTab === 'reglas')     renderReglasPozos();
 }
 
 function tryAutoLogin() {
@@ -811,7 +817,8 @@ function calcPoints(pred, match, allPreds) {
   const mp = (allPreds || CACHE.preds).filter(p => p.matchId === match.id);
   const correctN = mp.filter(p => Math.sign(p.predHome - p.predAway) === realO).length;
   if (!correctN) return 0;
-  const base  = 30 / correctN;
+  const pool  = getPoolForStage(match.stage);
+  const base  = pool / correctN;
   const exact = pred.predHome === match.realHome && pred.predAway === match.realAway;
   return Math.round((exact ? base * 2 : base) * 100) / 100;
 }
@@ -960,6 +967,7 @@ function showTab(tab) {
   if (tab === 'podio')      renderPodio();
   if (tab === 'ajustes')    renderAjustes();
   if (tab === 'resultados') renderResultados();
+  if (tab === 'reglas')     renderReglasPozos();
 }
 
 // ═══ UPCOMING MATCHES (Home) ═══
@@ -1159,6 +1167,129 @@ const STAGE_ORDER = [
   'Grupo G','Grupo H','Grupo I','Grupo J','Grupo K','Grupo L',
   'Ronda de 32','Octavos','Cuartos de Final','Semifinal','Tercer Puesto','Final'
 ];
+
+// Pozos por fase (editables desde Admin → 🏆 Pozos por Fase)
+// Si una fase no tiene config, usa STAGE_POOL_FALLBACK (30)
+const STAGE_POOL_FALLBACK = 30;
+const STAGE_POOLS_DEFAULT = {
+  'Grupo A': 30, 'Grupo B': 30, 'Grupo C': 30, 'Grupo D': 30,
+  'Grupo E': 30, 'Grupo F': 30, 'Grupo G': 30, 'Grupo H': 30,
+  'Grupo I': 30, 'Grupo J': 30, 'Grupo K': 30, 'Grupo L': 30,
+  'Ronda de 32': 35, 'Octavos': 40, 'Cuartos de Final': 50,
+  'Semifinal': 60, 'Tercer Puesto': 50, 'Final': 100
+};
+
+function getPoolForStage(rawStage) {
+  const stage = normStage(rawStage);
+  const overrides = (CACHE.settings && CACHE.settings.stagePoints) || {};
+  if (overrides[stage] != null && !isNaN(Number(overrides[stage]))) {
+    return Number(overrides[stage]);
+  }
+  if (STAGE_POOLS_DEFAULT[stage] != null) return STAGE_POOLS_DEFAULT[stage];
+  return STAGE_POOL_FALLBACK;
+}
+
+// Lista de fases unicas usadas en partidos actuales (para mostrar solo las relevantes)
+function getStagesEnUso() {
+  const set = new Set();
+  CACHE.matches.forEach(m => set.add(normStage(m.stage)));
+  // Ordenar segun STAGE_ORDER
+  return [...set].sort((a, b) => {
+    const ia = STAGE_ORDER.indexOf(a), ib = STAGE_ORDER.indexOf(b);
+    if (ia === -1 && ib === -1) return a.localeCompare(b);
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
+}
+
+async function saveStagePool(stage, valor) {
+  const num = Number(valor);
+  if (!Number.isFinite(num) || num < 0) {
+    return toast('Valor invalido (debe ser numero >= 0)', 'err');
+  }
+  await RT.ref('pf/settings/stagePoints/' + stage).set(num);
+  if (currentUser?.isAdmin) {
+    logActivity(currentUser.code, 'EditarPozo', `${stage} → ${num} pts`);
+  }
+  toast(`Pozo de ${stage} ahora es ${num} pts ✅`, 'ok');
+}
+
+async function resetStagePool(stage) {
+  if (!confirm(`Restaurar pozo de "${stage}" al default?`)) return;
+  await RT.ref('pf/settings/stagePoints/' + stage).remove();
+  toast(`${stage} restaurado al default ↩️`, 'ok');
+}
+
+// Tabla de pozos en pestana Reglas (vista para todos)
+function renderReglasPozos() {
+  const el = document.getElementById('reglasPozosTabla');
+  if (!el) return;
+  const stages = getStagesEnUso();
+  if (!stages.length) {
+    el.innerHTML = '<span style="font-size:11px;color:#475569">No hay partidos cargados todavia</span>';
+    return;
+  }
+  let html = `<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:6px">
+    <thead><tr style="color:#94a3b8;font-size:11px">
+      <th style="text-align:left;padding:4px 8px;border-bottom:1px solid #334155">Fase</th>
+      <th style="text-align:right;padding:4px 8px;border-bottom:1px solid #334155">Pozo</th>
+    </tr></thead><tbody>`;
+  stages.forEach((s, i) => {
+    const pool = getPoolForStage(s);
+    const isCustom = (CACHE.settings?.stagePoints || {})[s] != null;
+    const bg = i % 2 === 0 ? '#1e293b' : '#182030';
+    html += `<tr style="background:${bg}">
+      <td style="padding:6px 8px;color:#f1f5f9">${s}</td>
+      <td style="padding:6px 8px;text-align:right;color:${isCustom?'#facc15':'#4ade80'};font-weight:700">${pool} pts${isCustom?' ✨':''}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  html += '<p style="font-size:10px;color:#475569;margin-top:6px">✨ = personalizado por admin</p>';
+  el.innerHTML = html;
+}
+
+// Panel admin para editar pozos por fase
+function buildAdminPozos() {
+  const stages = getStagesEnUso();
+  const overrides = CACHE.settings?.stagePoints || {};
+  let html = `<div class="card" style="padding:16px;margin-bottom:12px">
+    <details open>
+      <summary class="group-summary" style="margin-bottom:8px">
+        <span>🏆 Pozos por Fase (${stages.length})</span>
+        <span class="group-chevron">▼</span>
+      </summary>
+      <p style="font-size:11px;color:#64748b;margin:6px 0 12px">
+        Cambios se aplican <b>en vivo</b> y recalculan puntos de todos los partidos de esa fase.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:6px">`;
+  if (!stages.length) {
+    html += '<p style="font-size:12px;color:#475569">Aun no hay partidos cargados.</p>';
+  } else {
+    stages.forEach(s => {
+      const pool = getPoolForStage(s);
+      const isCustom = overrides[s] != null;
+      const def = STAGE_POOLS_DEFAULT[s] != null ? STAGE_POOLS_DEFAULT[s] : STAGE_POOL_FALLBACK;
+      const inputId = 'pool_' + s.replace(/[^a-z0-9]/gi, '_');
+      html += `<div style="background:#0f172a;border-radius:8px;padding:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:140px">
+          <div style="font-size:13px;font-weight:700;color:#f1f5f9">${s}</div>
+          <div style="font-size:10px;color:#64748b">default ${def} pts ${isCustom ? '— <span style="color:#facc15">personalizado</span>' : ''}</div>
+        </div>
+        <input id="${inputId}" type="number" min="0" step="1" value="${pool}"
+          style="width:70px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#f1f5f9;font-size:13px;font-weight:700;text-align:center">
+        <button onclick="saveStagePool('${s.replace(/'/g, "\\\'")}', document.getElementById('${inputId}').value)"
+          style="padding:6px 12px;border-radius:6px;background:#0053e2;color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer">
+          Guardar
+        </button>
+        ${isCustom ? `<button onclick="resetStagePool('${s.replace(/'/g, "\\\'")}')"
+          style="padding:6px 8px;border-radius:6px;background:transparent;border:1px solid #334155;color:#94a3b8;font-size:11px;cursor:pointer" title="Volver al default">↩️</button>` : ''}
+      </div>`;
+    });
+  }
+  html += `</div></details></div>`;
+  return html;
+}
 let selectedTournament = null;
 let selectedRankTournament = '__all__';
 let selectedStatsTournament = '__all__';
@@ -2088,7 +2219,7 @@ function renderAdmin() {
   const subNav = '';
 
   document.getElementById('adminContent').innerHTML =
-    subNav + buildAdminGestion();
+    subNav + buildAdminPozos() + buildAdminGestion();
 }
 
 function setAdminTab(t) { adminSubTab=t; renderAdmin(); }
