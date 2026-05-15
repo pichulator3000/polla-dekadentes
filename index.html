@@ -756,12 +756,29 @@ function initFirebase() {
     if (dbReady) debouncedRefresh();
   });
 
-  // Messages → mensajes diarios entre jugadores
-  RT.ref('pf/messages').on('value', snap => {
+  // Messages → solo cargar mensajes del día actual (ahorra datos)
+  const today = new Date().toLocaleDateString('es-CL', { timeZone: 'America/Santiago' });
+  RT.ref('pf/messages').orderByChild('date').equalTo(today).on('value', snap => {
     CACHE.messages = snap.val() ? Object.values(snap.val()) : [];
     LOADED.messages = true;
     if (dbReady) debouncedRefresh();
   });
+
+  // Limpiar mensajes viejos (ejecutar una vez al día)
+  const lastCleanup = localStorage.getItem('msgCleanupDate');
+  if (lastCleanup !== today) {
+    localStorage.setItem('msgCleanupDate', today);
+    RT.ref('pf/messages').once('value', snap => {
+      if (!snap.val()) return;
+      const updates = {};
+      Object.entries(snap.val()).forEach(([key, msg]) => {
+        if (msg.date !== today) updates[key] = null;
+      });
+      if (Object.keys(updates).length > 0) {
+        RT.ref('pf/messages').update(updates);
+      }
+    });
+  }
 }
 
 function onAllLoaded() {
