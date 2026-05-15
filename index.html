@@ -303,12 +303,10 @@
 
       <!-- Mini Stats -->
       <div id="homeStats" style="display:none;margin-bottom:14px">
-        <h3 style="font-weight:900;font-size:15px;margin:0 0 10px;color:#f1f5f9">📊 Stats</h3>
+        <h3 style="font-weight:900;font-size:15px;margin:0 0 10px;color:#f1f5f9">📊 Mi Resumen</h3>
         <div class="card" style="padding:12px 14px">
           <div id="homeStatsKPIs" style="display:flex;gap:10px;margin-bottom:10px"></div>
-          <div style="height:180px;position:relative">
-            <canvas id="homeEvoChart"></canvas>
-          </div>
+          <div id="homeExtraStats" style="display:flex;gap:10px"></div>
         </div>
       </div>
 
@@ -390,6 +388,14 @@
       <h2 style="margin:0 0 12px;font-size:17px;font-weight:900">📊 Estadísticas</h2>
       <div id="statsPills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
       <div id="statsContent"></div>
+      <div style="margin-top:16px">
+        <h3 style="font-weight:900;font-size:15px;margin:0 0 10px;color:#f1f5f9">📈 Evolución de Puntos</h3>
+        <div class="card" style="padding:12px 14px">
+          <div style="height:250px;position:relative">
+            <canvas id="statsEvoChart"></canvas>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ADMIN -->
@@ -981,7 +987,7 @@ function showTab(tab) {
   currentTab = tab;
   if (tab === 'partidos')   renderMatches();
   if (tab === 'ranking')    renderRanking();
-  if (tab === 'stats')      renderStats();
+  if (tab === 'stats')      { renderStats(); renderStatsChart(); }
   if (tab === 'admin')      renderAdmin();
   if (tab === 'podio')      renderPodio();
   if (tab === 'ajustes')    renderAjustes();
@@ -995,9 +1001,8 @@ let homeChartInstance = null;
 function renderHomeStats() {
   const container = document.getElementById('homeStats');
   const kpiEl     = document.getElementById('homeStatsKPIs');
-  const canvas    = document.getElementById('homeEvoChart');
-  if (!container || !kpiEl || !canvas) return;
-  if (typeof Chart === 'undefined') return; // Chart.js not loaded yet
+  const extraEl   = document.getElementById('homeExtraStats');
+  if (!container || !kpiEl) return;
 
   const uid   = currentUser?.id;
   const isAdm = currentUser?.isAdmin;
@@ -1036,7 +1041,62 @@ function renderHomeStats() {
       <div style="font-size:10px;color:#64748b">Exactos 🥇</div>
     </div>`;
 
-  // Evolution chart — cumulative points per user across finished matches
+  // Calcular posición en el ranking
+  const ranking = users.map(u => {
+    const uPreds = preds.filter(p => p.userId === u.id);
+    const uDone = uPreds.filter(p => done.find(m => m.id === p.matchId));
+    const uPts = uDone.reduce((s, p) => {
+      const m = done.find(x => x.id === p.matchId);
+      return s + (m ? calcPoints(p, m, preds) : 0);
+    }, 0);
+    return { name: u.name, pts: uPts, id: u.id };
+  }).sort((a, b) => b.pts - a.pts);
+  const myPos = ranking.findIndex(r => r.id === uid) + 1;
+
+  // Calcular racha (últimos partidos con puntos > 0)
+  let streak = 0;
+  const myDoneSorted = myDone.sort((a, b) => {
+    const ma = done.find(x => x.id === a.matchId);
+    const mb = done.find(x => x.id === b.matchId);
+    return new Date(mb?.datetime) - new Date(ma?.datetime);
+  });
+  for (const p of myDoneSorted) {
+    const m = done.find(x => x.id === p.matchId);
+    const pts = m ? calcPoints(p, m, preds) : 0;
+    if (pts > 0) streak++;
+    else break;
+  }
+
+  if (extraEl) {
+    extraEl.innerHTML = `
+      <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:20px;font-weight:900;color:#c084fc">#${myPos}</div>
+        <div style="font-size:10px;color:#64748b">Posición</div>
+      </div>
+      <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:20px;font-weight:900;color:#fb923c">${streak}🔥</div>
+        <div style="font-size:10px;color:#64748b">Racha</div>
+      </div>
+      <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:20px;font-weight:900;color:#2dd4bf">${myDone.length}</div>
+        <div style="font-size:10px;color:#64748b">Partidos</div>
+      </div>`;
+  }
+}
+
+let statsChartInstance = null;
+
+function renderStatsChart() {
+  const canvas = document.getElementById('statsEvoChart');
+  if (!canvas) return;
+  if (typeof Chart === 'undefined') return;
+
+  const uid   = currentUser?.id;
+  const users = CACHE.users.filter(u => !u.isAdmin);
+  const done  = CACHE.matches.filter(m => m.realHome != null)
+    .sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
+  const preds = CACHE.preds;
+
   const tz = 'America/Santiago';
   const labels = done.length
     ? done.map(m => new Date(m.datetime).toLocaleDateString('es-CL', { day:'numeric', month:'short', timeZone: tz }))
@@ -1063,8 +1123,8 @@ function renderHomeStats() {
       })
     : [{ label: 'Puntos', data: [0], borderColor: '#334155', borderWidth: 1, pointRadius: 3 }];
 
-  if (homeChartInstance) homeChartInstance.destroy();
-  homeChartInstance = new Chart(canvas, {
+  if (statsChartInstance) statsChartInstance.destroy();
+  statsChartInstance = new Chart(canvas, {
     type: 'line',
     data: { labels, datasets },
     options: {
