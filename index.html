@@ -560,6 +560,21 @@
 
   </div><!-- /mainContent -->
 
+  <!-- MESSAGE PANEL (expandible) -->
+  <div id="messagePanel" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:flex-end;justify-content:center">
+    <div style="background:#1e293b;border-radius:16px 16px 0 0;padding:20px;width:100%;max-width:400px;max-height:70vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h3 style="margin:0;font-size:16px;font-weight:800;color:#f472b6">💌 Dejar un mensaje</h3>
+        <button onclick="toggleMessagePanel()" style="background:none;border:none;color:#64748b;font-size:20px;cursor:pointer">✕</button>
+      </div>
+      <p style="font-size:12px;color:#64748b;margin-bottom:12px">Solo puedes enviar <b style="color:#f472b6">1 mensaje por día</b>. El mensaje durará hasta medianoche.</p>
+      <div id="messageTargets"></div>
+    </div>
+  </div>
+
+  <!-- MESSAGE CORNER (mensaje recibido) -->
+  <div id="msgCorner" style="display:none;position:fixed;top:12px;right:12px;z-index:999;max-width:200px"></div>
+
   <!-- BOTTOM NAV -->
   <div id="bottomNav">
     <button class="nav-btn nav-active" id="nb-home" onclick="showHome()">
@@ -628,7 +643,7 @@ const RT = firebase.database();
 
 // ═══ CACHE local (espejo de Firebase) ═══
 const CACHE  = { users: [], matches: [], preds: [], podio: [], pending: [], settings: {} };
-const LOADED = { users: false, matches: false, preds: false, podio: false };
+const LOADED = { users: false, matches: false, preds: false, podio: false, messages: false };
 let dbReady     = false;
 let currentUser = null;
 let currentTab  = 'home';
@@ -738,6 +753,13 @@ function initFirebase() {
   });
   RT.ref('pf/settings').on('value', snap => {
     CACHE.settings = snap.val() || {};
+    if (dbReady) debouncedRefresh();
+  });
+
+  // Messages → mensajes diarios entre jugadores
+  RT.ref('pf/messages').on('value', snap => {
+    CACHE.messages = snap.val() ? Object.values(snap.val()) : [];
+    LOADED.messages = true;
     if (dbReady) debouncedRefresh();
   });
 }
@@ -1067,20 +1089,37 @@ function renderHomeStats() {
     else break;
   }
 
+  // Verificar si alguien me dejó mensaje hoy
+  const today = new Date().toLocaleDateString('es-CL', { timeZone: 'America/Santiago' });
+  const myMsg = CACHE.messages?.find(m => m.toUserId === uid && m.date === today);
+
   if (extraEl) {
     extraEl.innerHTML = `
       <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center">
         <div style="font-size:20px;font-weight:900;color:#c084fc">#${myPos}</div>
         <div style="font-size:10px;color:#64748b">Posición</div>
       </div>
-      <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center">
-        <div style="font-size:20px;font-weight:900;color:#fb923c">${streak}🔥</div>
-        <div style="font-size:10px;color:#64748b">Racha</div>
+      <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center;cursor:pointer" onclick="toggleMessagePanel()">
+        <div style="font-size:20px;font-weight:900;color:#f472b6">💌</div>
+        <div style="font-size:10px;color:#64748b">Mensaje</div>
       </div>
       <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center">
         <div style="font-size:20px;font-weight:900;color:#2dd4bf">${myDone.length}</div>
         <div style="font-size:10px;color:#64748b">Partidos</div>
       </div>`;
+  }
+
+  // Mostrar mensaje recibido en la esquina
+  const msgCorner = document.getElementById('msgCorner');
+  if (msgCorner && myMsg) {
+    msgCorner.style.display = 'block';
+    msgCorner.innerHTML = `
+      <div style="background:rgba(15,23,44,0.7);border:1px solid rgba(244,114,182,0.3);border-radius:10px;padding:8px 12px;backdrop-filter:blur(4px)">
+        <div style="font-size:9px;color:#f472b6;margin-bottom:2px;font-weight:700">💌 ${myMsg.fromName}</div>
+        <div style="font-size:12px;color:#f1f5f9;font-weight:600">${myMsg.text}</div>
+      </div>`;
+  } else if (msgCorner) {
+    msgCorner.style.display = 'none';
   }
 }
 
@@ -1151,6 +1190,115 @@ function renderStatsChart() {
       }
     }
   });
+}
+
+// ═══ SISTEMA DE MENSAJES DIARIOS ═══
+function toggleMessagePanel() {
+  const panel = document.getElementById('messagePanel');
+  if (panel.style.display === 'none' || !panel.style.display) {
+    panel.style.display = 'flex';
+    renderMessageTargets();
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+function renderMessageTargets() {
+  const container = document.getElementById('messageTargets');
+  if (!container) return;
+
+  const uid = currentUser?.id;
+  const today = new Date().toLocaleDateString('es-CL', { timeZone: 'America/Santiago' });
+  const users = CACHE.users.filter(u => !u.isAdmin && u.id !== uid);
+
+  // Verificar si ya envié un mensaje hoy
+  const sentToday = CACHE.messages?.find(m => m.fromUserId === uid && m.date === today);
+  const alreadySent = !!sentToday;
+
+  let html = '';
+  users.forEach(u => {
+    const receivedFromThisUser = CACHE.messages?.find(m => m.fromUserId === u.id && m.toUserId === uid && m.date === today);
+    const disabled = alreadySent ? 'opacity:0.5;pointer-events:none' : '';
+    const btnText = alreadySent ? '✅ Enviado' : '💌 Enviar';
+    const btnColor = alreadySent ? '#4ade80' : '#f472b6';
+
+    html += `
+      <div style="background:#0f172a;border-radius:10px;padding:12px;margin-bottom:8px;${disabled}">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:700;color:#f1f5f9;font-size:14px">${u.name}</div>
+            ${receivedFromThisUser ? `<div style="font-size:11px;color:#f472b6;margin-top:4px">💌 "${receivedFromThisUser.text}"</div>` : ''}
+          </div>
+          <button onclick="sendMessage('${u.id}', '${u.name.replace(/'/g, "\\'")}')")" 
+            style="background:${btnColor};border:none;border-radius:8px;padding:8px 12px;color:#0f172a;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">
+            ${btnText}
+          </button>
+        </div>
+        ${!alreadySent ? `
+          <input type="text" id="msgInput_${u.id}" placeholder="Escribe algo corto..." maxlength="50"
+            style="width:100%;margin-top:8px;background:#1e293b;border:1px solid #334155;border-radius:8px;padding:8px;color:#f1f5f9;font-size:12px;box-sizing:border-box">
+        ` : ''}
+      </div>`;
+  });
+
+  container.innerHTML = html || '<p style="color:#64748b;font-size:12px;text-align:center">No hay otros jugadores</p>';
+}
+
+function sendMessage(toUserId, toUserName) {
+  const uid = currentUser?.id;
+  const input = document.getElementById(`msgInput_${toUserId}`);
+  const text = input?.value?.trim();
+
+  if (!text) {
+    toast('Escribe algo primero', 'error');
+    return;
+  }
+
+  if (text.length > 50) {
+    toast('Máximo 50 caracteres', 'error');
+    return;
+  }
+
+  const today = new Date().toLocaleDateString('es-CL', { timeZone: 'America/Santiago' });
+
+  // Inicializar array de mensajes si no existe
+  if (!CACHE.messages) CACHE.messages = [];
+
+  // Verificar si ya envié hoy
+  const alreadySent = CACHE.messages.find(m => m.fromUserId === uid && m.date === today);
+  if (alreadySent) {
+    toast('Ya enviaste un mensaje hoy', 'error');
+    return;
+  }
+
+  // Guardar mensaje
+  CACHE.messages.push({
+    fromUserId: uid,
+    fromName: currentUser.name,
+    toUserId: toUserId,
+    toName: toUserName,
+    text: text,
+    date: today,
+    timestamp: Date.now()
+  });
+
+  // Guardar en Firebase si está disponible
+  if (typeof db !== 'undefined' && db) {
+    const msgRef = db.ref('messages').push();
+    msgRef.set({
+      fromUserId: uid,
+      fromName: currentUser.name,
+      toUserId: toUserId,
+      toName: toUserName,
+      text: text,
+      date: today,
+      timestamp: Date.now()
+    });
+  }
+
+  toast(`💌 Mensaje enviado a ${toUserName}`, 'ok');
+  toggleMessagePanel();
+  renderHomeStats(); // Refrescar para mostrar el mensaje en la esquina
 }
 
 function renderUpcoming() {
