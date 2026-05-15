@@ -573,7 +573,7 @@
   </div>
 
   <!-- MESSAGE CORNER (mensaje recibido) -->
-  <div id="msgCorner" style="display:none;position:fixed;top:12px;right:12px;z-index:999;max-width:200px"></div>
+  <div id="msgCorner" style="display:none;position:fixed;top:12px;left:12px;z-index:999;max-width:200px"></div>
 
   <!-- BOTTOM NAV -->
   <div id="bottomNav">
@@ -1258,7 +1258,13 @@ function renderMessageTargets() {
       </div>`;
   });
 
-  container.innerHTML = html || '<p style="color:#64748b;font-size:12px;text-align:center">No hay otros jugadores</p>';
+  if (!html) {
+    const totalUsers = CACHE.users?.length || 0;
+    const adminUsers = CACHE.users?.filter(u => u.isAdmin).length || 0;
+    container.innerHTML = `<p style="color:#64748b;font-size:12px;text-align:center">No hay otros jugadores<br><span style="font-size:10px;color:#475569">Total: ${totalUsers} usuarios, ${adminUsers} admins</span></p>`;
+  } else {
+    container.innerHTML = html;
+  }
 }
 
 function sendMessage(toUserId, toUserName) {
