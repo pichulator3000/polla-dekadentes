@@ -2383,30 +2383,37 @@ function renderPodio() {
     ${myPodio.champion ? `<div style="text-align:center;margin-top:10px;font-size:11px;color:#4ade80">✓ Tu predicción está guardada</div>` : ''}
   </div>`;
 
-  // Show everyone's picks (only completed ones)
-  const allPodio = CACHE.podio.filter(p => p.champion && !CACHE.users.find(u=>u.id===p.userId)?.isAdmin);
-  if (allPodio.length) {
-    html += `<h3 style="font-weight:800;font-size:14px;margin:0 0 8px;color:#facc15">👀 Predicciones del grupo</h3>
-    <div class="card" style="overflow:hidden">
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead><tr style="background:#0f172a;color:#64748b;font-size:10px;text-transform:uppercase">
-          <th style="padding:8px 10px;text-align:left">Jugador</th>
-          <th style="padding:8px 6px;text-align:center">🥇</th>
-          <th style="padding:8px 6px;text-align:center">🥈</th>
-          <th style="padding:8px 6px;text-align:center">⚽</th>
-        </tr></thead>
-        <tbody>`;
-    allPodio.forEach((p, i) => {
-      const u = CACHE.users.find(x=>x.id===p.userId);
-      const isMine = p.userId===uid;
-      html += `<tr style="${isMine?'background:#1e3a5f':i%2===0?'background:#1e293b':'background:#182030'}">
-        <td style="padding:8px 10px;font-weight:700">${u?.name||'?'}${isMine?' <span style="color:#facc15;font-size:10px">(tú)</span>':''}</td>
-        <td style="padding:8px 6px;text-align:center;font-weight:700;color:#facc15;font-size:11px">${p.champion||'—'}</td>
-        <td style="padding:8px 6px;text-align:center;color:#94a3b8;font-size:11px">${p.runner||'—'}</td>
-        <td style="padding:8px 6px;text-align:center;color:#4ade80;font-size:11px">${p.scorer||'—'}</td>
-      </tr>`;
-    });
-    html += `</tbody></table></div>`;
+  // Show everyone's picks ONLY after the World Cup starts (no copying!)
+  if (locked) {
+    const allPodio = CACHE.podio.filter(p => p.champion && !CACHE.users.find(u=>u.id===p.userId)?.isAdmin);
+    if (allPodio.length) {
+      html += `<h3 style="font-weight:800;font-size:14px;margin:0 0 8px;color:#facc15">👀 Predicciones del grupo</h3>
+      <div class="card" style="overflow:hidden">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:#0f172a;color:#64748b;font-size:10px;text-transform:uppercase">
+            <th style="padding:8px 10px;text-align:left">Jugador</th>
+            <th style="padding:8px 6px;text-align:center">🥇</th>
+            <th style="padding:8px 6px;text-align:center">🥈</th>
+            <th style="padding:8px 6px;text-align:center">⚽</th>
+          </tr></thead>
+          <tbody>`;
+      allPodio.forEach((p, i) => {
+        const u = CACHE.users.find(x=>x.id===p.userId);
+        const isMine = p.userId===uid;
+        html += `<tr style="${isMine?'background:#1e3a5f':i%2===0?'background:#1e293b':'background:#182030'}">
+          <td style="padding:8px 10px;font-weight:700">${u?.name||'?'}${isMine?' <span style="color:#facc15;font-size:10px">(tú)</span>':''}</td>
+          <td style="padding:8px 6px;text-align:center;font-weight:700;color:#facc15;font-size:11px">${p.champion||'—'}</td>
+          <td style="padding:8px 6px;text-align:center;color:#94a3b8;font-size:11px">${p.runner||'—'}</td>
+          <td style="padding:8px 6px;text-align:center;color:#4ade80;font-size:11px">${p.scorer||'—'}</td>
+        </tr>`;
+      });
+      html += `</tbody></table></div>`;
+    }
+  } else {
+    html += `<div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:14px;text-align:center;margin-top:8px">
+      <span style="font-size:20px">🔒</span>
+      <p style="margin:6px 0 0;color:#64748b;font-size:12px">Las predicciones del grupo se revelarán cuando <b style="color:#facc15">comience el Mundial</b></p>
+    </div>`;
   }
 
   document.getElementById('podioContent').innerHTML = html;
