@@ -1046,7 +1046,7 @@ function renderHomeStats() {
   const uid   = currentUser?.id;
   const isAdm = currentUser?.isAdmin;
   const users = CACHE.users.filter(u => !u.isAdmin);
-  const done  = CACHE.matches.filter(m => m.realHome != null)
+  const done  = CACHE.matches.filter(m => m.realHome != null && !isTournamentHidden(m.tournament || 'Sin Torneo'))
     .sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
   const preds = CACHE.preds;
 
@@ -1149,7 +1149,7 @@ function renderStatsChart() {
 
   const uid   = currentUser?.id;
   const users = CACHE.users.filter(u => !u.isAdmin);
-  const done  = CACHE.matches.filter(m => m.realHome != null)
+  const done  = CACHE.matches.filter(m => m.realHome != null && !isTournamentHidden(m.tournament || 'Sin Torneo'))
     .sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
   const preds = CACHE.preds;
 
@@ -2139,10 +2139,10 @@ async function savePred(matchId) {
 function renderRanking() {
   buildTournamentPills('rankingPills', selectedRankTournament, 'setRankTournament');
   const users   = CACHE.users.filter(u => !u.isAdmin);
-  // Cuando es "Todos", excluir torneos ocultos
+  // Excluir siempre torneos ocultos
   const baseMatches = selectedRankTournament === '__all__'
     ? CACHE.matches.filter(m => !isTournamentHidden(m.tournament || 'Sin Torneo'))
-    : CACHE.matches.filter(m => (m.tournament || 'Sin Torneo') === selectedRankTournament);
+    : CACHE.matches.filter(m => (m.tournament || 'Sin Torneo') === selectedRankTournament && !isTournamentHidden(m.tournament || 'Sin Torneo'));
   const matches = baseMatches;
   const preds   = CACHE.preds;
   const incluyePodio = podioAplicaATorneo(selectedRankTournament);
