@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="theme-color" content="#0f172a"/>
+  <title>Polla Dekadentes ⚽ — Preview Partido Potenciado</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html { height: 100%; }
+    body {
+      margin: 0; padding: 0;
+      background: #0f172a; color: #f1f5f9;
+      font-family: -apple-system, 'Segoe UI', sans-serif;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #appScreen {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    #appHeader {
+      flex-shrink: 0;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      padding: 0 16px;
+      height: 52px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    #mainContent {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding: 12px;
+    }
+
+    #bottomNav {
+      flex-shrink: 0;
+      background: #1e293b;
+      border-top: 1px solid #334155;
+      display: flex;
+    }
+    .nav-btn {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 3px; padding: 8px 2px;
+      color: #64748b; font-size: 10px; font-weight: 700;
+      min-height: 54px; border: none; background: none; cursor: pointer;
+    }
+    .nav-btn .nicon { font-size: 20px; line-height: 1; display: block; }
+    .nav-btn.nav-active { color: #facc15; }
+    .nav-btn.nav-active .nicon { transform: scale(1.2); }
+
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 14px; }
+
+    /* ═══════════════════════════════════════════
+       PARTIDO POTENCIADO — ESTILOS PRINCIPALES
+       ═══════════════════════════════════════════ */
+
+    /* Contenedor principal con glow animado */
+    @property --glow-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+    @keyframes glowSpin {
+      to { --glow-angle: 360deg; }
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 20px rgba(250,204,21,0.3), 0 0 40px rgba(250,204,21,0.1), inset 0 0 20px rgba(250,204,21,0.05); }
+      50% { box-shadow: 0 0 30px rgba(250,204,21,0.5), 0 0 60px rgba(250,204,21,0.2), inset 0 0 30px rgba(250,204,21,0.1); }
+    }
+    @keyframes floatEmoji {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      25% { transform: translateY(-4px) rotate(5deg); }
+      75% { transform: translateY(4px) rotate(-5deg); }
+    }
+    @keyframes revealPop {
+      0% { transform: scale(0.5); opacity: 0; }
+      60% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes starBurst {
+      0% { transform: scale(0) rotate(0deg); opacity: 1; }
+      100% { transform: scale(1.5) rotate(180deg); opacity: 0; }
+    }
+    @keyframes badgeBounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+    @keyframes countPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    .potenciado-card {
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      animation: pulseGlow 3s ease-in-out infinite;
+    }
+
+    /* Borde con gradiente giratorio */
+    .potenciado-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 18px;
+      padding: 2.5px;
+      background: conic-gradient(from var(--glow-angle), #facc15, #f97316, #ef4444, #c084fc, #60a5fa, #4ade80, #facc15);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      animation: glowSpin 3s linear infinite;
+      z-index: 2;
+    }
+
+    /* Fondo con shimmer */
+    .potenciado-bg {
+      position: absolute;
+      inset: 2.5px;
+      border-radius: 15.5px;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 30%, #1a1a2e 50%, #0f172a 70%, #1e293b 100%);
+      background-size: 200% 200%;
+      animation: shimmer 4s ease-in-out infinite;
+      z-index: 0;
+    }
+
+    /* Estrellas decorativas */
+    .potenciado-stars {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      border-radius: 15.5px;
+      z-index: 1;
+      pointer-events: none;
+    }
+    .star {
+      position: absolute;
+      font-size: 10px;
+      opacity: 0;
+      animation: starFloat 3s ease-in-out infinite;
+    }
+    @keyframes starFloat {
+      0%, 100% { opacity: 0; transform: translateY(0) scale(0.5); }
+      25% { opacity: 0.8; }
+      50% { opacity: 0.4; transform: translateY(-20px) scale(1); }
+      75% { opacity: 0.6; }
+    }
+
+    .potenciado-content {
+      position: relative;
+      z-index: 3;
+      padding: 18px 16px;
+    }
+
+    /* Badge de potenciado */
+    .potenciado-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, #facc15, #f97316);
+      color: #0f172a;
+      font-size: 11px;
+      font-weight: 900;
+      padding: 5px 12px;
+      border-radius: 20px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      animation: badgeBounce 2s ease-in-out infinite;
+      box-shadow: 0 2px 12px rgba(250,204,21,0.4);
+    }
+
+    /* Texto shimmer dorado */
+    .potenciado-text-shimmer {
+      background: linear-gradient(90deg, #facc15 0%, #fef08a 25%, #facc15 50%, #fef08a 75%, #facc15 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 2s linear infinite;
+    }
+
+    /* Equipos */
+    .potenciado-teams {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin: 14px 0;
+    }
+    .potenciado-team {
+      text-align: center;
+      flex: 1;
+    }
+    .potenciado-team-flag {
+      font-size: 48px;
+      display: block;
+      margin-bottom: 6px;
+      animation: floatEmoji 3s ease-in-out infinite;
+    }
+    .potenciado-team-flag:last-child {
+      animation-delay: 1.5s;
+    }
+    .potenciado-team-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: #f1f5f9;
+    }
+    .potenciado-vs {
+      font-size: 18px;
+      font-weight: 900;
+      color: #facc15;
+      flex-shrink: 0;
+    }
+
+    /* Info del partido */
+    .potenciado-info {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 10px;
+    }
+    .potenciado-info-item {
+      font-size: 11px;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Estado: oculto (antes de que inicie) */
+    .potenciado-hidden {
+      text-align: center;
+      padding: 10px 0;
+    }
+    .potenciado-hidden-text {
+      font-size: 13px;
+      color: #94a3b8;
+      font-style: italic;
+    }
+
+    /* Estado: revelado (en vivo / terminado) */
+    .potenciado-revealed {
+      animation: revealPop 0.6s ease-out;
+    }
+    .potenciado-revealed .potenciado-badge {
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+      box-shadow: 0 2px 12px rgba(74,222,128,0.4);
+    }
+
+    /* Multiplicador */
+    .potenciado-multiplier {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 8px 16px;
+      background: rgba(250,204,21,0.1);
+      border: 1px solid rgba(250,204,21,0.3);
+      border-radius: 10px;
+    }
+    .potenciado-multiplier-text {
+      font-size: 12px;
+      color: #facc15;
+      font-weight: 700;
+    }
+    .potenciado-multiplier-value {
+      font-size: 20px;
+      font-weight: 900;
+      color: #facc15;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar{width:6px}
+    ::-webkit-scrollbar-track{background:#0f172a;border-radius:3px}
+    ::-webkit-scrollbar-thumb{background:#475569;border-radius:3px}
+    * { scrollbar-width: thin; scrollbar-color: #475569 #0f172a; }
+
+    /* ── KPI chips ── */
+    .kpi-chip {
+      flex: 1;
+      text-align: center;
+      padding: 10px 6px;
+      border-radius: 10px;
+      background: #0f172a;
+      border: 1px solid #334155;
+    }
+    .kpi-val { font-size: 22px; font-weight: 900; color: #facc15; }
+    .kpi-lbl { font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+
+    /* ── Próximos partidos mini ── */
+    .upcoming-mini {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      margin-bottom: 6px;
+    }
+    .upcoming-mini-date { font-size: 10px; color: #64748b; white-space: nowrap; }
+    .upcoming-mini-teams { font-size: 12px; color: #f1f5f9; font-weight: 700; flex: 1; }
+    .upcoming-mini-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; }
+    .badge-open { background:#16a34a22; color:#4ade80; border:1px solid #16a34a; }
+    .badge-lock { background:#dc262622; color:#f87171; border:1px solid #dc2626; }
+  </style>
+</head>
+<body>
+
+<div id="appScreen">
+
+  <!-- HEADER -->
+  <div id="appHeader">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:20px">⚽</span>
+      <span style="font-weight:900;color:#facc15;font-size:16px">Polla Dekadentes</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:12px;color:#94a3b8">Tomas</span>
+      <button style="background:#334155;color:#f1f5f9;font-weight:700;border-radius:8px;padding:6px 10px;font-size:13px;border:none;cursor:pointer;">⚙️</button>
+      <button style="background:#334155;color:#f1f5f9;font-weight:700;border-radius:8px;padding:6px 10px;font-size:13px;border:none;cursor:pointer;">Salir</button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div id="mainContent">
+
+    <!-- Logo + saludo -->
+    <div style="text-align:center;padding:16px 0 20px">
+      <div style="margin-bottom:16px;text-align:center">
+        <img src="panini.png" alt="Polla Dekadentes" width="120" height="120" style="border-radius:14px;display:inline-block;"
+             onerror="this.style.display='none';this.parentElement.innerHTML='<div style=\\'font-size:80px\\'>🏆</div>'">
+      </div>
+      <p style="color:#64748b;font-size:14px;margin:0">¡Hola Tomas! 👋 Fecha 2 de Grupos</p>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         PARTIDO POTENCIADO — ESTADO: OCULTO (antes de inicio)
+         ═══════════════════════════════════════════════ -->
+    <div class="potenciado-card" id="potenciadoOculto">
+      <div class="potenciado-bg"></div>
+      <div class="potenciado-stars">
+        <span class="star" style="top:15%;left:10%;animation-delay:0s">✦</span>
+        <span class="star" style="top:25%;right:15%;animation-delay:0.5s">✧</span>
+        <span class="star" style="top:60%;left:5%;animation-delay:1s">✦</span>
+        <span class="star" style="top:70%;right:8%;animation-delay:1.5s">✧</span>
+        <span class="star" style="top:40%;left:85%;animation-delay:2s">✦</span>
+        <span class="star" style="top:80%;left:50%;animation-delay:0.8s">✧</span>
+        <span class="star" style="top:10%;left:60%;animation-delay:1.2s">✦</span>
+        <span class="star" style="top:50%;right:3%;animation-delay:2.5s">✧</span>
+      </div>
+      <div class="potenciado-content">
+        <div style="text-align:center;">
+          <div class="potenciado-badge">
+            <span>⚡</span>
+            <span>Partido Potenciado</span>
+            <span>⚡</span>
+          </div>
+        </div>
+
+        <div style="text-align:center;margin-top:12px;">
+          <div class="potenciado-text-shimmer" style="font-size:13px;font-weight:700;">
+            🔒 El partido potenciado se revela al inicio
+          </div>
+        </div>
+
+        <div class="potenciado-hidden">
+          <div style="font-size:40px;margin-bottom:8px;animation: floatEmoji 2s ease-in-out infinite;">🎲</div>
+          <div class="potenciado-hidden-text">
+            Se eligió aleatoriamente entre los 12 partidos de la Fecha 2<br/>
+            <span style="color:#facc15;font-weight:700;">¡El pozo se duplica!</span>
+          </div>
+        </div>
+
+        <div class="potenciado-multiplier">
+          <span class="potenciado-multiplier-text">MULTIPLICADOR</span>
+          <span class="potenciado-multiplier-value">×2</span>
+        </div>
+
+        <div class="potenciado-info">
+          <div class="potenciado-info-item">📅 18 Jun 2026</div>
+          <div class="potenciado-info-item">🏟️ Fase de Grupos</div>
+          <div class="potenciado-info-item">⏰ Por revelar</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         PARTIDO POTENCIADO — ESTADO: REVELADO (toggle con botón)
+         ═══════════════════════════════════════════════ -->
+    <div class="potenciado-card" id="potenciadoRevelado" style="display:none;">
+      <div class="potenciado-bg"></div>
+      <div class="potenciado-stars">
+        <span class="star" style="top:15%;left:10%;animation-delay:0s;color:#4ade80">✦</span>
+        <span class="star" style="top:25%;right:15%;animation-delay:0.5s;color:#4ade80">✧</span>
+        <span class="star" style="top:60%;left:5%;animation-delay:1s;color:#4ade80">✦</span>
+        <span class="star" style="top:70%;right:8%;animation-delay:1.5s;color:#4ade80">✧</span>
+        <span class="star" style="top:40%;left:85%;animation-delay:2s;color:#4ade80">✦</span>
+        <span class="star" style="top:80%;left:50%;animation-delay:0.8s;color:#4ade80">✧</span>
+      </div>
+      <div class="potenciado-content potenciado-revealed">
+        <div style="text-align:center;">
+          <div class="potenciado-badge" style="background:linear-gradient(135deg,#4ade80,#22c55e);box-shadow:0 2px 12px rgba(74,222,128,0.4);">
+            <span>⚡</span>
+            <span>Partido Potenciado — REVELADO</span>
+            <span>⚡</span>
+          </div>
+        </div>
+
+        <div class="potenciado-teams">
+          <div class="potenciado-team">
+            <span class="potenciado-team-flag">🇦🇷</span>
+            <div class="potenciado-team-name">Argentina</div>
+          </div>
+          <div class="potenciado-vs">VS</div>
+          <div class="potenciado-team">
+            <span class="potenciado-team-flag">🇲🇽</span>
+            <div class="potenciado-team-name">México</div>
+          </div>
+        </div>
+
+        <div style="text-align:center;">
+          <div style="font-size:12px;color:#4ade80;font-weight:700;">🔓 ¡Se reveló el partido potenciado!</div>
+          <div style="font-size:11px;color:#64748b;margin-top:4px;">Pozo normal: 30 pts → <span style="color:#facc15;font-weight:800;">Pozo potenciado: 60 pts</span></div>
+        </div>
+
+        <div class="potenciado-multiplier">
+          <span class="potenciado-multiplier-text">MULTIPLICADOR</span>
+          <span class="potenciado-multiplier-value">×2</span>
+        </div>
+
+        <div class="potenciado-info">
+          <div class="potenciado-info-item">📅 18 Jun 2026</div>
+          <div class="potenciado-info-item">🏟️ Grupo A</div>
+          <div class="potenciado-info-item">⏰ 20:00 Chile</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botón para toggle de demostración -->
+    <div style="text-align:center;margin-bottom:16px;">
+      <button onclick="togglePotenciado()" id="btnToggle"
+        style="background:linear-gradient(135deg,#7c3aed,#60a5fa);color:white;font-weight:800;border-radius:12px;padding:10px 24px;font-size:13px;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(124,58,237,0.3);">
+        👁️ Simular revelado
+      </button>
+      <div style="font-size:10px;color:#475569;margin-top:4px;">← Toggle para ver ambos estados</div>
+    </div>
+
+    <!-- Mini Stats -->
+    <div style="margin-bottom:14px">
+      <h3 style="font-weight:900;font-size:15px;margin:0 0 10px;color:#f1f5f9">📊 Mi Resumen</h3>
+      <div class="card" style="padding:12px 14px">
+        <div style="display:flex;gap:10px;margin-bottom:10px">
+          <div class="kpi-chip"><div class="kpi-val">145</div><div class="kpi-lbl">Puntos</div></div>
+          <div class="kpi-chip"><div class="kpi-val">4°</div><div class="kpi-lbl">Posición</div></div>
+          <div class="kpi-chip"><div class="kpi-val">3</div><div class="kpi-lbl">Exactos</div></div>
+          <div class="kpi-chip"><div class="kpi-val">12</div><div class="kpi-lbl">Aciertos</div></div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <div class="kpi-chip"><div class="kpi-val" style="font-size:16px;color:#60a5fa">68%</div><div class="kpi-lbl">Precisión</div></div>
+          <div class="kpi-chip"><div class="kpi-val" style="font-size:16px;color:#4ade80">8</div><div class="kpi-lbl">Partidos</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid de accesos rápidos -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <button class="card" style="padding:20px 12px;text-align:center;border:none;cursor:pointer;width:100%;color:inherit;font:inherit">
+        <div style="font-size:36px;margin-bottom:8px">🏟️</div>
+        <div style="font-weight:900;color:#f1f5f9;font-size:15px">Fixture</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px">Tus predicciones</div>
+      </button>
+      <button class="card" style="padding:20px 12px;text-align:center;border:none;cursor:pointer;width:100%;color:inherit;font:inherit">
+        <div style="font-size:36px;margin-bottom:8px">🏆</div>
+        <div style="font-weight:900;color:#f1f5f9;font-size:15px">Ranking</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px">Tabla de posiciones</div>
+      </button>
+      <button class="card" style="padding:20px 12px;text-align:center;border:none;cursor:pointer;width:100%;color:inherit;font:inherit">
+        <div style="font-size:36px;margin-bottom:8px">📊</div>
+        <div style="font-weight:900;color:#f1f5f9;font-size:15px">Estadísticas</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px">Números y datos</div>
+      </button>
+      <button class="card" style="padding:20px 12px;text-align:center;border:none;cursor:pointer;width:100%;color:inherit;font:inherit">
+        <div style="font-size:36px;margin-bottom:8px">🏅</div>
+        <div style="font-weight:900;color:#f1f5f9;font-size:15px">Podio</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px">Campeón y goleador</div>
+      </button>
+      <button class="card" style="padding:20px 12px;text-align:center;border:none;cursor:pointer;width:100%;color:inherit;font:inherit">
+        <div style="font-size:36px;margin-bottom:8px">📜</div>
+        <div style="font-weight:900;color:#f1f5f9;font-size:15px">Reglas</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px">Pa que no webeen</div>
+      </button>
+      <button class="card" style="padding:20px 12px;text-align:center;border:none;cursor:pointer;width:100%;color:inherit;font:inherit">
+        <div style="font-size:36px;margin-bottom:8px">🔍</div>
+        <div style="font-weight:900;color:#f1f5f9;font-size:15px">Resultados</div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px">Historial por jugador</div>
+      </button>
+    </div>
+
+    <!-- Próximos Partidos -->
+    <div style="margin-top:16px">
+      <h3 style="font-weight:900;font-size:15px;margin:0 0 10px;color:#f1f5f9">📅 Próximos Partidos</h3>
+      <div class="upcoming-mini">
+        <div class="upcoming-mini-date">18 Jun<br/>20:00</div>
+        <div class="upcoming-mini-teams">🇦🇷 Argentina vs México 🇲🇽</div>
+        <span class="upcoming-mini-badge badge-open">● Abierto</span>
+      </div>
+      <div class="upcoming-mini">
+        <div class="upcoming-mini-date">18 Jun<br/>23:00</div>
+        <div class="upcoming-mini-teams">🇧🇷 Brasil vs Japón 🇯🇵</div>
+        <span class="upcoming-mini-badge badge-open">● Abierto</span>
+      </div>
+      <div class="upcoming-mini">
+        <div class="upcoming-mini-date">19 Jun<br/>17:00</div>
+        <div class="upcoming-mini-teams">🇪🇸 España vs Chile 🇨🇱</div>
+        <span class="upcoming-mini-badge badge-lock">🔒 Cerrado</span>
+      </div>
+      <div class="upcoming-mini">
+        <div class="upcoming-mini-date">19 Jun<br/>20:00</div>
+        <div class="upcoming-mini-teams">🇩🇪 Alemania vs Uruguay 🇺🇾</div>
+        <span class="upcoming-mini-badge badge-lock">🔒 Cerrado</span>
+      </div>
+    </div>
+
+    <!-- Espacio inferior -->
+    <div style="height:24px"></div>
+
+  </div><!-- /mainContent -->
+
+  <!-- BOTTOM NAV -->
+  <div id="bottomNav">
+    <button class="nav-btn nav-active">
+      <span class="nicon">🏠</span>
+      <span>Home</span>
+    </button>
+    <button class="nav-btn">
+      <span class="nicon">🏟️</span>
+      <span>Fixture</span>
+    </button>
+    <button class="nav-btn">
+      <span class="nicon">🏆</span>
+      <span>Ranking</span>
+    </button>
+    <button class="nav-btn">
+      <span class="nicon">📊</span>
+      <span>Stats</span>
+    </button>
+  </div>
+
+</div>
+
+<script>
+  let revelado = false;
+  function togglePotenciado() {
+    revelado = !revelado;
+    document.getElementById('potenciadoOculto').style.display = revelado ? 'none' : 'block';
+    document.getElementById('potenciadoRevelado').style.display = revelado ? 'block' : 'none';
+    document.getElementById('btnToggle').textContent = revelado ? '🔒 Simular oculto' : '👁️ Simular revelado';
+  }
+</script>
+
+</body>
+</html>

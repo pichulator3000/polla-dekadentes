@@ -185,6 +185,61 @@
     .group-chevron { transition: transform 0.2s; color: #475569; font-size: 14px; }
     details[open] > .group-summary .group-chevron { transform: rotate(180deg); color: #facc15; }
 
+    /* ── Partido Potenciado ── */
+    @property --glow-angle-p { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+    @keyframes glowSpinP { to { --glow-angle-p: 360deg; } }
+    @keyframes shimmerP {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+    @keyframes pulseGlowP {
+      0%, 100% { box-shadow: 0 0 20px rgba(250,204,21,0.3), 0 0 40px rgba(250,204,21,0.1), inset 0 0 20px rgba(250,204,21,0.05); }
+      50% { box-shadow: 0 0 30px rgba(250,204,21,0.5), 0 0 60px rgba(250,204,21,0.2), inset 0 0 30px rgba(250,204,21,0.1); }
+    }
+    @keyframes floatEmojiP {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      25% { transform: translateY(-4px) rotate(5deg); }
+      75% { transform: translateY(4px) rotate(-5deg); }
+    }
+    @keyframes badgeBounceP {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+    @keyframes starFloatP {
+      0%, 100% { opacity: 0; transform: translateY(0) scale(0.5); }
+      25% { opacity: 0.8; }
+      50% { opacity: 0.4; transform: translateY(-20px) scale(1); }
+      75% { opacity: 0.6; }
+    }
+    .potenciado-card {
+      position: relative; border-radius: 18px; overflow: hidden; margin-bottom: 14px;
+      animation: pulseGlowP 3s ease-in-out infinite;
+    }
+    .potenciado-card::before {
+      content: ''; position: absolute; inset: 0; border-radius: 18px; padding: 2.5px;
+      background: conic-gradient(from var(--glow-angle-p), #facc15, #f97316, #ef4444, #c084fc, #60a5fa, #4ade80, #facc15);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      pointer-events: none; animation: glowSpinP 3s linear infinite; z-index: 2;
+    }
+    .potenciado-bg {
+      position: absolute; inset: 2.5px; border-radius: 15.5px;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 30%, #1a1a2e 50%, #0f172a 70%, #1e293b 100%);
+      background-size: 200% 200%; animation: shimmerP 4s ease-in-out infinite; z-index: 0;
+    }
+    .potenciado-stars { position: absolute; inset: 0; overflow: hidden; border-radius: 15.5px; z-index: 1; pointer-events: none; }
+    .potenciado-stars .star { position: absolute; font-size: 10px; opacity: 0; animation: starFloatP 3s ease-in-out infinite; }
+    .potenciado-content { position: relative; z-index: 3; padding: 18px 16px; }
+    .potenciado-multiplier {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 12px; padding: 8px 16px;
+      background: rgba(250,204,21,0.1); border: 1px solid rgba(250,204,21,0.3); border-radius: 10px;
+    }
+    .potenciado-multiplier-text { font-size: 12px; color: #facc15; font-weight: 700; }
+    .potenciado-multiplier-value { font-size: 20px; font-weight: 900; color: #facc15; }
+    .potenciado-info { display: flex; justify-content: center; gap: 16px; margin-top: 10px; }
+    .potenciado-info-item { font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 4px; }
+
     /* ── PC mode overrides ── */
     body.pc-mode #mainContent { max-width: 780px; margin: 0 auto; padding: 20px 24px; }
     body.pc-mode .card-match { padding: 20px !important; }
@@ -300,6 +355,9 @@
         <div style="margin-bottom:16px;text-align:center"><img src="panini.png" alt="Polla Dekadentes" width="120" height="120" style="border-radius:14px;display:inline-block;"></div>
         <p id="homeGreet" style="color:#64748b;font-size:14px;margin:0"></p>
       </div>
+
+      <!-- Partido Potenciado -->
+      <div id="homePotenciado" style="display:none;margin-bottom:14px"></div>
 
       <!-- Mini Stats -->
       <div id="homeStats" style="display:none;margin-bottom:14px">
@@ -826,7 +884,7 @@ function refreshActiveTab() {
   if (selectedStatsTournament !== '__all__' && isTournamentHidden(selectedStatsTournament)) {
     selectedStatsTournament = '__all__';
   }
-  if (currentTab === 'home')     renderUpcoming();
+  if (currentTab === 'home')     { renderPotenciado(); renderUpcoming(); }
   if (currentTab === 'partidos') renderMatches();
   if (currentTab === 'ranking')  renderRanking();
   if (currentTab === 'stats')    renderStats();
@@ -881,7 +939,8 @@ function calcPoints(pred, match, allPreds) {
   const mp = (allPreds || CACHE.preds).filter(p => p.matchId === match.id);
   const correctN = mp.filter(p => Math.sign(p.predHome - p.predAway) === realO).length;
   if (!correctN) return 0;
-  const pool  = getPoolForStage(match.stage);
+  let pool  = getPoolForStage(match.stage);
+  if (match.potenciado) pool *= 2;
   const base  = pool / correctN;
   const exact = pred.predHome === match.realHome && pred.predAway === match.realAway;
   return Math.round((exact ? base * 2 : base) * 100) / 100;
@@ -904,6 +963,23 @@ function timeUntil(iso) {
 }
 
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+const TEAM_FLAGS = {
+  'Argentina':'🇦🇷','Brasil':'🇧🇷','Uruguay':'🇺🇾','Chile':'🇨🇱','Colombia':'🇨🇴','Ecuador':'🇪🇨','Paraguay':'🇵🇾','Perú':'🇵🇪','Venezuela':'🇻🇪','Bolivia':'🇧🇴',
+  'España':'🇪🇸','Francia':'🇫🇷','Alemania':'🇩🇪','Inglaterra':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','Portugal':'🇵🇹','Italia':'🇮🇹','Países Bajos':'🇳🇱','Bélgica':'🇧🇪','Croacia':'🇭🇷','Noruega':'🇳🇴','Suecia':'🇸🇪','Dinamarca':'🇩🇰','Suiza':'🇨🇭','Serbia':'🇷🇸','Polonia':'🇵🇱','Ucrania':'🇺🇦','Turquía':'🇹🇷','República Checa':'🇨🇿','Escocia':'🏴󠁧󠁢󠁳󠁣󠁴󠁿','Grecia':'🇬🇷','Austria':'🇦🇹','Hungría':'🇭🇺','Rumania':'🇷🇴','Islandia':'🇮🇸','Finlandia':'🇫🇮','Irlanda':'🇮🇪','Gales':'🏴󠁧󠁢󠁷󠁬󠁳󠁿','Rusia':'🇷🇺',
+  'México':'🇲🇽','Estados Unidos':'🇺🇸','Canadá':'🇨🇦','Costa Rica':'🇨🇷','Panamá':'🇵🇦','Honduras':'🇭🇳','Jamaica':'🇯🇲','Haití':'🇭��','Trinidad y Tobago':'🇹🇹','Cuba':'🇨🇺','El Salvador':'🇸🇻','Guatemala':'🇬🇹','Nicaragua':'🇳🇮',
+  'Japón':'🇯🇵','Corea del Sur':'🇰🇷','China':'🇨🇳','Australia':'🇦🇺','Nueva Zelanda':'🇳🇿','Irán':'🇮🇷','Arabia Saudita':'🇸🇦','Qatar':'🇶🇦','Iraq':'🇮🇶','Uzbekistán':'🇺🇿','Jordania':'🇯🇴','Israel':'🇮🇱','Líbano':'🇱🇧','Siria':'🇸🇾','Emiratos Árabes':'🇦🇪','Kuwait':'🇼🇰','Omán':'🇴🇲','Bahréin':'🇧🇭','Yemen':'🇾🇪','India':'🇮🇳','Tailandia':'🇹🇭','Vietnam':'🇻🇳','Indonesia':'🇮🇩','Malasia':'🇲🇾','Filipinas':'🇵🇭','Singapur':'🇸🇬',
+  'Nigeria':'🇳🇬','Egipto':'🇪🇬','Senegal':'🇸🇳','Marruecos':'🇲🇦','Túnez':'🇹🇳','Argelia':'🇩🇿','Ghana':'🇬🇭','Costa de Marfil':'🇨🇮','Camerún':'🇨🇲','RD Congo':'🇨🇩','Kenia':'🇰🇪','Sudáfrica':'🇿🇦','Angola':'🇦🇴','Mozambique':'🇲🇿','Zambia':'🇿🇲','Zimbabue':'🇿🇼','Malí':'🇲🇱','Burkina Faso':'🇧🇫','Guinea':'🇬🇳','Sierra Leona':'🇸🇱','Liberia':'🇱🇷','Togo':'🇹🇬','Benín':'🇧🇯','Níger':'🇳🇪','Chad':'🇹🇩','Sudán':'🇸🇩','Etiopía':'🇪🇹','Somalia':'🇸🇺','Uganda':'🇺🇬','Tanzania':'🇹🇿','Ruanda':'🇷🇼','Botsuana':'🇧🇼','Namibia':'🇳🇦','Lesoto':'🇱🇸','Suazilandia':'🇸🇿','Madagascar':'🇲🇬','Mauricio':'🇲🇺','Seychelles':'🇸🇨','Comoras':'🇰🇲','Yibuti':'🇩🇪','Eritrea':'🇪🇷','Lib�':'🇱🇾','Gabón':'🇬🇶','Guinea Ecuatorial':'🇬🇶','República Centroafricana':'🇨🇫','Cabo Verde':'🇨🇻','Santo Tomé y Príncipe':'🇸🇹','Gambia':'🇬🇲','Guinea-Bisáu':'🇬🇼','Mauritania':'🇷🇸','Malaui':'🇲🇼','Burundi':'🇧🇮','Yibuti':'🇩🇯','Eritrea':'🇪🇷','Sudán del Sur':'🇸🇸','Liberia':'🇱🇷','Sierra Leona':'🇸🇱','Curazao':'🇨🇼','Bolivia':'🇧🇴','Por definir':'❓','TBD':'❓'
+};
+function getFlag(team) {
+  if (!team) return '🏳️';
+  if (TEAM_FLAGS[team]) return TEAM_FLAGS[team];
+  // Buscar parcial
+  for (const [k, v] of Object.entries(TEAM_FLAGS)) {
+    if (team.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(team.toLowerCase())) return v;
+  }
+  return '🏳️';
+}
 
 // ═══ AUTH ═══
 function showAuth(tab) {
@@ -1013,6 +1089,7 @@ function showHome() {
   document.getElementById('mainContent').scrollTop = 0;
   currentTab = 'home';
   renderHomeStats();
+  renderPotenciado();
   renderUpcoming();
 }
 
@@ -1138,6 +1215,123 @@ function renderHomeStats() {
   } else if (msgCorner) {
     msgCorner.style.display = 'none';
   }
+}
+
+function renderPotenciado() {
+  const el = document.getElementById('homePotenciado');
+  if (!el) return;
+
+  // Buscar el próximo partido potenciado sin resultado
+  const now = new Date();
+  const potenciados = CACHE.matches
+    .filter(m => m.potenciado && !isTournamentHidden(m.tournament || 'Sin Torneo'))
+    .sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
+
+  if (!potenciados.length) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+
+  // Separar: próximo sin empezar vs en vivo/terminado
+  const next = potenciados.find(m => new Date(m.datetime) > now && m.realHome == null);
+  const live = potenciados.find(m => { const s = getStatus(m); return s === 'live' || s === 'locked'; });
+  const done = potenciados.filter(m => m.realHome != null).sort((a,b) => new Date(b.datetime) - new Date(a.datetime));
+
+  // Mostrar el más relevante: live > next > último done
+  const show = live || next || done[0];
+  if (!show) { el.style.display = 'none'; return; }
+
+  const status = getStatus(show);
+  const until = timeUntil(show.datetime);
+  const tz = 'America/Santiago';
+  const dateStr = new Date(show.datetime).toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',timeZone:tz});
+  const timeStr = new Date(show.datetime).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:tz});
+  const pool = getPoolForStage(show.stage);
+  const potPool = pool * 2;
+
+  // Estado: oculto (aún no empieza) vs revelado (en vivo o terminado)
+  const isRevealed = status === 'live' || status === 'locked' || status === 'done';
+  const isLive = status === 'live';
+  const isDone = status === 'done';
+
+  let badgeColor = 'linear-gradient(135deg,#facc15,#f97316)';
+  let badgeText = '⚡ PARTIDO POTENCIADO ⚡';
+  let badgeShadow = '0 2px 12px rgba(250,204,21,0.4)';
+  if (isLive) {
+    badgeColor = 'linear-gradient(135deg,#ef4444,#dc2626)';
+    badgeText = '⚡ POTENCIADO — EN VIVO 🔴';
+    badgeShadow = '0 2px 12px rgba(239,68,68,0.4)';
+  } else if (isDone) {
+    badgeColor = 'linear-gradient(135deg,#4ade80,#22c55e)';
+    badgeText = '⚡ POTENCIADO — FINALIZADO ✓';
+    badgeShadow = '0 2px 12px rgba(74,222,128,0.4)';
+  }
+
+  let innerHtml = '';
+
+  if (!isRevealed) {
+    // ── OCULTO: aún no empieza ──
+    innerHtml = `
+      <div style="text-align:center">
+        <div style="display:inline-flex;align-items:center;gap:6px;background:${badgeColor};color:#0f172a;font-size:11px;font-weight:900;padding:5px 14px;border-radius:20px;letter-spacing:0.05em;animation:badgeBounce 2s ease-in-out infinite;box-shadow:${badgeShadow}">
+          <span>⚡</span><span>Partido Potenciado</span><span>⚡</span>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:14px">
+        <div style="font-size:48px;margin-bottom:8px;animation:floatEmoji 2s ease-in-out infinite">🎲</div>
+        <div style="font-size:13px;color:#94a3b8;font-style:italic">El partido potenciado se revela al inicio</div>
+        <div style="font-size:12px;color:#facc15;font-weight:700;margin-top:4px">¡El pozo se duplica!</div>
+      </div>`;
+  } else {
+    // ── REVELADO: en vivo o terminado ──
+    const resultHtml = isDone && show.realHome != null
+      ? `<div style="text-align:center;margin-top:6px;font-size:12px;color:#64748b">Resultado: <b style="color:#f1f5f9;font-size:16px">${show.realHome} - ${show.realAway}</b></div>`
+      : '';
+
+    innerHtml = `
+      <div style="text-align:center">
+        <div style="display:inline-flex;align-items:center;gap:6px;background:${badgeColor};color:#0f172a;font-size:11px;font-weight:900;padding:5px 14px;border-radius:20px;letter-spacing:0.05em;box-shadow:${badgeShadow}">
+          <span>${badgeText}</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin:14px 0">
+        <div style="text-align:center;flex:1">
+          <div style="font-size:40px;margin-bottom:4px;animation:floatEmoji 3s ease-in-out infinite">${getFlag(show.home)}</div>
+          <div style="font-size:14px;font-weight:800;color:#f1f5f9">${show.home}</div>
+        </div>
+        <div style="font-size:20px;font-weight:900;color:#facc15">VS</div>
+        <div style="text-align:center;flex:1">
+          <div style="font-size:40px;margin-bottom:4px;animation:floatEmoji 3s ease-in-out infinite 1.5s">${getFlag(show.away)}</div>
+          <div style="font-size:14px;font-weight:800;color:#f1f5f9">${show.away}</div>
+        </div>
+      </div>
+      ${resultHtml}
+      <div style="text-align:center;font-size:11px;color:#4ade80;font-weight:700;margin-top:4px">🔓 ¡Partido potenciado revelado!</div>`;
+  }
+
+  el.innerHTML = `
+    <div class="potenciado-card">
+      <div class="potenciado-bg"></div>
+      <div class="potenciado-stars">
+        <span class="star" style="top:15%;left:10%;animation-delay:0s">✦</span>
+        <span class="star" style="top:25%;right:15%;animation-delay:0.5s">✧</span>
+        <span class="star" style="top:60%;left:5%;animation-delay:1s">✦</span>
+        <span class="star" style="top:70%;right:8%;animation-delay:1.5s">✧</span>
+        <span class="star" style="top:40%;left:85%;animation-delay:2s">✦</span>
+        <span class="star" style="top:80%;left:50%;animation-delay:0.8s">✧</span>
+      </div>
+      <div class="potenciado-content">
+        ${innerHtml}
+        <div class="potenciado-multiplier">
+          <span class="potenciado-multiplier-text">POZO</span>
+          <span class="potenciado-multiplier-value">${potPool} pts</span>
+          <span style="font-size:10px;color:#64748b;margin-left:4px">(${pool} × 2)</span>
+        </div>
+        <div class="potenciado-info">
+          <div class="potenciado-info-item">📅 ${dateStr}</div>
+          <div class="potenciado-info-item">🏟️ ${show.stage || ''}</div>
+          <div class="potenciado-info-item">⏰ ${isRevealed ? timeStr : 'Por revelar'}</div>
+        </div>
+      </div>
+    </div>`;
 }
 
 let statsChartInstance = null;
@@ -2741,6 +2935,16 @@ function buildAdminGestion() {
           <input id="es_${m.id}" class="auth-input" value="${m.stage||''}" placeholder="Fase" style="font-size:12px;padding:8px"/>
           <input id="et_${m.id}" class="auth-input" value="${m.tournament||''}" placeholder="Torneo" style="font-size:12px;padding:8px"/>
         </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#1e293b;border-radius:8px;margin-bottom:6px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:18px">⚡</span>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:#facc15">Partido Potenciado</div>
+              <div style="font-size:10px;color:#64748b">Duplica el pozo de puntos</div>
+            </div>
+          </div>
+          <button id="tog_pot_${m.id}" class="toggle ${m.potenciado?'on':''}" onclick="togglePotenciadoAdmin('${m.id}')"></button>
+        </div>
         <button onclick="saveEditMatch('${m.id}')" class="btn-primary" style="width:100%;padding:8px;font-size:12px">💾 Guardar cambios</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -2786,6 +2990,16 @@ function buildAdminGestion() {
         <input id="aTour" class="auth-input" placeholder="Torneo"/>
         <input id="aStage" class="auth-input" placeholder="Fase / Grupo"/>
         <input id="aDt" class="auth-input" type="datetime-local"/>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#0f172a;border-radius:8px;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:18px">⚡</span>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:#facc15">Partido Potenciado</div>
+              <div style="font-size:10px;color:#64748b">Duplica el pozo de puntos</div>
+            </div>
+          </div>
+          <button id="tog_pot_new" class="toggle" onclick="togglePotenciadoNew()"></button>
+        </div>
         <button class="btn-primary" onclick="addMatch()">Agregar Partido</button>
       </div>
     </details>
@@ -2866,6 +3080,21 @@ function logActivity(adminCode, action, detail) {
   localStorage.setItem(ACTIVITY_KEY, JSON.stringify(log));
 }
 
+let _potenciadoNew = false;
+function togglePotenciadoNew() {
+  _potenciadoNew = !_potenciadoNew;
+  document.getElementById('tog_pot_new').classList.toggle('on', _potenciadoNew);
+}
+
+async function togglePotenciadoAdmin(id) {
+  const m = CACHE.matches.find(x => x.id === id);
+  if (!m) return;
+  const newVal = !m.potenciado;
+  await DB.updateMatch(id, { potenciado: newVal });
+  document.getElementById('tog_pot_' + id).classList.toggle('on', newVal);
+  toast(newVal ? '⚡ Partido potenciado (pozo ×2)' : 'Potenciado desactivado', 'ok');
+}
+
 async function addMatch() {
   const h=document.getElementById('aHome').value.trim(), a=document.getElementById('aAway').value.trim();
   const t=document.getElementById('aTour').value.trim(), s=document.getElementById('aStage').value.trim();
@@ -2877,7 +3106,7 @@ async function addMatch() {
                          dtParsed.getHours(), dtParsed.getMinutes(), 0);
   const dtISO = new Date(asUTC + 4 * 3600000).toISOString();
   const m = {id:'m'+Date.now(),home:h,away:a,datetime:dtISO,closesAtMs:new Date(dtISO).getTime(),
-             tournament:t||'Amistoso',stage:s||'\u2014',realHome:null,realAway:null};
+             tournament:t||'Amistoso',stage:s||'\u2014',realHome:null,realAway:null,potenciado:_potenciadoNew};
   await DB.saveMatch(m);
   toast('\u2713 Partido agregado');
 }
@@ -2892,8 +3121,9 @@ async function saveEditMatch(id) {
   const away  = document.getElementById('ea_'+id)?.value.trim();
   const stage = document.getElementById('es_'+id)?.value.trim();
   const tour  = document.getElementById('et_'+id)?.value.trim();
+  const m = CACHE.matches.find(x => x.id === id);
   if (!home || !away) return toast('Local y visita son obligatorios', 'err');
-  await DB.updateMatch(id, { home, away, stage: stage||'\u2014', tournament: tour||'Mundial 2026' });
+  await DB.updateMatch(id, { home, away, stage: stage||'\u2014', tournament: tour||'Mundial 2026', potenciado: m?.potenciado || false });
   toast('\u2713 Partido actualizado');
 }
 
