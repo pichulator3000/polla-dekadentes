@@ -1327,7 +1327,6 @@ function renderPotenciado() {
         </div>
         <div class="potenciado-info">
           <div class="potenciado-info-item">📅 ${dateStr}</div>
-          <div class="potenciado-info-item">🏟️ ${show.stage || ''}</div>
           <div class="potenciado-info-item">⏰ ${isRevealed ? timeStr : 'Por revelar'}</div>
         </div>
       </div>
@@ -2283,10 +2282,27 @@ function renderMatches() {
       }
     }
 
+    // Admin: badge potenciado + toggle
+    let potenciadoBadge = '';
+    let potenciadoToggle = '';
+    if (isAdm) {
+      if (m.potenciado) {
+        potenciadoBadge = `<span style="background:linear-gradient(135deg,#facc15,#f97316);color:#0f172a;font-size:9px;font-weight:900;padding:2px 8px;border-radius:4px;margin-left:4px">⚡ POTENCIADO</span>`;
+      }
+      potenciadoToggle = `<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;padding:6px 10px;background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.2);border-radius:8px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:14px">⚡</span>
+          <span style="font-size:11px;font-weight:700;color:#facc15">Potenciar</span>
+          <span style="font-size:9px;color:#64748b">(pozo ×2)</span>
+        </div>
+        <button id="tog_pot_fixture_${m.id}" class="toggle ${m.potenciado?'on':''}" style="width:36px;height:22px;transform:scale(0.85)" onclick="togglePotenciadoAdmin('${m.id}');event.stopPropagation()"></button>
+      </div>`;
+    }
+
     html += `
-    <div class="card-match" style="padding:10px 12px">
+    <div class="card-match" style="padding:10px 12px${m.potenciado&&isAdm?';border-color:rgba(250,204,21,0.4);box-shadow:0 0 12px rgba(250,204,21,0.15)':''}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
-        <span style="font-size:10px;color:#475569">${normStage(m.stage)}</span>
+        <span style="font-size:10px;color:#475569">${normStage(m.stage)}${potenciadoBadge}</span>
         ${badges[status]}
       </div>
       <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;flex-wrap:wrap">
@@ -2307,6 +2323,7 @@ function renderMatches() {
         <div style="flex:1;text-align:left;font-weight:800;font-size:13px;line-height:1.2">${m.away}</div>
       </div>
       ${playerPredsPanel}
+      ${potenciadoToggle}
     </div>`;
     });
 
