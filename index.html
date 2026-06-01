@@ -623,9 +623,9 @@
       <div class="card" style="padding:10px 12px;margin-bottom:10px;font-size:11px;color:#64748b;line-height:1.8">
         ${currentUser?.isAdmin
           ? `👑 <b style="color:#c084fc">Modo Admin</b> — Ingresa los resultados oficiales de cada partido`
-          : `🏆 Pozo <b style="color:#facc15">varía por fase</b> &nbsp;·&nbsp;
+          : `🏆 Pozo <b style="color:#38bdf8">varía por fase</b> &nbsp;·&nbsp;
         ✅ Aciertas = <b style="color:#4ade80">pozo ÷ N</b> &nbsp;·&nbsp;
-        🥇 Exacto = <b style="color:#facc15">tu parte ×2</b> &nbsp;·&nbsp;
+        🥇 Exacto = <b style="color:#38bdf8">tu parte ×2</b> &nbsp;·&nbsp;
         <a href="#" onclick="event.preventDefault();showTab('reglas')" style="color:#60a5fa;text-decoration:underline">ver pozos</a>`}
       </div>
       <div id="tournamentPills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
@@ -747,7 +747,7 @@
 
       <!-- Perfil -->
       <div class="card" style="padding:16px;margin-bottom:12px">
-        <h3 style="margin:0 0 14px;font-size:14px;font-weight:800;color:#facc15">👤 Editar Perfil</h3>
+        <h3 style="margin:0 0 14px;font-size:14px;font-weight:800;color:#38bdf8">👤 Editar Perfil</h3>
         <div style="margin-bottom:10px">
           <label style="font-size:11px;color:#64748b;font-weight:700;text-transform:uppercase">Nombre</label>
           <input id="ajNombre" class="auth-input" type="text" placeholder="Tu nombre" style="margin-top:6px"/>
@@ -765,7 +765,7 @@
 
       <!-- Formato / apariencia -->
       <div class="card" style="padding:16px;margin-bottom:12px">
-        <h3 style="margin:0 0 4px;font-size:14px;font-weight:800;color:#facc15">🖥️ Formato de Página</h3>
+        <h3 style="margin:0 0 4px;font-size:14px;font-weight:800;color:#38bdf8">🖥️ Formato de Página</h3>
         <p style="font-size:12px;color:#64748b;margin:0 0 14px">Ajusta el diseño según tu dispositivo</p>
 
         <div class="settings-row">
@@ -884,7 +884,7 @@ if (FIREBASE_CONFIG.apiKey === 'TU_API_KEY') {
     <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;
                 flex-direction:column;gap:16px;padding:24px;text-align:center">
       <div style="font-size:56px">🔧</div>
-      <h2 style="color:#facc15;margin:0">Falta configurar Firebase</h2>
+      <h2 style="color:#38bdf8;margin:0">Falta configurar Firebase</h2>
       <p style="color:#64748b;font-size:14px;max-width:340px;line-height:1.6">
         Abre <b style="color:#e8edf5">index.html</b>, busca
         <code style="color:#fb923c">FIREBASE_CONFIG</code> y reemplaza
@@ -1343,7 +1343,7 @@ function renderHomeStats() {
 
   kpiEl.innerHTML = `
     <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center">
-      <div style="font-size:20px;font-weight:900;color:#facc15">${myPts.toFixed(2)}</div>
+      <div style="font-size:20px;font-weight:900;color:#38bdf8">${myPts.toFixed(2)}</div>
       <div style="font-size:10px;color:#64748b">Mis puntos</div>
     </div>
     <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center">
@@ -1450,7 +1450,7 @@ function renderPotenciado() {
   const isLive = status === 'live';
   const isDone = status === 'done';
 
-  let badgeColor = 'linear-gradient(135deg,#facc15,#f97316)';
+  let badgeColor = 'linear-gradient(135deg,#38bdf8,#f97316)';
   let badgeText = '⚡ PARTIDO POTENCIADO ⚡';
   let badgeShadow = '0 2px 12px rgba(250,204,21,0.4)';
   if (isLive) {
@@ -1476,7 +1476,7 @@ function renderPotenciado() {
       <div style="text-align:center;margin-top:14px">
         <div style="font-size:48px;margin-bottom:8px;animation:floatEmoji 2s ease-in-out infinite">🎲</div>
         <div style="font-size:13px;color:#94a3b8;font-style:italic">El partido potenciado se revela al inicio</div>
-        <div style="font-size:12px;color:#facc15;font-weight:700;margin-top:4px">Doble pozo</div>
+        <div style="font-size:12px;color:#38bdf8;font-weight:700;margin-top:4px">Doble pozo</div>
       </div>`;
   } else {
     // ── REVELADO: en vivo o terminado ──
@@ -1495,7 +1495,7 @@ function renderPotenciado() {
           <div style="font-size:40px;margin-bottom:4px;animation:floatEmoji 3s ease-in-out infinite">${getFlag(show.home)}</div>
           <div style="font-size:14px;font-weight:800;color:#e8edf5">${show.home}</div>
         </div>
-        <div style="font-size:20px;font-weight:900;color:#facc15">VS</div>
+        <div style="font-size:20px;font-weight:900;color:#38bdf8">VS</div>
         <div style="text-align:center;flex:1">
           <div style="font-size:40px;margin-bottom:4px;animation:floatEmoji 3s ease-in-out infinite 1.5s">${getFlag(show.away)}</div>
           <div style="font-size:14px;font-weight:800;color:#e8edf5">${show.away}</div>
@@ -1549,7 +1549,7 @@ function renderStatsChart() {
     ? done.map(m => new Date(m.datetime).toLocaleDateString('es-CL', { day:'numeric', month:'short', timeZone: tz }))
     : ['Sin partidos'];
 
-  const colors = ['#facc15','#60a5fa','#4ade80','#f87171','#c084fc','#fb923c','#2dd4bf','#e879f9','#a3e635','#fbbf24'];
+  const colors = ['#38bdf8','#60a5fa','#4ade80','#f87171','#c084fc','#fb923c','#2dd4bf','#e879f9','#a3e635','#fbbf24'];
   const datasets = done.length
     ? users.map((u, idx) => {
         let cumul = 0;
@@ -1969,7 +1969,7 @@ function buildAdminPodio() {
         <div style="background:#0f172a;border-radius:8px;padding:10px;display:flex;align-items:center;gap:10px">
           <span style="font-size:20px">🥇</span>
           <div style="flex:1">
-            <div style="font-size:13px;font-weight:700;color:#facc15">Campeon</div>
+            <div style="font-size:13px;font-weight:700;color:#38bdf8">Campeon</div>
             <div style="font-size:10px;color:#64748b">default ${PODIO_POINTS_DEFAULT.champion} pts</div>
           </div>
           <input id="podPts_champion" type="number" min="0" step="1" value="${pts.champion}"
@@ -2002,13 +2002,13 @@ function buildAdminPodio() {
       <hr style="border:none;border-top:1px solid #334155;margin:16px 0">
 
       <p style="font-size:11px;color:#64748b;margin:0 0 10px">
-        🔖 <b style="color:#facc15">Resultado oficial</b> — define quien fue campeon/subcampeon/goleador.
+        🔖 <b style="color:#38bdf8">Resultado oficial</b> — define quien fue campeon/subcampeon/goleador.
         Los jugadores que acertaron reciben los puntos <b>en vivo</b>.
         Si dejas un campo vacio, ese premio aun no se cuenta.
       </p>
       <div style="display:flex;flex-direction:column;gap:8px">
         <div>
-          <label style="font-size:11px;color:#facc15;font-weight:700">🥇 Campeon oficial</label>
+          <label style="font-size:11px;color:#38bdf8;font-weight:700">🥇 Campeon oficial</label>
           <select id="podOf_champion" style="width:100%;margin-top:4px;padding:8px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#f1f5f9;font-size:13px">
             ${teamOptions.join('')}
           </select>
@@ -2053,7 +2053,7 @@ function renderReglasPozos() {
     const bg = i % 2 === 0 ? '#1e293b' : '#182030';
     html += `<tr style="background:${bg}">
       <td style="padding:6px 8px;color:#e8edf5">${s}</td>
-      <td style="padding:6px 8px;text-align:right;color:${isCustom?'#facc15':'#4ade80'};font-weight:700">${pool} pts${isCustom?' ✨':''}</td>
+      <td style="padding:6px 8px;text-align:right;color:${isCustom?'#38bdf8':'#4ade80'};font-weight:700">${pool} pts${isCustom?' ✨':''}</td>
     </tr>`;
   });
   html += '</tbody></table>';
@@ -2068,7 +2068,7 @@ function renderReglasPodio() {
   const pts = getPodioPoints();
   const of  = getPodioOficial();
   const filas = [
-    { icon: '🥇', label: 'Campeón',    pts: pts.champion, oficial: of.champion, color: '#facc15' },
+    { icon: '🥇', label: 'Campeón',    pts: pts.champion, oficial: of.champion, color: '#38bdf8' },
     { icon: '🥈', label: 'Subcampeón', pts: pts.runner,   oficial: of.runner,   color: '#94a3b8' },
     { icon: '⚽', label: 'Goleador',   pts: pts.scorer,   oficial: of.scorer,   color: '#4ade80' },
   ];
@@ -2081,11 +2081,11 @@ function renderReglasPodio() {
   filas.forEach((f, i) => {
     const bg = i % 2 === 0 ? '#1e293b' : '#182030';
     const oficialDisplay = f.oficial
-      ? `<span style="color:#facc15;font-weight:700">${f.oficial}</span>`
+      ? `<span style="color:#38bdf8;font-weight:700">${f.oficial}</span>`
       : `<span style="color:#475569;font-style:italic">por definir</span>`;
     html += `<tr style="background:${bg}">
       <td style="padding:6px 8px;color:${f.color};font-weight:700">${f.icon} ${f.label}</td>
-      <td style="padding:6px 8px;text-align:right;color:#facc15;font-weight:700">+${f.pts} pts</td>
+      <td style="padding:6px 8px;text-align:right;color:#38bdf8;font-weight:700">+${f.pts} pts</td>
       <td style="padding:6px 8px;font-size:11px">${oficialDisplay}</td>
     </tr>`;
   });
@@ -2118,7 +2118,7 @@ function buildAdminPozos() {
       html += `<div style="background:#0f172a;border-radius:8px;padding:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <div style="flex:1;min-width:140px">
           <div style="font-size:13px;font-weight:700;color:#e8edf5">${s}</div>
-          <div style="font-size:10px;color:#64748b">default ${def} pts ${isCustom ? '— <span style="color:#facc15">personalizado</span>' : ''}</div>
+          <div style="font-size:10px;color:#64748b">default ${def} pts ${isCustom ? '— <span style="color:#38bdf8">personalizado</span>' : ''}</div>
         </div>
         <input id="${inputId}" type="number" min="0" step="1" value="${pool}"
           style="width:70px;padding:6px 8px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#f1f5f9;font-size:13px;font-weight:700;text-align:center">
@@ -2275,7 +2275,7 @@ function renderMatches() {
     if (!isAdm && pred && status === 'done') {
       const p = calcPoints(pred, m, preds);
       const isExact = pred.predHome===m.realHome && pred.predAway===m.realAway;
-      const col = isExact ? '#facc15' : p > 0 ? '#4ade80' : '#64748b';
+      const col = isExact ? '#38bdf8' : p > 0 ? '#4ade80' : '#64748b';
       ptsHtml = `<div style="text-align:center;margin-top:6px;font-size:18px;font-weight:900;color:${col}">${isExact?'🥇':p>0?'✅':'❌'} ${p.toFixed(2)} pts</div>`;
     }
 
@@ -2324,7 +2324,7 @@ function renderMatches() {
       const matchPreds = preds.filter(p => p.matchId === m.id);
       const predCount = matchPreds.length;
       const pct = totalPlayers ? Math.round((predCount / totalPlayers) * 100) : 0;
-      const pctColor = pct === 100 ? '#4ade80' : pct >= 50 ? '#facc15' : '#f87171';
+      const pctColor = pct === 100 ? '#4ade80' : pct >= 50 ? '#38bdf8' : '#f87171';
       const panelOpen = _openPredPanels.has(m.id);
 
       participHtml = `<div style="text-align:center;font-size:10px;margin-top:6px;display:flex;flex-direction:column;align-items:center;gap:4px">
@@ -2362,7 +2362,7 @@ function renderMatches() {
           if (p && hasDone) {
             const pts = calcPoints(p, m, preds);
             const isExact = p.predHome===m.realHome && p.predAway===m.realAway;
-            predColor = isExact ? '#facc15' : pts > 0 ? '#4ade80' : '#f87171';
+            predColor = isExact ? '#38bdf8' : pts > 0 ? '#4ade80' : '#f87171';
             ptsText = `<span style="color:${predColor};font-weight:900">${pts.toFixed(2)}</span>`;
           }
 
@@ -2403,8 +2403,8 @@ function renderMatches() {
 
       playerPredsPanel = `<div style="text-align:center;margin-top:6px">
         <button onclick="togglePlayerPreds('${m.id}')" 
-          style="background:#0f172a;border:1px solid ${ppOpen?'#facc15':'#334155'};border-radius:8px;
-                 padding:4px 14px;color:${ppOpen?'#facc15':'#94a3b8'};font-size:10px;font-weight:700;
+          style="background:#0f172a;border:1px solid ${ppOpen?'#38bdf8':'#334155'};border-radius:8px;
+                 padding:4px 14px;color:${ppOpen?'#38bdf8':'#94a3b8'};font-size:10px;font-weight:700;
                  cursor:pointer;transition:all 0.2s">
           \ud83d\udc40 Apuestas ${ppOpen?'\u25b2':'\u25bc'}
         </button>
@@ -2432,15 +2432,15 @@ function renderMatches() {
           if (p && hasDone) {
             const pts = calcPoints(p, m, preds);
             const isExact = p.predHome===m.realHome && p.predAway===m.realAway;
-            predColor = isExact ? '#facc15' : pts > 0 ? '#4ade80' : '#f87171';
+            predColor = isExact ? '#38bdf8' : pts > 0 ? '#4ade80' : '#f87171';
             ptsText = `<td style="padding:5px 4px;text-align:center"><span style="color:${predColor};font-weight:900">${pts.toFixed(2)}</span></td>`;
           } else if (hasDone) {
             ptsText = `<td style="padding:5px 4px;text-align:center;color:#334155">\u2014</td>`;
           }
 
           playerPredsPanel += `<tr style="${rowStyle}">
-            <td style="padding:5px 8px;font-weight:${isMine?'900':'600'};color:${isMine?'#facc15':'#e2e8f0'};font-size:11px">
-              ${u.name}${isMine?' <span style="font-size:9px;color:#facc15">(t\u00fa)</span>':''}
+            <td style="padding:5px 8px;font-weight:${isMine?'900':'600'};color:${isMine?'#38bdf8':'#e2e8f0'};font-size:11px">
+              ${u.name}${isMine?' <span style="font-size:9px;color:#38bdf8">(t\u00fa)</span>':''}
             </td>
             <td style="padding:5px 4px;text-align:center;color:${predColor};font-weight:700">${predText}</td>
             ${ptsText}
@@ -2457,7 +2457,7 @@ function renderMatches() {
         : (!locked ? `<div style="text-align:center;font-size:10px;color:#475569;margin-top:2px">Sin predicción aún</div>` : ''));
 
     // Time row — prominent colors
-    const timeColor = until ? '#facc15' : '#64748b';
+    const timeColor = until ? '#38bdf8' : '#64748b';
     const closeBadge = until
       ? `<span style="background:#92400e;color:#fbbf24;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;margin-left:6px">⏳ cierra en ${until}</span>`
       : (status==='locked'||status==='live'||status==='done')
@@ -2487,12 +2487,12 @@ function renderMatches() {
     let potenciadoToggle = '';
     if (isAdm) {
       if (m.potenciado) {
-        potenciadoBadge = `<span style="background:linear-gradient(135deg,#facc15,#f97316);color:#0f172a;font-size:9px;font-weight:900;padding:2px 8px;border-radius:4px;margin-left:4px">⚡ POTENCIADO</span>`;
+        potenciadoBadge = `<span style="background:linear-gradient(135deg,#38bdf8,#f97316);color:#0f172a;font-size:9px;font-weight:900;padding:2px 8px;border-radius:4px;margin-left:4px">⚡ POTENCIADO</span>`;
       }
       potenciadoToggle = `<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;padding:6px 10px;background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.2);border-radius:8px">
         <div style="display:flex;align-items:center;gap:6px">
           <span style="font-size:14px">⚡</span>
-          <span style="font-size:11px;font-weight:700;color:#facc15">Potenciar</span>
+          <span style="font-size:11px;font-weight:700;color:#38bdf8">Potenciar</span>
           <span style="font-size:9px;color:#64748b">(pozo ×2)</span>
         </div>
         <button id="tog_pot_fixture_${m.id}" class="toggle ${m.potenciado?'on':''}" style="width:36px;height:22px;transform:scale(0.85)" onclick="togglePotenciadoAdmin('${m.id}');event.stopPropagation()"></button>
@@ -2601,12 +2601,12 @@ function renderRanking() {
     html += `<tr style="${rowBg}">
       <td style="padding:12px 10px;font-weight:800;font-size:14px">${medal||i+1}</td>
       <td style="padding:12px 4px">
-        <div style="font-weight:700;font-size:13px">${s.name}${isMine?' <span style="color:#facc15;font-size:10px">(tú)</span>':''}</div>
+        <div style="font-weight:700;font-size:13px">${s.name}${isMine?' <span style="color:#38bdf8;font-size:10px">(tú)</span>':''}</div>
         <div style="color:#475569;font-size:10px">@${s.code}</div>
       </td>
-      <td style="padding:12px 6px;text-align:center;font-weight:900;color:#facc15;font-size:16px">${s.pts.toFixed(2)}</td>
-      ${showPodioCol ? `<td style="padding:12px 6px;text-align:center;color:${s.podioPts>0?'#facc15':'#475569'};font-weight:700">${s.podioPts>0?('+'+s.podioPts):'—'}</td>` : ''}
-      <td style="padding:12px 6px;text-align:center;color:#facc15">${s.exact}</td>
+      <td style="padding:12px 6px;text-align:center;font-weight:900;color:#38bdf8;font-size:16px">${s.pts.toFixed(2)}</td>
+      ${showPodioCol ? `<td style="padding:12px 6px;text-align:center;color:${s.podioPts>0?'#38bdf8':'#475569'};font-weight:700">${s.podioPts>0?('+'+s.podioPts):'—'}</td>` : ''}
+      <td style="padding:12px 6px;text-align:center;color:#38bdf8">${s.exact}</td>
       <td style="padding:12px 6px;text-align:center;color:#4ade80">${s.correct}</td>
       <td style="padding:12px 6px;text-align:center;color:#64748b">${s.played}/${total}</td>
     </tr>`;
@@ -2683,7 +2683,7 @@ function renderStats() {
 
   let html = `
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:14px">
-    <div class="card" style="padding:10px 6px;text-align:center"><div style="font-size:18px;font-weight:900;color:#facc15">${done.length}</div><div style="font-size:10px;color:#64748b;margin-top:2px">Jugados</div></div>
+    <div class="card" style="padding:10px 6px;text-align:center"><div style="font-size:18px;font-weight:900;color:#38bdf8">${done.length}</div><div style="font-size:10px;color:#64748b;margin-top:2px">Jugados</div></div>
     <div class="card" style="padding:10px 6px;text-align:center"><div style="font-size:18px;font-weight:900;color:#60a5fa">${totalPreds}</div><div style="font-size:10px;color:#64748b;margin-top:2px">Predicciones</div></div>
     <div class="card" style="padding:10px 6px;text-align:center"><div style="font-size:18px;font-weight:900;color:#4ade80">${totalExact}</div><div style="font-size:10px;color:#64748b;margin-top:2px">Exactos</div></div>
     <div class="card" style="padding:10px 6px;text-align:center"><div style="font-size:18px;font-weight:900;color:#fb923c">${avgGoals}</div><div style="font-size:10px;color:#64748b;margin-top:2px">Goles/partido</div></div>
@@ -2691,7 +2691,7 @@ function renderStats() {
     <div class="card" style="padding:10px 6px;text-align:center"><div style="font-size:18px;font-weight:900;color:#f87171">${bestStreak}🔥</div><div style="font-size:10px;color:#64748b;margin-top:2px">${streakPlayer?streakPlayer.name.split(' ')[0]:''}</div></div>
   </div>
 
-  <h3 style="font-weight:800;font-size:14px;margin:0 0 8px;color:#facc15">\ud83d\udc64 Por Jugador</h3>
+  <h3 style="font-weight:800;font-size:14px;margin:0 0 8px;color:#38bdf8">\ud83d\udc64 Por Jugador</h3>
   <div class="card" style="overflow-x:auto;margin-bottom:14px">
     <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:420px">
       <thead><tr style="background:#0f172a;color:#64748b;font-size:9px;text-transform:uppercase">
@@ -2711,10 +2711,10 @@ function renderStats() {
     const contColor = s.contPct>=50?'#c084fc':s.contPct>=30?'#fb923c':'#64748b';
     html += `<tr style="${isMine?'background:#1e3a5f':''}">
       <td style="padding:8px 8px">
-        <div style="font-weight:700;font-size:11px">${s.name}${isMine?' <span style="color:#facc15;font-size:9px">(t\u00fa)</span>':''}</div>
+        <div style="font-weight:700;font-size:11px">${s.name}${isMine?' <span style="color:#38bdf8;font-size:9px">(t\u00fa)</span>':''}</div>
       </td>
-      <td style="padding:8px 4px;text-align:center;font-weight:900;color:#facc15">${s.pts.toFixed(2)}</td>
-      <td style="padding:8px 4px;text-align:center;color:#facc15">${s.ex}</td>
+      <td style="padding:8px 4px;text-align:center;font-weight:900;color:#38bdf8">${s.pts.toFixed(2)}</td>
+      <td style="padding:8px 4px;text-align:center;color:#38bdf8">${s.ex}</td>
       <td style="padding:8px 4px;text-align:center;color:#4ade80">${s.ok}</td>
       <td style="padding:8px 4px;text-align:center;color:#f87171">${s.no}</td>
       <td style="padding:8px 4px;text-align:center;color:#94a3b8">${s.pct}%</td>
@@ -2734,7 +2734,7 @@ function renderStats() {
   if(!ps.length) html+=`<tr><td colspan="8" style="text-align:center;padding:24px;color:#475569">Sin datos</td></tr>`;
   html += `</tbody></table></div>
 
-  <h3 style="font-weight:800;font-size:14px;margin:0 0 8px;color:#facc15">⚽ Goles por Equipo</h3>
+  <h3 style="font-weight:800;font-size:14px;margin:0 0 8px;color:#38bdf8">⚽ Goles por Equipo</h3>
   <div class="card" style="overflow-x:auto">
     <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:320px">
       <thead><tr style="background:#0f172a;color:#64748b;font-size:10px;text-transform:uppercase">
@@ -2776,7 +2776,7 @@ function renderStats() {
     });
 
   if(matchesDist.length) {
-    html += `<h3 style="font-weight:800;font-size:14px;margin:14px 0 8px;color:#facc15">📊 Distribución de Apuestas</h3>
+    html += `<h3 style="font-weight:800;font-size:14px;margin:14px 0 8px;color:#38bdf8">📊 Distribución de Apuestas</h3>
     <div class="card" style="overflow-x:auto;padding:0">
       <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:300px">`;
 
@@ -2806,7 +2806,7 @@ function renderStats() {
             : `<span style="color:#60a5fa;font-weight:700">${nLocal}</span>
                <span style="color:#475569;font-size:10px;margin:0 2px">${m.home.split(' ')[0]}</span>
                <span style="color:#94a3b8">·</span>
-               <span style="color:#facc15;font-weight:700;margin:0 4px">${nEmpate}</span>
+               <span style="color:#38bdf8;font-weight:700;margin:0 4px">${nEmpate}</span>
                <span style="color:#475569;font-size:10px;margin:0 2px">Empate</span>
                <span style="color:#94a3b8">·</span>
                <span style="color:#fb923c;font-weight:700;margin-left:4px">${nVisita}</span>
@@ -2842,8 +2842,8 @@ function renderStats() {
         const u = CACHE.users.find(x=>x.id===p.userId);
         const isMine = p.userId===currentUser?.id;
         html += `<tr style="${isMine?'background:#1e3a5f':i%2===0?'background:#1e293b':'background:#182030'}">
-          <td style="padding:8px 10px;font-weight:700">${u?.name||'?'}${isMine?' <span style="color:#facc15;font-size:10px">(tú)</span>':''}</td>
-          <td style="padding:8px 6px;text-align:center;font-weight:700;color:#facc15;font-size:11px">${p.champion}</td>
+          <td style="padding:8px 10px;font-weight:700">${u?.name||'?'}${isMine?' <span style="color:#38bdf8;font-size:10px">(tú)</span>':''}</td>
+          <td style="padding:8px 6px;text-align:center;font-weight:700;color:#38bdf8;font-size:11px">${p.champion}</td>
           <td style="padding:8px 6px;text-align:center;color:#94a3b8;font-size:11px">${p.runner}</td>
           <td style="padding:8px 6px;text-align:center;color:#4ade80;font-size:11px">${p.scorer}</td>
         </tr>`;
@@ -2854,6 +2854,60 @@ function renderStats() {
     }
     html += `</details>`;
   }
+
+  // ══ PUNTOS SEMANALES ══
+  html += `<h3 style="font-weight:800;font-size:14px;margin:14px 0 8px;color:#38bdf8">Puntos Semanales</h3>`;
+  html += `<div class="card" style="overflow-x:auto;margin-bottom:14px">`;
+  html += `<table style="width:100%;border-collapse:collapse;font-size:12px">`;
+  html += `<thead><tr style="background:rgba(56,189,248,0.1);color:#8899b0;font-size:10px;text-transform:uppercase">`;
+  html += `<th style="padding:8px 10px;text-align:left;border-bottom:1px solid rgba(56,189,248,0.15)">Jugador</th>`;
+
+  // Calcular semanas
+  const weeks = {};
+  const doneMatches = matches.filter(m => m.realHome != null);
+  doneMatches.forEach(m => {
+    const d = new Date(m.datetime);
+    // Semana ISO: año + numero de semana
+    const jan1 = new Date(d.getFullYear(), 0, 1);
+    const days = Math.floor((d - jan1) / (24 * 60 * 60 * 1000));
+    const weekNum = Math.ceil((days + jan1.getDay() + 1) / 7);
+    const weekKey = d.getFullYear() + '-W' + (weekNum < 10 ? '0' : '') + weekNum;
+    if (!weeks[weekKey]) weeks[weekKey] = [];
+    weeks[weekKey].push(m);
+  });
+
+  const sortedWeeks = Object.keys(weeks).sort();
+
+  // Headers de semanas
+  sortedWeeks.forEach(wk => {
+    html += `<th style="padding:8px 6px;text-align:center;border-bottom:1px solid rgba(56,189,248,0.15);min-width:70px">${wk}</th>`;
+  });
+  html += `</tr></thead><tbody>`;
+
+  // Por jugador, por semana
+  users.forEach((u, idx) => {
+    const isMine = u.id === currentUser?.id;
+    const rowBg = isMine ? 'background:rgba(56,189,248,0.08)' : (idx % 2 === 0 ? 'background:rgba(15,27,45,0.5)' : 'background:rgba(12,21,38,0.5)');
+    html += `<tr style="${rowBg}">`;
+    html += `<td style="padding:8px 10px;font-weight:700;color:#e8edf5;font-size:11px">${u.name}${isMine ? ' <span style="color:#38bdf8;font-size:9px">(tú)</span>' : ''}</td>`;
+
+    sortedWeeks.forEach(wk => {
+      const weekMatches = weeks[wk];
+      let weekPts = 0;
+      weekMatches.forEach(m => {
+        const p = preds.find(pr => pr.userId === u.id && pr.matchId === m.id);
+        if (p) {
+          const pt = calcPoints(p, m, preds);
+          weekPts += pt;
+        }
+      });
+      const ptsColor = weekPts > 0 ? '#38bdf8' : '#4a5f78';
+      html += `<td style="padding:8px 6px;text-align:center;font-weight:700;color:${ptsColor}">${weekPts > 0 ? weekPts.toFixed(2) : '—'}</td>`;
+    });
+    html += `</tr>`;
+  });
+
+  html += `</tbody></table></div>`;
 
   document.getElementById('statsContent').innerHTML = html;
 }
@@ -2943,7 +2997,7 @@ function renderResultados() {
   let html = `
   <div style="background:#1e293b;border-radius:12px;padding:10px 12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
     <span style="font-weight:800;font-size:14px;color:#e8edf5">${user.name}</span>
-    <span style="color:#facc15;font-weight:900;font-size:14px">${totalPts.toFixed(2)} pts</span>
+    <span style="color:#38bdf8;font-weight:900;font-size:14px">${totalPts.toFixed(2)} pts</span>
   </div>
   <div class="card" style="overflow:hidden">
     <table style="width:100%;border-collapse:collapse;font-size:11px">
@@ -2966,7 +3020,7 @@ function renderResultados() {
     const isOk    = pts !== null && !isExact && pts > 0;
     const bg      = i % 2 === 0 ? '#1e293b' : '#182030';
 
-    const ptsColor = isExact ? '#facc15' : isOk ? '#4ade80' : pts === 0 ? '#f87171' : '#334155';
+    const ptsColor = isExact ? '#38bdf8' : isOk ? '#4ade80' : pts === 0 ? '#f87171' : '#334155';
     const ptsText  = pts !== null ? pts.toFixed(2) : (p ? '—' : '');
     const icon     = isExact ? '\uD83E\uDD47' : isOk ? '\u2705' : (pts === 0 ? '\u274C' : '');
 
@@ -3025,7 +3079,7 @@ function renderPodio() {
     </div>` : ''}
 
     <div style="margin-bottom:14px">
-      <label style="font-size:11px;color:#facc15;font-weight:800;text-transform:uppercase;letter-spacing:.05em">🥇 Campeón</label>
+      <label style="font-size:11px;color:#38bdf8;font-weight:800;text-transform:uppercase;letter-spacing:.05em">🥇 Campeón</label>
       <select id="podioChamp" ${disAttr}width:100%;margin-top:6px;background:#0f172a;border:2px solid #475569;border-radius:10px;
         padding:12px;color:#f1f5f9;font-size:15px;font-weight:700"${locked?' disabled':''}>
         ${optTeams(myPodio.champion||'')}
@@ -3056,7 +3110,7 @@ function renderPodio() {
   if (locked) {
     const allPodio = CACHE.podio.filter(p => p.champion && !CACHE.users.find(u=>u.id===p.userId)?.isAdmin);
     if (allPodio.length) {
-      html += `<h3 style="font-weight:800;font-size:14px;margin:0 0 8px;color:#facc15">👀 Predicciones del grupo</h3>
+      html += `<h3 style="font-weight:800;font-size:14px;margin:0 0 8px;color:#38bdf8">👀 Predicciones del grupo</h3>
       <div class="card" style="overflow:hidden">
         <table style="width:100%;border-collapse:collapse;font-size:12px">
           <thead><tr style="background:#0f172a;color:#64748b;font-size:10px;text-transform:uppercase">
@@ -3070,8 +3124,8 @@ function renderPodio() {
         const u = CACHE.users.find(x=>x.id===p.userId);
         const isMine = p.userId===uid;
         html += `<tr style="${isMine?'background:#1e3a5f':i%2===0?'background:#1e293b':'background:#182030'}">
-          <td style="padding:8px 10px;font-weight:700">${u?.name||'?'}${isMine?' <span style="color:#facc15;font-size:10px">(tú)</span>':''}</td>
-          <td style="padding:8px 6px;text-align:center;font-weight:700;color:#facc15;font-size:11px">${p.champion||'—'}</td>
+          <td style="padding:8px 10px;font-weight:700">${u?.name||'?'}${isMine?' <span style="color:#38bdf8;font-size:10px">(tú)</span>':''}</td>
+          <td style="padding:8px 6px;text-align:center;font-weight:700;color:#38bdf8;font-size:11px">${p.champion||'—'}</td>
           <td style="padding:8px 6px;text-align:center;color:#94a3b8;font-size:11px">${p.runner||'—'}</td>
           <td style="padding:8px 6px;text-align:center;color:#4ade80;font-size:11px">${p.scorer||'—'}</td>
         </tr>`;
@@ -3081,7 +3135,7 @@ function renderPodio() {
   } else {
     html += `<div style="background:rgba(15,27,45,0.6);border:1px solid rgba(56,189,248,0.1);border-radius:10px;padding:14px;text-align:center;margin-top:8px">
       <span style="font-size:20px">🔒</span>
-      <p style="margin:6px 0 0;color:#64748b;font-size:12px">Las predicciones del grupo se revelarán cuando <b style="color:#facc15">comience el Mundial</b></p>
+      <p style="margin:6px 0 0;color:#64748b;font-size:12px">Las predicciones del grupo se revelarán cuando <b style="color:#38bdf8">comience el Mundial</b></p>
     </div>`;
   }
 
@@ -3156,7 +3210,7 @@ function buildAdminGestion() {
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:18px">⚡</span>
             <div>
-              <div style="font-size:12px;font-weight:700;color:#facc15">Partido Potenciado</div>
+              <div style="font-size:12px;font-weight:700;color:#38bdf8">Partido Potenciado</div>
               <div style="font-size:10px;color:#64748b">Duplica el pozo de puntos</div>
             </div>
           </div>
@@ -3178,7 +3232,7 @@ function buildAdminGestion() {
 
   <!-- Usuarios -->
   <div class="card" style="padding:16px;margin-bottom:12px">
-    <h3 style="font-weight:800;font-size:14px;color:#facc15;margin:0 0 12px">👥 Participantes (${users.length})</h3>
+    <h3 style="font-weight:800;font-size:14px;color:#38bdf8;margin:0 0 12px">👥 Participantes (${users.length})</h3>
     <div style="display:flex;flex-direction:column;gap:6px">`;
 
   users.forEach(u => {
@@ -3186,7 +3240,7 @@ function buildAdminGestion() {
     const done2 = CACHE.matches.filter(m=>m.realHome!=null);
     const pts   = up.reduce((acc,p)=>{const m=done2.find(x=>x.id===p.matchId);return acc+(m?calcPoints(p,m,preds):0);},0);
     html += `<div style="background:#0f172a;border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between">
-      <div><div style="font-weight:700;font-size:13px">${u.name}</div><div style="font-size:11px;color:#64748b">@${u.code} · ${up.length} pred. · <span style="color:#facc15">${pts.toFixed(2)} pts</span></div></div>
+      <div><div style="font-weight:700;font-size:13px">${u.name}</div><div style="font-size:11px;color:#64748b">@${u.code} · ${up.length} pred. · <span style="color:#38bdf8">${pts.toFixed(2)} pts</span></div></div>
       <button class="btn-danger" onclick="delUser('${u.id}')" style="padding:6px 10px">✕</button>
     </div>`;
   });
@@ -3211,7 +3265,7 @@ function buildAdminGestion() {
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:18px">⚡</span>
             <div>
-              <div style="font-size:12px;font-weight:700;color:#facc15">Partido Potenciado</div>
+              <div style="font-size:12px;font-weight:700;color:#38bdf8">Partido Potenciado</div>
               <div style="font-size:10px;color:#64748b">Duplica el pozo de puntos</div>
             </div>
           </div>
@@ -3746,7 +3800,7 @@ function renderAjustes() {
     const detailText = e.detail || '';
     return `<div style="background:#0f172a;border-radius:8px;padding:10px;border-left:3px solid #7c3aed">
       <div style="font-size:11px;color:#64748b;margin-bottom:4px">${dateStr}</div>
-      <div style="font-size:13px;font-weight:700;color:#e8edf5"><span style="color:#c084fc">@${e.admin||'?'}</span> ${actionText} <span style="color:#64748b">a las</span> <span style="color:#facc15">${timeStr}</span></div>
+      <div style="font-size:13px;font-weight:700;color:#e8edf5"><span style="color:#c084fc">@${e.admin||'?'}</span> ${actionText} <span style="color:#64748b">a las</span> <span style="color:#38bdf8">${timeStr}</span></div>
       ${detailText ? `<div style="font-size:11px;color:#94a3b8;margin-top:2px">${detailText}</div>` : ''}
     </div>`;
   }).join('');
