@@ -1,3 +1,20 @@
 ~$*
 __pycache__/
 *.pyc
+
+# Secrets
+service-account.json
+.github-token
+
+# Redesign drafts
+polla-copy.html
+polla-redesign.html
+polla-redesign-v2.html
+polla-redesign-v3.html
+polla-redesign-v4.html
+index.html.bak
+
+# Node
+node_modules/
+package.json
+package-lock.json

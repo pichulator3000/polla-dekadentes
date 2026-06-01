@@ -1,0 +1,2388 @@
+{
+  "matches": {
+    "m1775834031309yuuu": {
+      "away": "Sudáfrica",
+      "closesAtMs": 1781204400000,
+      "datetime": "2026-06-11T19:00:00.000Z",
+      "home": "México",
+      "id": "m1775834031309yuuu",
+      "stage": "Grupo A · Estadio Ciudad de México",
+      "tournament": "Mundial 2026"
+    },
+    "m17758340324929cdq": {
+      "away": "República Checa",
+      "closesAtMs": 1781229600000,
+      "datetime": "2026-06-12T02:00:00.000Z",
+      "home": "Corea del Sur",
+      "id": "m17758340324929cdq",
+      "stage": "Grupo A · Estadio Guadalajara",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834033294czry": {
+      "away": "Sudáfrica",
+      "closesAtMs": 1781798400000,
+      "datetime": "2026-06-18T16:00:00.000Z",
+      "home": "República Checa",
+      "id": "m1775834033294czry",
+      "stage": "Grupo A · Atlanta Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834033924lq22": {
+      "away": "Corea del Sur",
+      "closesAtMs": 1781830800000,
+      "datetime": "2026-06-19T01:00:00.000Z",
+      "home": "México",
+      "id": "m1775834033924lq22",
+      "stage": "Grupo A · Estadio Guadalajara",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834034862ogcq": {
+      "away": "México",
+      "closesAtMs": 1782349200000,
+      "datetime": "2026-06-25T01:00:00.000Z",
+      "home": "República Checa",
+      "id": "m1775834034862ogcq",
+      "stage": "Grupo A · Estadio Ciudad de México",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834035490kaat": {
+      "away": "Corea del Sur",
+      "closesAtMs": 1782349200000,
+      "datetime": "2026-06-25T01:00:00.000Z",
+      "home": "Sudáfrica",
+      "id": "m1775834035490kaat",
+      "stage": "Grupo A · Estadio Monterrey",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834036109j7lf": {
+      "away": "Bosnia",
+      "closesAtMs": 1781290800000,
+      "datetime": "2026-06-12T19:00:00.000Z",
+      "home": "Canadá",
+      "id": "m1775834036109j7lf",
+      "potenciado": true,
+      "stage": "Grupo B · Toronto Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m17758340367408o4o": {
+      "away": "Suiza",
+      "closesAtMs": 1781377200000,
+      "datetime": "2026-06-13T19:00:00.000Z",
+      "home": "Qatar",
+      "id": "m17758340367408o4o",
+      "stage": "Grupo B · San Francisco Bay Area Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834037256dgzv": {
+      "away": "Bosnia",
+      "closesAtMs": 1781809200000,
+      "datetime": "2026-06-18T19:00:00.000Z",
+      "home": "Suiza",
+      "id": "m1775834037256dgzv",
+      "stage": "Grupo B · Los Angeles Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834037870fe1l": {
+      "away": "Qatar",
+      "closesAtMs": 1781820000000,
+      "datetime": "2026-06-18T22:00:00.000Z",
+      "home": "Canadá",
+      "id": "m1775834037870fe1l",
+      "stage": "Grupo B · BC Place Vancouver",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834038477o5cy": {
+      "away": "Canadá",
+      "closesAtMs": 1782327600000,
+      "datetime": "2026-06-24T19:00:00.000Z",
+      "home": "Suiza",
+      "id": "m1775834038477o5cy",
+      "stage": "Grupo B · BC Place Vancouver",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834039138hibb": {
+      "away": "Qatar",
+      "closesAtMs": 1782327600000,
+      "datetime": "2026-06-24T19:00:00.000Z",
+      "home": "Bosnia",
+      "id": "m1775834039138hibb",
+      "stage": "Grupo B · Seattle Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834039745oscm": {
+      "away": "Marruecos",
+      "closesAtMs": 1781388000000,
+      "datetime": "2026-06-13T22:00:00.000Z",
+      "home": "Brasil",
+      "id": "m1775834039745oscm",
+      "stage": "Grupo C · New York / New Jersey Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834040356g7hs": {
+      "away": "Escocia",
+      "closesAtMs": 1781398800000,
+      "datetime": "2026-06-14T01:00:00.000Z",
+      "home": "Haití",
+      "id": "m1775834040356g7hs",
+      "stage": "Grupo C · Boston Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834040981rdnw": {
+      "away": "Marruecos",
+      "closesAtMs": 1781906400000,
+      "datetime": "2026-06-19T22:00:00.000Z",
+      "home": "Escocia",
+      "id": "m1775834040981rdnw",
+      "stage": "Grupo C · Boston Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834042062tf8p": {
+      "away": "Haití",
+      "closesAtMs": 1781917200000,
+      "datetime": "2026-06-20T01:00:00.000Z",
+      "home": "Brasil",
+      "id": "m1775834042062tf8p",
+      "stage": "Grupo C · Philadelphia Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834042975umhf": {
+      "away": "Brasil",
+      "closesAtMs": 1782338400000,
+      "datetime": "2026-06-24T22:00:00.000Z",
+      "home": "Escocia",
+      "id": "m1775834042975umhf",
+      "stage": "Grupo C · Miami Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834043795l3va": {
+      "away": "Haití",
+      "closesAtMs": 1782338400000,
+      "datetime": "2026-06-24T22:00:00.000Z",
+      "home": "Marruecos",
+      "id": "m1775834043795l3va",
+      "stage": "Grupo C · Atlanta Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834044688e1s8": {
+      "away": "Paraguay",
+      "closesAtMs": 1781312400000,
+      "datetime": "2026-06-13T01:00:00.000Z",
+      "home": "Estados Unidos",
+      "id": "m1775834044688e1s8",
+      "stage": "Grupo D · Los Angeles Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834045315rquk": {
+      "away": "Turquía",
+      "closesAtMs": 1781323200000,
+      "datetime": "2026-06-13T04:00:00.000Z",
+      "home": "Australia",
+      "id": "m1775834045315rquk",
+      "stage": "Grupo D · BC Place Vancouver",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834046243t8l7": {
+      "away": "Paraguay",
+      "closesAtMs": 1781841600000,
+      "datetime": "2026-06-19T04:00:00.000Z",
+      "home": "Turquía",
+      "id": "m1775834046243t8l7",
+      "stage": "Grupo D · San Francisco Bay Area Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834046880hjio": {
+      "away": "Australia",
+      "closesAtMs": 1781895600000,
+      "datetime": "2026-06-19T19:00:00.000Z",
+      "home": "Estados Unidos",
+      "id": "m1775834046880hjio",
+      "potenciado": true,
+      "stage": "Grupo D · Seattle Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m17758340476934ouv": {
+      "away": "Estados Unidos",
+      "closesAtMs": 1782439200000,
+      "datetime": "2026-06-26T02:00:00.000Z",
+      "home": "Turquía",
+      "id": "m17758340476934ouv",
+      "stage": "Grupo D · Los Angeles Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834048550cyir": {
+      "away": "Australia",
+      "closesAtMs": 1782439200000,
+      "datetime": "2026-06-26T02:00:00.000Z",
+      "home": "Paraguay",
+      "id": "m1775834048550cyir",
+      "stage": "Grupo D · San Francisco Bay Area Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834049396ki94": {
+      "away": "Curazao",
+      "closesAtMs": 1781456400000,
+      "datetime": "2026-06-14T17:00:00.000Z",
+      "home": "Alemania",
+      "id": "m1775834049396ki94",
+      "stage": "Grupo E · Houston Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834050372r9kn": {
+      "away": "Ecuador",
+      "closesAtMs": 1781478000000,
+      "datetime": "2026-06-14T23:00:00.000Z",
+      "home": "Costa de Marfil",
+      "id": "m1775834050372r9kn",
+      "stage": "Grupo E · Philadelphia Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834051341d4mv": {
+      "away": "Costa de Marfil",
+      "closesAtMs": 1781985600000,
+      "datetime": "2026-06-20T20:00:00.000Z",
+      "home": "Alemania",
+      "id": "m1775834051341d4mv",
+      "stage": "Grupo E · Toronto Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m17758340519313ofb": {
+      "away": "Ecuador",
+      "closesAtMs": 1782000000000,
+      "datetime": "2026-06-21T00:00:00.000Z",
+      "home": "Curazao",
+      "id": "m17758340519313ofb",
+      "stage": "Grupo E · Kansas City Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834052982auvh": {
+      "away": "Alemania",
+      "closesAtMs": 1782417600000,
+      "datetime": "2026-06-25T20:00:00.000Z",
+      "home": "Ecuador",
+      "id": "m1775834052982auvh",
+      "stage": "Grupo E · New York / New Jersey Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834053847gqc9": {
+      "away": "Costa de Marfil",
+      "closesAtMs": 1782417600000,
+      "datetime": "2026-06-25T20:00:00.000Z",
+      "home": "Curazao",
+      "id": "m1775834053847gqc9",
+      "stage": "Grupo E · Philadelphia Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m17758340544595i8r": {
+      "away": "Japón",
+      "closesAtMs": 1781467200000,
+      "datetime": "2026-06-14T20:00:00.000Z",
+      "home": "Países Bajos",
+      "id": "m17758340544595i8r",
+      "stage": "Grupo F · Dallas Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m17758340550731wlu": {
+      "away": "Túnez",
+      "closesAtMs": 1781488800000,
+      "datetime": "2026-06-15T02:00:00.000Z",
+      "home": "Suecia",
+      "id": "m17758340550731wlu",
+      "stage": "Grupo F · Estadio Monterrey",
+      "tournament": "Mundial 2026"
+    },
+    "m17758340558829tgp": {
+      "away": "Túnez",
+      "closesAtMs": 1781928000000,
+      "datetime": "2026-06-20T04:00:00.000Z",
+      "home": "Japón",
+      "id": "m17758340558829tgp",
+      "stage": "Grupo F · Estadio Monterrey",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834056503jomo": {
+      "away": "Suecia",
+      "closesAtMs": 1781974800000,
+      "datetime": "2026-06-20T17:00:00.000Z",
+      "home": "Países Bajos",
+      "id": "m1775834056503jomo",
+      "stage": "Grupo F · Houston Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m17758340571599ep6": {
+      "away": "Países Bajos",
+      "closesAtMs": 1782428400000,
+      "datetime": "2026-06-25T23:00:00.000Z",
+      "home": "Túnez",
+      "id": "m17758340571599ep6",
+      "stage": "Grupo F · Dallas Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m177583405778470ai": {
+      "away": "Suecia",
+      "closesAtMs": 1782428400000,
+      "datetime": "2026-06-25T23:00:00.000Z",
+      "home": "Japón",
+      "id": "m177583405778470ai",
+      "stage": "Grupo F · Kansas City Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m17758340584483g16": {
+      "away": "Egipto",
+      "closesAtMs": 1781550000000,
+      "datetime": "2026-06-15T19:00:00.000Z",
+      "home": "Bélgica",
+      "id": "m17758340584483g16",
+      "stage": "Grupo G · Seattle Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834059304yllb": {
+      "away": "Nueva Zelanda",
+      "closesAtMs": 1781571600000,
+      "datetime": "2026-06-16T01:00:00.000Z",
+      "home": "Irán",
+      "id": "m1775834059304yllb",
+      "stage": "Grupo G · Los Angeles Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834060335m6g8": {
+      "away": "Irán",
+      "closesAtMs": 1782068400000,
+      "datetime": "2026-06-21T19:00:00.000Z",
+      "home": "Bélgica",
+      "id": "m1775834060335m6g8",
+      "stage": "Grupo G · Los Angeles Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834060976guc5": {
+      "away": "Nueva Zelanda",
+      "closesAtMs": 1782090000000,
+      "datetime": "2026-06-22T01:00:00.000Z",
+      "home": "Egipto",
+      "id": "m1775834060976guc5",
+      "stage": "Grupo G · BC Place Vancouver",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834061869sw3n": {
+      "away": "Bélgica",
+      "closesAtMs": 1782529200000,
+      "datetime": "2026-06-27T03:00:00.000Z",
+      "home": "Nueva Zelanda",
+      "id": "m1775834061869sw3n",
+      "stage": "Grupo G · BC Place Vancouver",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834062464xty2": {
+      "away": "Irán",
+      "closesAtMs": 1782529200000,
+      "datetime": "2026-06-27T03:00:00.000Z",
+      "home": "Egipto",
+      "id": "m1775834062464xty2",
+      "stage": "Grupo G · Seattle Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834063416u8pk": {
+      "away": "Cabo Verde",
+      "closesAtMs": 1781539200000,
+      "datetime": "2026-06-15T16:00:00.000Z",
+      "home": "España",
+      "id": "m1775834063416u8pk",
+      "stage": "Grupo H · Atlanta Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m177583406421794ml": {
+      "away": "Uruguay",
+      "closesAtMs": 1781560800000,
+      "datetime": "2026-06-15T22:00:00.000Z",
+      "home": "Arabia Saudita",
+      "id": "m177583406421794ml",
+      "stage": "Grupo H · Miami Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834064835d36e": {
+      "away": "Arabia Saudita",
+      "closesAtMs": 1782057600000,
+      "datetime": "2026-06-21T16:00:00.000Z",
+      "home": "España",
+      "id": "m1775834064835d36e",
+      "stage": "Grupo H · Atlanta Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m177583406546113lr": {
+      "away": "Uruguay",
+      "closesAtMs": 1782079200000,
+      "datetime": "2026-06-21T22:00:00.000Z",
+      "home": "Cabo Verde",
+      "id": "m177583406546113lr",
+      "stage": "Grupo H · Miami Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834066125nppf": {
+      "away": "España",
+      "closesAtMs": 1782518400000,
+      "datetime": "2026-06-27T00:00:00.000Z",
+      "home": "Uruguay",
+      "id": "m1775834066125nppf",
+      "potenciado": true,
+      "stage": "Grupo H · Estadio Guadalajara",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834066758zg4t": {
+      "away": "Arabia Saudita",
+      "closesAtMs": 1782518400000,
+      "datetime": "2026-06-27T00:00:00.000Z",
+      "home": "Cabo Verde",
+      "id": "m1775834066758zg4t",
+      "stage": "Grupo H · Houston Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m177583406737528rf": {
+      "away": "Senegal",
+      "closesAtMs": 1781636400000,
+      "datetime": "2026-06-16T19:00:00.000Z",
+      "home": "Francia",
+      "id": "m177583406737528rf",
+      "stage": "Grupo I · New York / New Jersey Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m17758340683337qt0": {
+      "away": "Noruega",
+      "closesAtMs": 1781647200000,
+      "datetime": "2026-06-16T22:00:00.000Z",
+      "home": "Irak",
+      "id": "m17758340683337qt0",
+      "stage": "Grupo I · Boston Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834069306hnkr": {
+      "away": "Irak",
+      "closesAtMs": 1782162000000,
+      "datetime": "2026-06-22T21:00:00.000Z",
+      "home": "Francia",
+      "id": "m1775834069306hnkr",
+      "stage": "Grupo I · Philadelphia Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834070179p3fj": {
+      "away": "Senegal",
+      "closesAtMs": 1782172800000,
+      "datetime": "2026-06-23T00:00:00.000Z",
+      "home": "Noruega",
+      "id": "m1775834070179p3fj",
+      "stage": "Grupo I · New York / New Jersey Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834070839vg7a": {
+      "away": "Francia",
+      "closesAtMs": 1782500400000,
+      "datetime": "2026-06-26T19:00:00.000Z",
+      "home": "Noruega",
+      "id": "m1775834070839vg7a",
+      "stage": "Grupo I · Boston Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834071757q60v": {
+      "away": "Irak",
+      "closesAtMs": 1782500400000,
+      "datetime": "2026-06-26T19:00:00.000Z",
+      "home": "Senegal",
+      "id": "m1775834071757q60v",
+      "stage": "Grupo I · Toronto Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834072716chvp": {
+      "away": "Jordania",
+      "closesAtMs": 1781582400000,
+      "datetime": "2026-06-16T04:00:00.000Z",
+      "home": "Austria",
+      "id": "m1775834072716chvp",
+      "stage": "Grupo J · San Francisco Bay Area Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834073625mtyh": {
+      "away": "Argelia",
+      "closesAtMs": 1781658000000,
+      "datetime": "2026-06-17T01:00:00.000Z",
+      "home": "Argentina",
+      "id": "m1775834073625mtyh",
+      "stage": "Grupo J · Kansas City Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m17758340745686fyk": {
+      "away": "Austria",
+      "closesAtMs": 1782147600000,
+      "datetime": "2026-06-22T17:00:00.000Z",
+      "home": "Argentina",
+      "id": "m17758340745686fyk",
+      "stage": "Grupo J · Dallas Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834075543mbq5": {
+      "away": "Argelia",
+      "closesAtMs": 1782183600000,
+      "datetime": "2026-06-23T03:00:00.000Z",
+      "home": "Jordania",
+      "id": "m1775834075543mbq5",
+      "stage": "Grupo J · San Francisco Bay Area Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834076215ktrm": {
+      "away": "Argentina",
+      "closesAtMs": 1782612000000,
+      "datetime": "2026-06-28T02:00:00.000Z",
+      "home": "Jordania",
+      "id": "m1775834076215ktrm",
+      "stage": "Grupo J · Dallas Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834077021z9sw": {
+      "away": "Austria",
+      "closesAtMs": 1782612000000,
+      "datetime": "2026-06-28T02:00:00.000Z",
+      "home": "Argelia",
+      "id": "m1775834077021z9sw",
+      "stage": "Grupo J · Kansas City Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834078212tjbk": {
+      "away": "RD Congo",
+      "closesAtMs": 1781715600000,
+      "datetime": "2026-06-17T17:00:00.000Z",
+      "home": "Portugal",
+      "id": "m1775834078212tjbk",
+      "stage": "Grupo K · Houston Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m17758340791379uxv": {
+      "away": "Colombia",
+      "closesAtMs": 1781748000000,
+      "datetime": "2026-06-18T02:00:00.000Z",
+      "home": "Uzbekistán",
+      "id": "m17758340791379uxv",
+      "stage": "Grupo K · Estadio Ciudad de México",
+      "tournament": "Mundial 2026"
+    },
+    "m17758340798369sd1": {
+      "away": "Uzbekistán",
+      "closesAtMs": 1782234000000,
+      "datetime": "2026-06-23T17:00:00.000Z",
+      "home": "Portugal",
+      "id": "m17758340798369sd1",
+      "stage": "Grupo K · Houston Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834080539yb4j": {
+      "away": "Colombia",
+      "closesAtMs": 1782266400000,
+      "datetime": "2026-06-24T02:00:00.000Z",
+      "home": "RD Congo",
+      "id": "m1775834080539yb4j",
+      "stage": "Grupo K · Estadio Guadalajara",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834081602llwu": {
+      "away": "Portugal",
+      "closesAtMs": 1782603000000,
+      "datetime": "2026-06-27T23:30:00.000Z",
+      "home": "Colombia",
+      "id": "m1775834081602llwu",
+      "stage": "Grupo K · Miami Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m17758340824666b3p": {
+      "away": "Uzbekistán",
+      "closesAtMs": 1782603000000,
+      "datetime": "2026-06-27T23:30:00.000Z",
+      "home": "RD Congo",
+      "id": "m17758340824666b3p",
+      "stage": "Grupo K · Atlanta Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834083099xzp4": {
+      "away": "Croacia",
+      "closesAtMs": 1781726400000,
+      "datetime": "2026-06-17T20:00:00.000Z",
+      "home": "Inglaterra",
+      "id": "m1775834083099xzp4",
+      "stage": "Grupo L · Dallas Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m17758340837365y53": {
+      "away": "Panamá",
+      "closesAtMs": 1781737200000,
+      "datetime": "2026-06-17T23:00:00.000Z",
+      "home": "Ghana",
+      "id": "m17758340837365y53",
+      "stage": "Grupo L · Toronto Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834084414kbnc": {
+      "away": "Ghana",
+      "closesAtMs": 1782244800000,
+      "datetime": "2026-06-23T20:00:00.000Z",
+      "home": "Inglaterra",
+      "id": "m1775834084414kbnc",
+      "stage": "Grupo L · Boston Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m17758340850193df7": {
+      "away": "Panamá",
+      "closesAtMs": 1782255600000,
+      "datetime": "2026-06-23T23:00:00.000Z",
+      "home": "Croacia",
+      "id": "m17758340850193df7",
+      "stage": "Grupo L · Toronto Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834085885ufra": {
+      "away": "Inglaterra",
+      "closesAtMs": 1782594000000,
+      "datetime": "2026-06-27T21:00:00.000Z",
+      "home": "Panamá",
+      "id": "m1775834085885ufra",
+      "stage": "Grupo L · New York / New Jersey Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1775834086546jts7": {
+      "away": "Ghana",
+      "closesAtMs": 1782594000000,
+      "datetime": "2026-06-27T21:00:00.000Z",
+      "home": "Croacia",
+      "id": "m1775834086546jts7",
+      "stage": "Grupo L · Philadelphia Stadium",
+      "tournament": "Mundial 2026"
+    },
+    "m1776121333868usos": {
+      "away": "D. Tolima",
+      "closesAtMs": 1776204000000,
+      "datetime": "2026-04-14T22:00:00.000Z",
+      "home": "Nacional",
+      "id": "m1776121333868usos",
+      "realAway": 1,
+      "realHome": 3,
+      "stage": "Grupo B",
+      "tournament": "Copa Libertadores 2026"
+    },
+    "m1776121334615t387": {
+      "away": "Barcelona",
+      "closesAtMs": 1776211200000,
+      "datetime": "2026-04-15T00:00:00.000Z",
+      "home": "Boca",
+      "id": "m1776121334615t387",
+      "realAway": 0,
+      "realHome": 3,
+      "stage": "Grupo D",
+      "tournament": "Copa Libertadores 2026"
+    },
+    "m17761213351820j92": {
+      "away": "D. La Guaira",
+      "closesAtMs": 1776211200000,
+      "datetime": "2026-04-15T00:00:00.000Z",
+      "home": "Bolívar",
+      "id": "m17761213351820j92",
+      "realAway": 1,
+      "realHome": 1,
+      "stage": "Grupo C",
+      "tournament": "Copa Libertadores 2026"
+    },
+    "m1776121335746uhec": {
+      "away": "Mirassol",
+      "closesAtMs": 1776218400000,
+      "datetime": "2026-04-15T02:00:00.000Z",
+      "home": "Liga de Quito",
+      "id": "m1776121335746uhec",
+      "realAway": 0,
+      "realHome": 2,
+      "stage": "Grupo G",
+      "tournament": "Copa Libertadores 2026"
+    },
+    "m1776121336331t136": {
+      "away": "Coquimbo",
+      "closesAtMs": 1776218400000,
+      "datetime": "2026-04-15T02:00:00.000Z",
+      "home": "Universitario",
+      "id": "m1776121336331t136",
+      "realAway": 2,
+      "realHome": 0,
+      "stage": "Grupo B",
+      "tournament": "Copa Libertadores 2026"
+    },
+    "m17761213368942zpd": {
+      "away": "U. Católica",
+      "closesAtMs": 1776290400000,
+      "datetime": "2026-04-15T22:00:00.000Z",
+      "home": "Cruzeiro",
+      "id": "m17761213368942zpd",
+      "realAway": 2,
+      "realHome": 1,
+      "stage": "Grupo D",
+      "tournament": "Copa Libertadores 2026"
+    },
+    "m17761213374340fe3": {
+      "away": "Rosario Central",
+      "closesAtMs": 1776290400000,
+      "datetime": "2026-04-15T22:00:00.000Z",
+      "home": "Libertad",
+      "id": "m17761213374340fe3",
+      "realAway": 1,
+      "realHome": 0,
+      "stage": "Grupo H",
+      "tournament": "Copa Libertadores 2026"
+    },
+    "m1776121338429s88j": {
+      "away": "Independiente Santa Fe",
+      "closesAtMs": 1776299400000,
+      "datetime": "2026-04-16T00:30:00.000Z",
+      "home": "Corinthians",
+      "id": "m1776121338429s88j",
+      "realAway": 0,
+      "realHome": 2,
+      "stage": "Grupo E",
+      "tournament": "Copa Libertadores 2026"
+    },
+    "m1776121339233wc8n": {
+      "away": "Independiente Rivadavia",
+      "closesAtMs": 1776299400000,
+      "datetime": "2026-04-16T00:30:00.000Z",
+      "home": "Fluminense",
+      "id": "m1776121339233wc8n",
+      "realAway": 2,
+      "realHome": 1,
+      "stage": "Grupo C",
+      "tournament": "Copa Libertadores 2026"
+    },
+    "m1776121339775dwgw": {
+      "away": "Universidad Central",
+      "closesAtMs": 1776304800000,
+      "datetime": "2026-04-16T02:00:00.000Z",
+      "home": "Independiente del Valle",
+      "id": "m1776121339775dwgw",
+      "realAway": 1,
+      "realHome": 3,
+      "stage": "Grupo H",
+      "tournament": "Copa Libertadores 2026"
+    },
+    "m1776121340544vzc5": {
+      "away": "Always Ready",
+      "closesAtMs": 1776376800000,
+      "datetime": "2026-04-16T22:00:00.000Z",
+      "home": "Lanús",
+      "id": "m1776121340544vzc5",
+      "realAway": 0,
+      "realHome": 1,
+      "stage": "Grupo G",
+      "tournament": "Copa Libertadores 2026"
+    },
+    "m17761213413400ubl": {
+      "away": "Sporting Cristal",
+      "closesAtMs": 1776376800000,
+      "datetime": "2026-04-16T22:00:00.000Z",
+      "home": "Palmeiras",
+      "id": "m17761213413400ubl",
+      "realAway": 1,
+      "realHome": 2,
+      "stage": "Grupo F",
+      "tournament": "Copa Libertadores 2026"
+    },
+    "m1776121342073ww8p": {
+      "away": "Independiente Medellín",
+      "closesAtMs": 1776385800000,
+      "datetime": "2026-04-17T00:30:00.000Z",
+      "home": "Flamengo",
+      "id": "m1776121342073ww8p",
+      "realAway": 1,
+      "realHome": 4,
+      "stage": "Grupo A",
+      "tournament": "Copa Libertadores 2026"
+    },
+    "m1776121342605abdy": {
+      "away": "Platense",
+      "closesAtMs": 1776385800000,
+      "datetime": "2026-04-17T00:30:00.000Z",
+      "home": "Peñarol",
+      "id": "m1776121342605abdy",
+      "realAway": 2,
+      "realHome": 1,
+      "stage": "Grupo E",
+      "tournament": "Copa Libertadores 2026"
+    },
+    "m1776177383126ekdf": {
+      "away": "Sp. Portugal",
+      "closesAtMs": 1776279600000,
+      "datetime": "2026-04-15T19:00:00.000Z",
+      "home": "Arsenal",
+      "id": "m1776177383126ekdf",
+      "realAway": 0,
+      "realHome": 0,
+      "stage": "Cuartos de final",
+      "tournament": "Champions League"
+    },
+    "m1776177384325ggbe": {
+      "away": "R. Madrid",
+      "closesAtMs": 1776279600000,
+      "datetime": "2026-04-15T19:00:00.000Z",
+      "home": "Bayern Múnich",
+      "id": "m1776177384325ggbe",
+      "realAway": 3,
+      "realHome": 4,
+      "stage": "Cuartos de final",
+      "tournament": "Champions League"
+    },
+    "m1777397865889": {
+      "away": "Bayern Múnich",
+      "closesAtMs": 1777402800000,
+      "datetime": "2026-04-28T19:00:00.000Z",
+      "home": "Paris Saint-Germain",
+      "id": "m1777397865889",
+      "realAway": 4,
+      "realHome": 5,
+      "stage": "Semifinal",
+      "tournament": "Champions League"
+    },
+    "m1777398021015": {
+      "away": "Arsenal",
+      "closesAtMs": 1777489200000,
+      "datetime": "2026-04-29T19:00:00.000Z",
+      "home": "Atlético",
+      "id": "m1777398021015",
+      "realAway": 1,
+      "realHome": 1,
+      "stage": "Semifinal",
+      "tournament": "Champions League"
+    },
+    "m1778000057866": {
+      "away": "Paris Saint-Germain",
+      "closesAtMs": 1778094000000,
+      "datetime": "2026-05-06T19:00:00.000Z",
+      "home": "Bayern Múnich",
+      "id": "m1778000057866",
+      "realAway": 1,
+      "realHome": 1,
+      "stage": "Semifinales",
+      "tournament": "Champions League"
+    },
+    "m1778000086754": {
+      "away": "Atlético",
+      "closesAtMs": 1778007600000,
+      "datetime": "2026-05-05T19:00:00.000Z",
+      "home": "Arsenal",
+      "id": "m1778000086754",
+      "realAway": 0,
+      "realHome": 1,
+      "stage": "Semifinales",
+      "tournament": "Champions League"
+    }
+  },
+  "podio": {
+    "asaval": {
+      "champion": "Francia",
+      "runner": "Países Bajos",
+      "scorer": "Mbappé",
+      "userId": "asaval"
+    },
+    "diegocroque": {
+      "champion": "España",
+      "runner": "Portugal",
+      "scorer": "Mbappe",
+      "userId": "diegocroque"
+    },
+    "elmeacabezas": {
+      "champion": "España",
+      "runner": "Francia",
+      "scorer": "Mbappe",
+      "userId": "elmeacabezas"
+    },
+    "jaimercks": {
+      "champion": "España",
+      "runner": "Portugal",
+      "scorer": "Mbappe",
+      "userId": "jaimercks"
+    },
+    "tomas123": {
+      "champion": "Francia",
+      "runner": "Inglaterra",
+      "scorer": "Mbappe",
+      "userId": "tomas123"
+    }
+  },
+  "preds": {
+    "__xxelpablito777xx____m17761213368942zpd": {
+      "matchId": "m17761213368942zpd",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "__xxelpablito777xx__"
+    },
+    "__xxelpablito777xx____m17761213374340fe3": {
+      "matchId": "m17761213374340fe3",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "__xxelpablito777xx__"
+    },
+    "__xxelpablito777xx____m1776121338429s88j": {
+      "matchId": "m1776121338429s88j",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "__xxelpablito777xx__"
+    },
+    "__xxelpablito777xx____m1776121339233wc8n": {
+      "matchId": "m1776121339233wc8n",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "__xxelpablito777xx__"
+    },
+    "__xxelpablito777xx____m1776121339775dwgw": {
+      "matchId": "m1776121339775dwgw",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "__xxelpablito777xx__"
+    },
+    "__xxelpablito777xx____m1776121340544vzc5": {
+      "matchId": "m1776121340544vzc5",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "__xxelpablito777xx__"
+    },
+    "__xxelpablito777xx____m17761213413400ubl": {
+      "matchId": "m17761213413400ubl",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "__xxelpablito777xx__"
+    },
+    "__xxelpablito777xx____m1776121342073ww8p": {
+      "matchId": "m1776121342073ww8p",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "__xxelpablito777xx__"
+    },
+    "__xxelpablito777xx____m1776121342605abdy": {
+      "matchId": "m1776121342605abdy",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "__xxelpablito777xx__"
+    },
+    "__xxelpablito777xx____m1777397865889": {
+      "matchId": "m1777397865889",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "__xxelpablito777xx__"
+    },
+    "__xxelpablito777xx____m1777398021015": {
+      "matchId": "m1777398021015",
+      "predAway": 1,
+      "predHome": 0,
+      "userId": "__xxelpablito777xx__"
+    },
+    "asaval__m1775834031309yuuu": {
+      "matchId": "m1775834031309yuuu",
+      "predAway": 0,
+      "predHome": 10,
+      "userId": "asaval"
+    },
+    "asaval__m17758340324929cdq": {
+      "matchId": "m17758340324929cdq",
+      "predAway": 0,
+      "predHome": 10,
+      "userId": "asaval"
+    },
+    "diegocroque__m1776121332746dkoi": {
+      "matchId": "m1776121332746dkoi",
+      "predAway": 2,
+      "predHome": 1,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m17761213333352419": {
+      "matchId": "m17761213333352419",
+      "predAway": 0,
+      "predHome": 3,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m1776121333868usos": {
+      "matchId": "m1776121333868usos",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m1776121334615t387": {
+      "matchId": "m1776121334615t387",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m17761213351820j92": {
+      "matchId": "m17761213351820j92",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m1776121335746uhec": {
+      "matchId": "m1776121335746uhec",
+      "predAway": 0,
+      "predHome": 3,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m1776121336331t136": {
+      "matchId": "m1776121336331t136",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m17761213368942zpd": {
+      "matchId": "m17761213368942zpd",
+      "predAway": 4,
+      "predHome": 0,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m17761213374340fe3": {
+      "matchId": "m17761213374340fe3",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m1776121338429s88j": {
+      "matchId": "m1776121338429s88j",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m1776121339233wc8n": {
+      "matchId": "m1776121339233wc8n",
+      "predAway": 0,
+      "predHome": 3,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m1776121339775dwgw": {
+      "matchId": "m1776121339775dwgw",
+      "predAway": 2,
+      "predHome": 3,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m1776121340544vzc5": {
+      "matchId": "m1776121340544vzc5",
+      "predAway": 0,
+      "predHome": 0,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m17761213413400ubl": {
+      "matchId": "m17761213413400ubl",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m1776121342073ww8p": {
+      "matchId": "m1776121342073ww8p",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m1776121342605abdy": {
+      "matchId": "m1776121342605abdy",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m17761773806805zc4": {
+      "matchId": "m17761773806805zc4",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m1776177382276euy9": {
+      "matchId": "m1776177382276euy9",
+      "predAway": 3,
+      "predHome": 0,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m1776177383126ekdf": {
+      "matchId": "m1776177383126ekdf",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m1776177384325ggbe": {
+      "matchId": "m1776177384325ggbe",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m1777397865889": {
+      "matchId": "m1777397865889",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m1777398021015": {
+      "matchId": "m1777398021015",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m1778000057866": {
+      "matchId": "m1778000057866",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "diegocroque"
+    },
+    "diegocroque__m1778000086754": {
+      "matchId": "m1778000086754",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "diegocroque"
+    },
+    "elmeacabezas__m1775834031309yuuu": {
+      "matchId": "m1775834031309yuuu",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m17758340324929cdq": {
+      "matchId": "m17758340324929cdq",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m1775834036109j7lf": {
+      "matchId": "m1775834036109j7lf",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m17758340367408o4o": {
+      "matchId": "m17758340367408o4o",
+      "predAway": 3,
+      "predHome": 0,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m1775834039745oscm": {
+      "matchId": "m1775834039745oscm",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m1775834040356g7hs": {
+      "matchId": "m1775834040356g7hs",
+      "predAway": 3,
+      "predHome": 0,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m1775834044688e1s8": {
+      "matchId": "m1775834044688e1s8",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m1775834045315rquk": {
+      "matchId": "m1775834045315rquk",
+      "predAway": 2,
+      "predHome": 0,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m1775834049396ki94": {
+      "matchId": "m1775834049396ki94",
+      "predAway": 0,
+      "predHome": 4,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m1775834050372r9kn": {
+      "matchId": "m1775834050372r9kn",
+      "predAway": 2,
+      "predHome": 0,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m17758340544595i8r": {
+      "matchId": "m17758340544595i8r",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m17758340550731wlu": {
+      "matchId": "m17758340550731wlu",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m17758340584483g16": {
+      "matchId": "m17758340584483g16",
+      "predAway": 2,
+      "predHome": 2,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m1775834059304yllb": {
+      "matchId": "m1775834059304yllb",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m1775834063416u8pk": {
+      "matchId": "m1775834063416u8pk",
+      "predAway": 0,
+      "predHome": 3,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m177583406421794ml": {
+      "matchId": "m177583406421794ml",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m177583406737528rf": {
+      "matchId": "m177583406737528rf",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m17758340683337qt0": {
+      "matchId": "m17758340683337qt0",
+      "predAway": 1,
+      "predHome": 0,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m1775834072716chvp": {
+      "matchId": "m1775834072716chvp",
+      "predAway": 1,
+      "predHome": 0,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m1775834073625mtyh": {
+      "matchId": "m1775834073625mtyh",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m17761213333352419": {
+      "matchId": "m17761213333352419",
+      "predAway": 3,
+      "predHome": 1,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m17761213368942zpd": {
+      "matchId": "m17761213368942zpd",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m1776121342073ww8p": {
+      "matchId": "m1776121342073ww8p",
+      "predAway": 1,
+      "predHome": 3,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m1776121342605abdy": {
+      "matchId": "m1776121342605abdy",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m1777397865889": {
+      "matchId": "m1777397865889",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m1777398021015": {
+      "matchId": "m1777398021015",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m1778000057866": {
+      "matchId": "m1778000057866",
+      "predAway": 2,
+      "predHome": 2,
+      "userId": "elmeacabezas"
+    },
+    "elmeacabezas__m1778000086754": {
+      "matchId": "m1778000086754",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "elmeacabezas"
+    },
+    "gato69__m1776121332746dkoi": {
+      "matchId": "m1776121332746dkoi",
+      "predAway": 2,
+      "predHome": 1,
+      "userId": "gato69"
+    },
+    "gato69__m17761213333352419": {
+      "matchId": "m17761213333352419",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "gato69"
+    },
+    "gato69__m1776121333868usos": {
+      "matchId": "m1776121333868usos",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "gato69"
+    },
+    "gato69__m1776121334615t387": {
+      "matchId": "m1776121334615t387",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "gato69"
+    },
+    "gato69__m17761213351820j92": {
+      "matchId": "m17761213351820j92",
+      "predAway": 1,
+      "predHome": 0,
+      "userId": "gato69"
+    },
+    "gato69__m1776121335746uhec": {
+      "matchId": "m1776121335746uhec",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "gato69"
+    },
+    "gato69__m1776121336331t136": {
+      "matchId": "m1776121336331t136",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "gato69"
+    },
+    "gato69__m17761213368942zpd": {
+      "matchId": "m17761213368942zpd",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "gato69"
+    },
+    "gato69__m17761213374340fe3": {
+      "matchId": "m17761213374340fe3",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "gato69"
+    },
+    "gato69__m1776121338429s88j": {
+      "matchId": "m1776121338429s88j",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "gato69"
+    },
+    "gato69__m1776121339233wc8n": {
+      "matchId": "m1776121339233wc8n",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "gato69"
+    },
+    "gato69__m1776121339775dwgw": {
+      "matchId": "m1776121339775dwgw",
+      "predAway": 0,
+      "predHome": 3,
+      "userId": "gato69"
+    },
+    "gato69__m1776121340544vzc5": {
+      "matchId": "m1776121340544vzc5",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "gato69"
+    },
+    "gato69__m17761213413400ubl": {
+      "matchId": "m17761213413400ubl",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "gato69"
+    },
+    "gato69__m1776121342073ww8p": {
+      "matchId": "m1776121342073ww8p",
+      "predAway": 0,
+      "predHome": 3,
+      "userId": "gato69"
+    },
+    "gato69__m1776121342605abdy": {
+      "matchId": "m1776121342605abdy",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "gato69"
+    },
+    "gato69__m17761773806805zc4": {
+      "matchId": "m17761773806805zc4",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "gato69"
+    },
+    "gato69__m1776177382276euy9": {
+      "matchId": "m1776177382276euy9",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "gato69"
+    },
+    "gato69__m1776177383126ekdf": {
+      "matchId": "m1776177383126ekdf",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "gato69"
+    },
+    "gato69__m1776177384325ggbe": {
+      "matchId": "m1776177384325ggbe",
+      "predAway": 2,
+      "predHome": 1,
+      "userId": "gato69"
+    },
+    "hitlergay__m1776121332746dkoi": {
+      "matchId": "m1776121332746dkoi",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m17761213333352419": {
+      "matchId": "m17761213333352419",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m1776121333868usos": {
+      "matchId": "m1776121333868usos",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m1776121334615t387": {
+      "matchId": "m1776121334615t387",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m17761213351820j92": {
+      "matchId": "m17761213351820j92",
+      "predAway": 0,
+      "predHome": 0,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m1776121335746uhec": {
+      "matchId": "m1776121335746uhec",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m1776121336331t136": {
+      "matchId": "m1776121336331t136",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m17761213368942zpd": {
+      "matchId": "m17761213368942zpd",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m17761213374340fe3": {
+      "matchId": "m17761213374340fe3",
+      "predAway": 1,
+      "predHome": 0,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m1776121338429s88j": {
+      "matchId": "m1776121338429s88j",
+      "predAway": 0,
+      "predHome": 3,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m1776121339233wc8n": {
+      "matchId": "m1776121339233wc8n",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m1776121339775dwgw": {
+      "matchId": "m1776121339775dwgw",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m1776121340544vzc5": {
+      "matchId": "m1776121340544vzc5",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m17761213413400ubl": {
+      "matchId": "m17761213413400ubl",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m1776121342073ww8p": {
+      "matchId": "m1776121342073ww8p",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m1776121342605abdy": {
+      "matchId": "m1776121342605abdy",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m17761773806805zc4": {
+      "matchId": "m17761773806805zc4",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m1776177382276euy9": {
+      "matchId": "m1776177382276euy9",
+      "predAway": 3,
+      "predHome": 0,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m1776177383126ekdf": {
+      "matchId": "m1776177383126ekdf",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m1776177384325ggbe": {
+      "matchId": "m1776177384325ggbe",
+      "predAway": 1,
+      "predHome": 3,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m1777397865889": {
+      "matchId": "m1777397865889",
+      "predAway": 2,
+      "predHome": 2,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m1777398021015": {
+      "matchId": "m1777398021015",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m1778000057866": {
+      "matchId": "m1778000057866",
+      "predAway": 2,
+      "predHome": 3,
+      "userId": "hitlergay"
+    },
+    "hitlergay__m1778000086754": {
+      "matchId": "m1778000086754",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "hitlergay"
+    },
+    "polo__m1777397865889": {
+      "matchId": "m1777397865889",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "polo"
+    },
+    "speraltaal__m1776121332746dkoi": {
+      "matchId": "m1776121332746dkoi",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "speraltaal"
+    },
+    "speraltaal__m17761213333352419": {
+      "matchId": "m17761213333352419",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "speraltaal"
+    },
+    "speraltaal__m1776121333868usos": {
+      "matchId": "m1776121333868usos",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "speraltaal"
+    },
+    "speraltaal__m1776121334615t387": {
+      "matchId": "m1776121334615t387",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "speraltaal"
+    },
+    "speraltaal__m17761213351820j92": {
+      "matchId": "m17761213351820j92",
+      "predAway": 0,
+      "predHome": 3,
+      "userId": "speraltaal"
+    },
+    "speraltaal__m1776121335746uhec": {
+      "matchId": "m1776121335746uhec",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "speraltaal"
+    },
+    "speraltaal__m1776121336331t136": {
+      "matchId": "m1776121336331t136",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "speraltaal"
+    },
+    "speraltaal__m17761213368942zpd": {
+      "matchId": "m17761213368942zpd",
+      "predAway": 1,
+      "predHome": 0,
+      "userId": "speraltaal"
+    },
+    "speraltaal__m17761213374340fe3": {
+      "matchId": "m17761213374340fe3",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "speraltaal"
+    },
+    "speraltaal__m1776121338429s88j": {
+      "matchId": "m1776121338429s88j",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "speraltaal"
+    },
+    "speraltaal__m1776121339233wc8n": {
+      "matchId": "m1776121339233wc8n",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "speraltaal"
+    },
+    "speraltaal__m1776121339775dwgw": {
+      "matchId": "m1776121339775dwgw",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "speraltaal"
+    },
+    "speraltaal__m17761773806805zc4": {
+      "matchId": "m17761773806805zc4",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "speraltaal"
+    },
+    "speraltaal__m1776177382276euy9": {
+      "matchId": "m1776177382276euy9",
+      "predAway": 2,
+      "predHome": 1,
+      "userId": "speraltaal"
+    },
+    "speraltaal__m1776177383126ekdf": {
+      "matchId": "m1776177383126ekdf",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "speraltaal"
+    },
+    "speraltaal__m1776177384325ggbe": {
+      "matchId": "m1776177384325ggbe",
+      "predAway": 2,
+      "predHome": 2,
+      "userId": "speraltaal"
+    },
+    "speraltaal__m1777397865889": {
+      "matchId": "m1777397865889",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "speraltaal"
+    },
+    "tagleteyenda__m1776121332746dkoi": {
+      "matchId": "m1776121332746dkoi",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m17761213333352419": {
+      "matchId": "m17761213333352419",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m1776121333868usos": {
+      "matchId": "m1776121333868usos",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m1776121334615t387": {
+      "matchId": "m1776121334615t387",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m17761213351820j92": {
+      "matchId": "m17761213351820j92",
+      "predAway": 0,
+      "predHome": 3,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m1776121335746uhec": {
+      "matchId": "m1776121335746uhec",
+      "predAway": 0,
+      "predHome": 3,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m1776121336331t136": {
+      "matchId": "m1776121336331t136",
+      "predAway": 1,
+      "predHome": 0,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m17761213368942zpd": {
+      "matchId": "m17761213368942zpd",
+      "predAway": 1,
+      "predHome": 0,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m17761213374340fe3": {
+      "matchId": "m17761213374340fe3",
+      "predAway": 2,
+      "predHome": 0,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m1776121338429s88j": {
+      "matchId": "m1776121338429s88j",
+      "predAway": 0,
+      "predHome": 3,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m1776121339233wc8n": {
+      "matchId": "m1776121339233wc8n",
+      "predAway": 1,
+      "predHome": 3,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m1776121339775dwgw": {
+      "matchId": "m1776121339775dwgw",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m1776121340544vzc5": {
+      "matchId": "m1776121340544vzc5",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m17761213413400ubl": {
+      "matchId": "m17761213413400ubl",
+      "predAway": 0,
+      "predHome": 5,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m1776121342073ww8p": {
+      "matchId": "m1776121342073ww8p",
+      "predAway": 0,
+      "predHome": 3,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m1776121342605abdy": {
+      "matchId": "m1776121342605abdy",
+      "predAway": 0,
+      "predHome": 3,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m17761773806805zc4": {
+      "matchId": "m17761773806805zc4",
+      "predAway": 2,
+      "predHome": 1,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m1776177382276euy9": {
+      "matchId": "m1776177382276euy9",
+      "predAway": 3,
+      "predHome": 0,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m1776177383126ekdf": {
+      "matchId": "m1776177383126ekdf",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m1776177384325ggbe": {
+      "matchId": "m1776177384325ggbe",
+      "predAway": 3,
+      "predHome": 1,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m1777397865889": {
+      "matchId": "m1777397865889",
+      "predAway": 2,
+      "predHome": 2,
+      "userId": "tagleteyenda"
+    },
+    "tagleteyenda__m1777398021015": {
+      "matchId": "m1777398021015",
+      "predAway": 0,
+      "predHome": 0,
+      "userId": "tagleteyenda"
+    },
+    "tomas123__m1776121332746dkoi": {
+      "matchId": "m1776121332746dkoi",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "tomas123"
+    },
+    "tomas123__m17761213333352419": {
+      "matchId": "m17761213333352419",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "tomas123"
+    },
+    "tomas123__m1776121333868usos": {
+      "matchId": "m1776121333868usos",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "tomas123"
+    },
+    "tomas123__m1776121334615t387": {
+      "matchId": "m1776121334615t387",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "tomas123"
+    },
+    "tomas123__m17761213351820j92": {
+      "matchId": "m17761213351820j92",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "tomas123"
+    },
+    "tomas123__m1776121335746uhec": {
+      "matchId": "m1776121335746uhec",
+      "predAway": 1,
+      "predHome": 3,
+      "userId": "tomas123"
+    },
+    "tomas123__m1776121336331t136": {
+      "matchId": "m1776121336331t136",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "tomas123"
+    },
+    "tomas123__m17761213368942zpd": {
+      "matchId": "m17761213368942zpd",
+      "predAway": 2,
+      "predHome": 1,
+      "userId": "tomas123"
+    },
+    "tomas123__m17761213374340fe3": {
+      "matchId": "m17761213374340fe3",
+      "predAway": 2,
+      "predHome": 1,
+      "userId": "tomas123"
+    },
+    "tomas123__m1776121338429s88j": {
+      "matchId": "m1776121338429s88j",
+      "predAway": 1,
+      "predHome": 3,
+      "userId": "tomas123"
+    },
+    "tomas123__m1776121339233wc8n": {
+      "matchId": "m1776121339233wc8n",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "tomas123"
+    },
+    "tomas123__m1776121339775dwgw": {
+      "matchId": "m1776121339775dwgw",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "tomas123"
+    },
+    "tomas123__m17761773806805zc4": {
+      "matchId": "m17761773806805zc4",
+      "predAway": 3,
+      "predHome": 1,
+      "userId": "tomas123"
+    },
+    "tomas123__m1776177382276euy9": {
+      "matchId": "m1776177382276euy9",
+      "predAway": 3,
+      "predHome": 1,
+      "userId": "tomas123"
+    },
+    "tomas123__m1776177383126ekdf": {
+      "matchId": "m1776177383126ekdf",
+      "predAway": 2,
+      "predHome": 1,
+      "userId": "tomas123"
+    },
+    "tomas123__m1776177384325ggbe": {
+      "matchId": "m1776177384325ggbe",
+      "predAway": 1,
+      "predHome": 3,
+      "userId": "tomas123"
+    },
+    "tomas123__m1776180591074": {
+      "matchId": "m1776180591074",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "tomas123"
+    },
+    "tomas123__m1777397865889": {
+      "matchId": "m1777397865889",
+      "predAway": 2,
+      "predHome": 1,
+      "userId": "tomas123"
+    },
+    "tomas123__m1777398021015": {
+      "matchId": "m1777398021015",
+      "predAway": 2,
+      "predHome": 1,
+      "userId": "tomas123"
+    },
+    "tomas123__m1778000057866": {
+      "matchId": "m1778000057866",
+      "predAway": 2,
+      "predHome": 3,
+      "userId": "tomas123"
+    },
+    "tomas123__m1778000086754": {
+      "matchId": "m1778000086754",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "tomas123"
+    },
+    "unacunumi__m1775834031309yuuu": {
+      "matchId": "m1775834031309yuuu",
+      "predAway": 2,
+      "predHome": 1,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m17758340324929cdq": {
+      "matchId": "m17758340324929cdq",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834033294czry": {
+      "matchId": "m1775834033294czry",
+      "predAway": 1,
+      "predHome": 0,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834033924lq22": {
+      "matchId": "m1775834033924lq22",
+      "predAway": 3,
+      "predHome": 1,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834034862ogcq": {
+      "matchId": "m1775834034862ogcq",
+      "predAway": 2,
+      "predHome": 0,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834035490kaat": {
+      "matchId": "m1775834035490kaat",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834036109j7lf": {
+      "matchId": "m1775834036109j7lf",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m17758340367408o4o": {
+      "matchId": "m17758340367408o4o",
+      "predAway": 3,
+      "predHome": 0,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834037256dgzv": {
+      "matchId": "m1775834037256dgzv",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834037870fe1l": {
+      "matchId": "m1775834037870fe1l",
+      "predAway": 0,
+      "predHome": 3,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834038477o5cy": {
+      "matchId": "m1775834038477o5cy",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834039138hibb": {
+      "matchId": "m1775834039138hibb",
+      "predAway": 0,
+      "predHome": 0,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834039745oscm": {
+      "matchId": "m1775834039745oscm",
+      "predAway": 3,
+      "predHome": 1,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834040356g7hs": {
+      "matchId": "m1775834040356g7hs",
+      "predAway": 2,
+      "predHome": 0,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834040981rdnw": {
+      "matchId": "m1775834040981rdnw",
+      "predAway": 4,
+      "predHome": 0,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834042062tf8p": {
+      "matchId": "m1775834042062tf8p",
+      "predAway": 0,
+      "predHome": 6,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834042975umhf": {
+      "matchId": "m1775834042975umhf",
+      "predAway": 2,
+      "predHome": 0,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834043795l3va": {
+      "matchId": "m1775834043795l3va",
+      "predAway": 0,
+      "predHome": 8,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834044688e1s8": {
+      "matchId": "m1775834044688e1s8",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834045315rquk": {
+      "matchId": "m1775834045315rquk",
+      "predAway": 2,
+      "predHome": 0,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834046243t8l7": {
+      "matchId": "m1775834046243t8l7",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834046880hjio": {
+      "matchId": "m1775834046880hjio",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m17758340476934ouv": {
+      "matchId": "m17758340476934ouv",
+      "predAway": 2,
+      "predHome": 1,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1775834048550cyir": {
+      "matchId": "m1775834048550cyir",
+      "predAway": 1,
+      "predHome": 0,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1776121332746dkoi": {
+      "matchId": "m1776121332746dkoi",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m17761213333352419": {
+      "matchId": "m17761213333352419",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1776121333868usos": {
+      "matchId": "m1776121333868usos",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1776121334615t387": {
+      "matchId": "m1776121334615t387",
+      "predAway": 0,
+      "predHome": 3,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m17761213351820j92": {
+      "matchId": "m17761213351820j92",
+      "predAway": 1,
+      "predHome": 2,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1776121335746uhec": {
+      "matchId": "m1776121335746uhec",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1776121336331t136": {
+      "matchId": "m1776121336331t136",
+      "predAway": 0,
+      "predHome": 3,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m17761213368942zpd": {
+      "matchId": "m17761213368942zpd",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m17761213374340fe3": {
+      "matchId": "m17761213374340fe3",
+      "predAway": 2,
+      "predHome": 1,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1776121338429s88j": {
+      "matchId": "m1776121338429s88j",
+      "predAway": 1,
+      "predHome": 3,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1776121339233wc8n": {
+      "matchId": "m1776121339233wc8n",
+      "predAway": 0,
+      "predHome": 4,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1776121339775dwgw": {
+      "matchId": "m1776121339775dwgw",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1776121340544vzc5": {
+      "matchId": "m1776121340544vzc5",
+      "predAway": 0,
+      "predHome": 1,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m17761213413400ubl": {
+      "matchId": "m17761213413400ubl",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1776121342073ww8p": {
+      "matchId": "m1776121342073ww8p",
+      "predAway": 0,
+      "predHome": 4,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1776121342605abdy": {
+      "matchId": "m1776121342605abdy",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m17761773806805zc4": {
+      "matchId": "m17761773806805zc4",
+      "predAway": 2,
+      "predHome": 0,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1776177382276euy9": {
+      "matchId": "m1776177382276euy9",
+      "predAway": 3,
+      "predHome": 0,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1776177383126ekdf": {
+      "matchId": "m1776177383126ekdf",
+      "predAway": 0,
+      "predHome": 4,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1776177384325ggbe": {
+      "matchId": "m1776177384325ggbe",
+      "predAway": 0,
+      "predHome": 3,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1777397865889": {
+      "matchId": "m1777397865889",
+      "predAway": 2,
+      "predHome": 1,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1777398021015": {
+      "matchId": "m1777398021015",
+      "predAway": 1,
+      "predHome": 1,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1778000057866": {
+      "matchId": "m1778000057866",
+      "predAway": 2,
+      "predHome": 3,
+      "userId": "unacunumi"
+    },
+    "unacunumi__m1778000086754": {
+      "matchId": "m1778000086754",
+      "predAway": 0,
+      "predHome": 2,
+      "userId": "unacunumi"
+    }
+  },
+  "settings": {
+    "hiddenTournaments": [
+      "Champions League",
+      "Copa Libertadores 2026"
+    ],
+    "podioPoints": {
+      "champion": 50,
+      "runner": 50,
+      "scorer": 50
+    }
+  },
+  "users": {
+    "__xxelpablito777xx__": {
+      "code": "__xxelpablito777xx__",
+      "id": "__xxelpablito777xx__",
+      "isAdmin": false,
+      "name": "Pablo Brunner",
+      "passHash": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
+      "rawPass": "1234"
+    },
+    "asaval": {
+      "code": "asaval",
+      "id": "asaval",
+      "isAdmin": false,
+      "name": "Alejandro Saval",
+      "passHash": "de9db001a357f5a733e87e58371bbaf199b4bdcf0f316515b82fa2eef5088435",
+      "rawPass": "5bmxDiBy26AGgFH"
+    },
+    "bertragol": {
+      "code": "bertragol",
+      "id": "bertragol",
+      "isAdmin": false,
+      "name": "Berto",
+      "passHash": "d33a7c6eb2b565e1c606511d70476334175f51426f87d45dfc16b67e33f995ed",
+      "rawPass": "Cacacaca1"
+    },
+    "clits": {
+      "code": "clits",
+      "id": "clits",
+      "isAdmin": false,
+      "name": "Clemente Barros",
+      "passHash": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
+      "rawPass": "1234"
+    },
+    "diegocroque": {
+      "code": "diegocroque",
+      "id": "diegocroque",
+      "isAdmin": false,
+      "name": "Diego Croquevielle",
+      "passHash": "26429a356b1d25b7d57c0f9a6d5fed8a290cb42374185887dcd2874548df0779",
+      "rawPass": "caca"
+    },
+    "elmeacabezas": {
+      "code": "elmeacabezas",
+      "id": "elmeacabezas",
+      "isAdmin": false,
+      "name": "Raimundo Opazo",
+      "passHash": "9f4ea8281f1dce48a901f166c9624acd333e6a1b9a8b69bfb90f6dc76a28003e",
+      "rawPass": "2382"
+    },
+    "gato69": {
+      "code": "gato69",
+      "id": "gato69",
+      "isAdmin": false,
+      "name": "Santiago lewin",
+      "passHash": "cb11a8bac4995b3cf6bc4e8154ee664eea5767d0e66cc8189b036bfdfc61776e",
+      "rawPass": "208681184Uc@"
+    },
+    "hitlergay": {
+      "code": "hitlergay",
+      "id": "hitlergay",
+      "isAdmin": false,
+      "name": "Tomas Erenchun",
+      "passHash": "ae5f9d9b4b4401d4f50825f9cb96fa8cf4162c5b0d9ab207c194cf7a7b185ab0",
+      "rawPass": "0910"
+    },
+    "jaimercks": {
+      "code": "jaimercks",
+      "id": "jaimercks",
+      "isAdmin": false,
+      "name": "Jaime Wilk",
+      "passHash": "c625ab9c4feb202fe807184b68f59e0e787c94a2e7827aee1851daf13d6f4854",
+      "rawPass": "Cacasegura"
+    },
+    "juanito": {
+      "code": "juanito",
+      "id": "juanito",
+      "isAdmin": false,
+      "name": "Juan Miranda",
+      "passHash": "b41a1aa01c9528527a880e6802c4b5cd761180edc0982d397457823439cb3c40",
+      "rawPass": "Juanm2003."
+    },
+    "lucas": {
+      "code": "lucas",
+      "id": "lucas",
+      "isAdmin": false,
+      "name": "Lucas Galetovic",
+      "passHash": "73b1cf2d044e010d7432dff58bc7f359cb8d8cbdc6f0c1d2c17560c4ef9e936b",
+      "rawPass": "paloalto9"
+    },
+    "pabloadmin": {
+      "code": "pabloadmin",
+      "id": "pabloadmin",
+      "isAdmin": true,
+      "name": "Pablo (Admin)",
+      "passHash": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9"
+    },
+    "polo": {
+      "code": "polo",
+      "id": "polo",
+      "isAdmin": false,
+      "name": "Polo Ommidvar",
+      "passHash": "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4",
+      "rawPass": "1234"
+    },
+    "raiadmin": {
+      "code": "raiadmin",
+      "id": "raiadmin",
+      "isAdmin": true,
+      "name": "Rai (Admin)",
+      "passHash": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9"
+    },
+    "seba": {
+      "code": "seba",
+      "id": "seba",
+      "isAdmin": false,
+      "name": "Sebastian Barros Ulloa",
+      "passHash": "c0d7c54022345b39c9be73e19b30ccb040ba03b1fefb2566a9f510a09aba4796",
+      "rawPass": "0712"
+    },
+    "speraltaal": {
+      "code": "speraltaal",
+      "id": "speraltaal",
+      "isAdmin": false,
+      "name": "Santiago Peralta",
+      "passHash": "08fab117e3da417bb51263d107eea1beca77765f38e5425dd8116e28b521238f",
+      "rawPass": "lupecanela"
+    },
+    "tagleteyenda": {
+      "code": "tagleteyenda",
+      "id": "tagleteyenda",
+      "isAdmin": false,
+      "name": "Andrés",
+      "passHash": "617014ebbcdf144cc941d4b2200b3998497a6a8241b18dd41dd56fad404fd6d0",
+      "rawPass": "chupaloerenchun"
+    },
+    "tomas123": {
+      "code": "tomas123",
+      "id": "tomas123",
+      "isAdmin": false,
+      "name": "Tomi",
+      "passHash": "fe7c8b93142029fafe356ee9b2dd09766e6f266141c0c1340b262fc633c16e10",
+      "rawPass": "1802"
+    },
+    "tomasadmin": {
+      "code": "tomasadmin",
+      "id": "tomasadmin",
+      "isAdmin": true,
+      "name": "Tomas (Admin)",
+      "passHash": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+      "rawPass": "admin123"
+    },
+    "unacunumi": {
+      "code": "unacunumi",
+      "id": "unacunumi",
+      "isAdmin": false,
+      "name": "Agustín Guzmán",
+      "passHash": "15407b3980244b7566227d2468163db23525b7e25f8afb4f53a499f75fa1d8e8",
+      "rawPass": "aguzurr56"
+    }
+  }
+}
