@@ -1,0 +1,66 @@
+name: Daily Firebase Backup
+
+on:
+  schedule:
+    # Corre todos los días a las 3:00 AM UTC (medianoche Chile)
+    - cron: '0 3 * * *'
+  # También permite correrlo manualmente desde GitHub
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install firebase-admin
+        run: npm install firebase-admin
+
+      - name: Run backup script
+        env:
+          FIREBASE_DATABASE_URL: "https://polla-dekadentes-default-rtdb.firebaseio.com"
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        node: |
+          const admin = require('firebase-admin');
+          const fs = require('fs');
+
+          // Inicializar con service account
+          const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+          admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            databaseURL: process.env.FIREBASE_DATABASE_URL
+          });
+
+          const db = admin.database();
+
+          async function backup() {
+            const ref = db.ref('pf');
+            const snapshot = await ref.once('value');
+            const data = snapshot.val();
+
+            const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+            const dir = 'backups';
+            if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+
+            const file = `${dir}/backup-${date}.json`;
+            fs.writeFileSync(file, JSON.stringify(data, null, 2));
+            console.log(`Backup saved: ${file}`);
+            console.log(`Size: ${JSON.stringify(data).length} chars`);
+          }
+
+          backup().catch(console.error);
+
+      - name: Commit and push backup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add backups/
+          git diff --staged --quiet || git commit -m "Daily backup $(date +%Y-%m-%d)"
+          git push
