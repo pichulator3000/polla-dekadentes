@@ -2864,14 +2864,14 @@ function renderStats() {
 
   // Calcular semanas
   const weeks = {};
-  const doneMatches = matches.filter(m => m.realHome != null);
+  const doneMatches = allMatches.filter(m => m.realHome != null);
   doneMatches.forEach(m => {
     const d = new Date(m.datetime);
     // Semana ISO: año + numero de semana
     const jan1 = new Date(d.getFullYear(), 0, 1);
     const days = Math.floor((d - jan1) / (24 * 60 * 60 * 1000));
     const weekNum = Math.ceil((days + jan1.getDay() + 1) / 7);
-    const weekKey = d.getFullYear() + '-W' + (weekNum < 10 ? '0' : '') + weekNum;
+    const weekKey = d.getFullYear() + '-W' + String(weekNum).padStart(2, '0');
     if (!weeks[weekKey]) weeks[weekKey] = [];
     weeks[weekKey].push(m);
   });
