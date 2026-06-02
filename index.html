@@ -1748,6 +1748,49 @@ function renderUpcoming() {
 
   const now = new Date();
   const uid = currentUser?.id;
+  const isAdm = currentUser?.isAdmin;
+
+  // ══ ADMIN: Partidos pasados sin resultado (para ingresar resultado rápido) ══
+  if (isAdm) {
+    const pendingResults = [...CACHE.matches]
+      .filter(m => new Date(m.datetime) < now && m.realHome == null && m.home !== 'Por definir' && !isTournamentHidden(m.tournament || 'Sin Torneo'))
+      .sort((a,b) => new Date(b.datetime) - new Date(a.datetime)); // más recientes primero
+
+    let adminHtml = '';
+    if (pendingResults.length > 0) {
+      adminHtml += `<div style="background:rgba(127,29,29,0.15);border:1px solid rgba(251,146,60,0.3);border-radius:10px;padding:10px 12px;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:800;color:#fb923c;margin-bottom:8px">⏰ Partidos sin resultado (${pendingResults.length})</div>`;
+      pendingResults.forEach(m => {
+        const matchDate = new Date(m.datetime);
+        const dateStr = matchDate.toLocaleDateString('es-CL', { weekday:'short', day:'numeric', month:'short', timeZone:'America/Santiago' });
+        const timeStr = matchDate.toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'America/Santiago' });
+        adminHtml += `<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid rgba(251,146,60,0.1)">
+          <div style="min-width:90px">
+            <div style="font-size:11px;font-weight:700;color:#fb923c">${dateStr}</div>
+            <div style="font-size:10px;color:#94a3b8">${timeStr}</div>
+          </div>
+          <div style="flex:1;min-width:0">
+            <span style="font-size:11px;font-weight:700;color:#e8edf5">${m.home} <span style="color:#4a5f78;font-weight:400">vs</span> ${m.away}</span>
+            <div style="font-size:9px;color:#64748b">${m.tournament || ''} · ${normStage(m.stage)}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+            <input type="number" inputmode="numeric" min="0" max="20" id="urh_${m.id}"
+              class="score-input" style="width:38px;height:38px;font-size:14px;border-radius:6px;border:1.5px solid rgba(251,146,60,0.4);background:#0a0f1c;color:#e8edf5;font-family:'Outfit',sans-serif"
+              value="${m.realHome??''}" placeholder="-"
+              oninput="autoJump(this,'ura_${m.id}')"/>
+            <span style="color:#fb923c;font-weight:900;font-size:12px">-</span>
+            <input type="number" inputmode="numeric" min="0" max="20" id="ura_${m.id}"
+              class="score-input" style="width:38px;height:38px;font-size:14px;border-radius:6px;border:1.5px solid rgba(251,146,60,0.4);background:#0a0f1c;color:#e8edf5;font-family:'Outfit',sans-serif"
+              value="${m.realAway??''}" placeholder="-"/>
+            <button onclick="saveUpcomingResult('${m.id}')" class="btn-sm" style="font-size:10px;padding:6px 8px;background:#fb923c;color:#0f172a;font-weight:800">💾</button>
+          </div>
+        </div>`;
+      });
+      adminHtml += `</div>`;
+    }
+    // El adminHtml se prependea al final
+  }
+
   const upcoming = [...CACHE.matches]
     .filter(m => new Date(m.datetime) > now && m.home !== 'Por definir' && !isTournamentHidden(m.tournament || 'Sin Torneo'))
     .sort((a,b) => new Date(a.datetime) - new Date(b.datetime))
@@ -1815,7 +1858,20 @@ function renderUpcoming() {
     });
     html += `</div>`;
   }
-  el.innerHTML = html;
+  el.innerHTML = (adminHtml || '') + html;
+}
+
+async function saveUpcomingResult(matchId) {
+  const hVal = document.getElementById('urh_'+matchId)?.value;
+  const aVal = document.getElementById('ura_'+matchId)?.value;
+  // Si ambos vacios, no hacer nada
+  if (hVal === '' && aVal === '') return toast('Ingresa un resultado', 'err');
+  const h = parseInt(hVal), a = parseInt(aVal);
+  if (isNaN(h)||isNaN(a)) return toast('Resultado inválido', 'err');
+  if (h<0||a<0||h>20||a>20) return toast('Resultado inválido (0-20)', 'err');
+  await DB.updateMatch(matchId, { realHome:h, realAway:a });
+  toast('✓ Resultado guardado');
+  renderUpcoming();
 }
 
 async function saveUpcomingPred(matchId) {
