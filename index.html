@@ -1875,8 +1875,18 @@ async function saveUpcomingResult(matchId) {
 
 async function saveUpcomingPred(matchId) {
   if (currentUser?.isAdmin) return toast('Admin no puede predecir', 'err');
-  const h = parseInt(document.getElementById('uph_'+matchId)?.value);
-  const a = parseInt(document.getElementById('upa_'+matchId)?.value);
+  const hVal = document.getElementById('uph_'+matchId)?.value;
+  const aVal = document.getElementById('upa_'+matchId)?.value;
+  // Si ambos están vacíos, borrar la predicción
+  if (hVal === '' && aVal === '') {
+    const predKey = currentUser.id + '__' + matchId;
+    await RT.ref('pf/preds/' + predKey).remove();
+    if (CACHE.preds) CACHE.preds = CACHE.preds.filter(p => !(p.userId === currentUser.id && p.matchId === matchId));
+    toast('Predicción eliminada');
+    renderUpcoming();
+    return;
+  }
+  const h = parseInt(hVal), a = parseInt(aVal);
   if (isNaN(h) || isNaN(a)) return;
   if (h<0||a<0||h>20||a>20) return toast('Resultado inv\u00e1lido', 'err');
   const match = CACHE.matches.find(m => m.id===matchId);
@@ -2673,8 +2683,17 @@ function renderMatches() {
 
 async function savePred(matchId) {
   if (currentUser?.isAdmin) return toast('Admin no puede predecir', 'err');
-  const h = parseInt(document.getElementById('ph_'+matchId)?.value);
-  const a = parseInt(document.getElementById('pa_'+matchId)?.value);
+  const hVal = document.getElementById('ph_'+matchId)?.value;
+  const aVal = document.getElementById('pa_'+matchId)?.value;
+  if (hVal === '' && aVal === '') {
+    const predKey = currentUser.id + '__' + matchId;
+    await RT.ref('pf/preds/' + predKey).remove();
+    if (CACHE.preds) CACHE.preds = CACHE.preds.filter(p => !(p.userId === currentUser.id && p.matchId === matchId));
+    toast('Predicción eliminada');
+    renderMatches();
+    return;
+  }
+  const h = parseInt(hVal), a = parseInt(aVal);
   if (isNaN(h) || isNaN(a)) return;
   if (h<0||a<0||h>20||a>20) return toast('Resultado inválido', 'err');
   const match = CACHE.matches.find(m => m.id===matchId);
