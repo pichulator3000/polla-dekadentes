@@ -307,6 +307,34 @@
     .group-chevron { transition: transform 0.25s ease; color: var(--text-muted); font-size: 14px; }
     details[open] > .group-summary .group-chevron { transform: rotate(180deg); color: var(--accent); }
 
+    /* ── Sub-accordions (grupos dentro de Fase de Grupos) ── */
+    .fase-grupos-header {
+      background: linear-gradient(135deg, var(--bg-card), var(--bg-surface));
+      border: 2px solid var(--accent) !important;
+      font-size: 14px !important;
+    }
+    details[open] > .fase-grupos-header {
+      border-color: var(--accent-bright) !important;
+      background: linear-gradient(90deg, rgba(56,189,248,0.1), rgba(56,189,248,0.02)) !important;
+    }
+    .sub-group {
+      margin-left: 12px;
+    }
+    .sub-group > .group-summary {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      padding: 10px 14px;
+    }
+    .sub-group > .group-summary:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-card-hover);
+    }
+    details.sub-group[open] > .group-summary {
+      border-color: var(--cyan);
+      background: linear-gradient(90deg, rgba(34,211,238,0.06), transparent);
+    }
+
     /* ── Partido Potenciado — blue theme ── */
     @property --glow-angle-p { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
     @keyframes glowSpinP { to { --glow-angle-p: 360deg; } }
@@ -1810,6 +1838,9 @@ const STAGE_ORDER = [
   'Ronda de 32','Octavos','Cuartos de Final','Semifinal','Tercer Puesto','Final'
 ];
 
+// Stages que pertenecen a fase de grupos (para agrupar en acordeón padre)
+const GROUP_STAGES = STAGE_ORDER.filter(s => s.startsWith('Grupo'));
+
 // Pozos por fase (editables desde Admin → 🏆 Pozos por Fase)
 // Si una fase no tiene config, usa STAGE_POOL_FALLBACK (30)
 const STAGE_POOL_FALLBACK = 30;
@@ -2235,40 +2266,25 @@ function renderMatches() {
   });
 
   let outerHtml = '';
+  const grupoStages = sortedStages.filter(s => GROUP_STAGES.includes(s));
+  const elimStages  = sortedStages.filter(s => !GROUP_STAGES.includes(s));
 
-  sortedStages.forEach(stage => {
-    const sMatches = groups[stage];
-    const hasLive  = sMatches.some(m => getStatus(m)==='live');
-    const hasOpen  = sMatches.some(m => getStatus(m)==='open');
-    const shouldOpen = prevOpen.has(stage) || hasLive;
-    const openAttr = shouldOpen ? ' open' : '';
-    const badge = hasLive
-      ? `<span style="background:#dc2626;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:6px;animation:blink 1.5s infinite">EN VIVO</span>`
-      : hasOpen
-      ? `<span style="background:#16a34a;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:6px">ABIERTO</span>`
-      : `<span style="background:#334155;color:#64748b;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:6px">CERRADO</span>`;
-
-    outerHtml += `<details${openAttr} data-stage="${stage}" style="margin-bottom:8px">
-      <summary class="group-summary">
-        <span>${stage}${badge}</span>
-        <span class="group-chevron">${sMatches.length} ▼</span>
-      </summary>
-      <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">`;
-
+  // ── Helper para renderizar los partidos de un stage ──
+  const renderStageMatches = (sMatches) => {
     let html = '';
     sMatches.forEach(m => {
-    const status = getStatus(m);
-    const isAdm  = currentUser?.isAdmin;
-    const pred   = isAdm ? null : preds.find(p => p.userId===uid && p.matchId===m.id);
-    const locked = status !== 'open';
-    const until  = timeUntil(m.datetime);
+      const status = getStatus(m);
+      const isAdm  = currentUser?.isAdmin;
+      const pred   = isAdm ? null : preds.find(p => p.userId===uid && p.matchId===m.id);
+      const locked = status !== 'open';
+      const until  = timeUntil(m.datetime);
 
-    const badges = {
-      open:   `<span class="badge-open">● Abierto</span>`,
-      locked: `<span class="badge-lock">🔒 Cerrado</span>`,
-      live:   `<span class="badge-live">🔴 En vivo</span>`,
-      done:   `<span class="badge-done">✓ Fin</span>`,
-    };
+      const badges = {
+        open:   `<span class="badge-open">● Abierto</span>`,
+        locked: `<span class="badge-lock">🔒 Cerrado</span>`,
+        live:   `<span class="badge-live">🔴 En vivo</span>`,
+        done:   `<span class="badge-done">✓ Fin</span>`,
+      };
 
     let ptsHtml = '';
     if (!isAdm && pred && status === 'done') {
@@ -2525,8 +2541,76 @@ function renderMatches() {
       ${potenciadoToggle}
     </div>`;
     });
+    return html;
+  };
 
-    outerHtml += html + `</div></details>`;
+  // ── Render Fase de Grupos (acordeón padre con sub-acordeones) ──
+  if (grupoStages.length > 0) {
+    const allGroupMatches = grupoStages.flatMap(s => groups[s]);
+    const grpHasLive = allGroupMatches.some(m => getStatus(m) === 'live');
+    const grpHasOpen = allGroupMatches.some(m => getStatus(m) === 'open');
+    const grpShouldOpen = prevOpen.has('__fase_grupos__') || grpHasLive;
+    const grpOpenAttr = grpShouldOpen ? ' open' : '';
+
+    const grpBadge = grpHasLive
+      ? `<span style="background:#dc2626;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:6px;animation:blink 1.5s infinite">EN VIVO</span>`
+      : grpHasOpen
+      ? `<span style="background:#16a34a;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:6px">ABIERTO</span>`
+      : `<span style="background:#334155;color:#64748b;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:6px">CERRADO</span>`;
+
+    outerHtml += `<details${grpOpenAttr} data-stage="__fase_grupos__" style="margin-bottom:8px">
+      <summary class="group-summary fase-grupos-header">
+        <span>Fase de Grupos${grpBadge}</span>
+        <span class="group-chevron">${grupoStages.length} grupos ▼</span>
+      </summary>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-top:6px">`;
+
+    grupoStages.forEach(stage => {
+      const sMatches = groups[stage];
+      const hasLive  = sMatches.some(m => getStatus(m)==='live');
+      const hasOpen  = sMatches.some(m => getStatus(m)==='open');
+      const shouldOpen = prevOpen.has(stage) || hasLive;
+      const openAttr = shouldOpen ? ' open' : '';
+      const badge = hasLive
+        ? `<span style="background:#dc2626;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:6px;animation:blink 1.5s infinite">EN VIVO</span>`
+        : hasOpen
+        ? `<span style="background:#16a34a;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:6px">ABIERTO</span>`
+        : `<span style="background:#334155;color:#64748b;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:6px">CERRADO</span>`;
+
+      outerHtml += `<details${openAttr} class="sub-group" data-stage="${stage}" style="margin-bottom:4px">
+        <summary class="group-summary">
+          <span>${stage}${badge}</span>
+          <span class="group-chevron">${sMatches.length} ▼</span>
+        </summary>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">`;
+      outerHtml += renderStageMatches(sMatches);
+      outerHtml += `</div></details>`;
+    });
+
+    outerHtml += `</div></details>`;
+  }
+
+  // ── Render fases eliminatorias (sin cambios) ──
+  elimStages.forEach(stage => {
+    const sMatches = groups[stage];
+    const hasLive  = sMatches.some(m => getStatus(m)==='live');
+    const hasOpen  = sMatches.some(m => getStatus(m)==='open');
+    const shouldOpen = prevOpen.has(stage) || hasLive;
+    const openAttr = shouldOpen ? ' open' : '';
+    const badge = hasLive
+      ? `<span style="background:#dc2626;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:6px;animation:blink 1.5s infinite">EN VIVO</span>`
+      : hasOpen
+      ? `<span style="background:#16a34a;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:6px">ABIERTO</span>`
+      : `<span style="background:#334155;color:#64748b;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;margin-left:6px">CERRADO</span>`;
+
+    outerHtml += `<details${openAttr} data-stage="${stage}" style="margin-bottom:8px">
+      <summary class="group-summary">
+        <span>${stage}${badge}</span>
+        <span class="group-chevron">${sMatches.length} ▼</span>
+      </summary>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">`;
+    outerHtml += renderStageMatches(sMatches);
+    outerHtml += `</div></details>`;
   });
 
   document.getElementById('matchList').innerHTML = outerHtml || '<p style="color:#475569;text-align:center;padding:32px 0">No hay partidos cargados</p>';
