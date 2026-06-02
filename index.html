@@ -1792,9 +1792,9 @@ function renderUpcoming() {
   }
 
   const upcoming = [...CACHE.matches]
-    .filter(m => new Date(m.datetime) > now && m.home !== 'Por definir' && !isTournamentHidden(m.tournament || 'Sin Torneo'))
+    .filter(m => new Date(m.datetime) > now && m.home !== 'Por definir' && !isTournamentHidden(m.tournament || 'Sin Torneo') && (isAdm || getStatus(m) === 'open'))
     .sort((a,b) => new Date(a.datetime) - new Date(b.datetime))
-    .slice(0, 20);
+    .slice(0, isAdm ? 20 : 10);
 
   if (!upcoming.length) { el.innerHTML = '<p style="color:#475569;font-size:12px">No hay próximos partidos</p>'; return; }
 
@@ -1816,26 +1816,14 @@ function renderUpcoming() {
       const t = new Date(m.datetime).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:tz});
       const until = timeUntil(m.datetime);
       const pred = uid ? CACHE.preds.find(p => p.userId===uid && p.matchId===m.id) : null;
-      const status = getStatus(m);
-      const locked = status !== 'open';
       const isAdm = currentUser?.isAdmin;
 
-      // Admin ve el resultado real o "Pendiente"; usuario normal ve inputs para predecir
-      let scoreInputHtml;
-      if (isAdm) {
-        scoreInputHtml = (m.realHome!=null)
+      // Admin: resultado real o Pendiente. Usuario normal: siempre input editable
+      const scoreInputHtml = isAdm
+        ? (m.realHome!=null
           ? `<span style="font-size:11px;font-weight:800;color:#34d399">${m.realHome}-${m.realAway}</span>`
-          : `<span style="font-size:10px;color:#a78bfa">Pendiente</span>`;
-      } else if (locked) {
-        scoreInputHtml = pred
-          ? `<div style="display:flex;align-items:center;gap:0;position:relative">
-               <div class="score-input-locked" style="width:34px;height:34px;font-size:14px;opacity:0.5;color:#8899b0">${pred.predHome}</div>
-               <span style="font-size:12px;margin:0 -2px;position:relative;z-index:1;color:#4a5f78">🔒</span>
-               <div class="score-input-locked" style="width:34px;height:34px;font-size:14px;opacity:0.5;color:#8899b0">${pred.predAway}</div>
-             </div>`
-          : `<span style="color:#4a5f78;font-size:14px;font-weight:600">—</span>`;
-      } else {
-        scoreInputHtml = `<div style="display:flex;align-items:center;gap:4px">
+          : `<span style="font-size:10px;color:#a78bfa">Pendiente</span>`)
+        : `<div style="display:flex;align-items:center;gap:4px">
              <input type="number" inputmode="numeric" min="0" max="20" id="uph_${m.id}"
                class="score-input" style="width:36px;height:36px;font-size:14px;border-radius:6px;border:1.5px solid rgba(56,189,248,0.2);background:#0a0f1c;color:#e8edf5;font-family:'Outfit',sans-serif"
                value="${pred?.predHome??''}" placeholder="-"
@@ -1846,7 +1834,6 @@ function renderUpcoming() {
                value="${pred?.predAway??''}" placeholder="-"
                onchange="saveUpcomingPred('${m.id}')"/>
            </div>`;
-      }
       const scoreSection = `<div style="width:92px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${scoreInputHtml}</div>`;
 
 
