@@ -1745,19 +1745,18 @@ function sendMessage(toUserId, toUserName) {
 function renderUpcoming() {
   const el = document.getElementById('upcomingMatches');
   if (!el || !CACHE.matches.length) { if(el) el.innerHTML = '<p style="color:#475569;font-size:12px">Cargando partidos...</p>'; return; }
-  console.log('DEBUG upcoming: total matches=', CACHE.matches.length, 'currentUser=', currentUser?.id, 'isAdmin=', currentUser?.isAdmin);
 
   const now = new Date();
   const uid = currentUser?.id;
   const isAdm = currentUser?.isAdmin;
 
   // ══ ADMIN: Partidos pasados sin resultado (para ingresar resultado rápido) ══
+  let adminHtml = '';
   if (isAdm) {
     const pendingResults = [...CACHE.matches]
       .filter(m => new Date(m.datetime) < now && m.realHome == null && m.home !== 'Por definir' && !isTournamentHidden(m.tournament || 'Sin Torneo'))
       .sort((a,b) => new Date(b.datetime) - new Date(a.datetime)); // más recientes primero
 
-    let adminHtml = '';
     if (pendingResults.length > 0) {
       adminHtml += `<div style="background:rgba(127,29,29,0.15);border:1px solid rgba(251,146,60,0.3);border-radius:10px;padding:10px 12px;margin-bottom:12px">
         <div style="font-size:12px;font-weight:800;color:#fb923c;margin-bottom:8px">⏰ Partidos sin resultado (${pendingResults.length})</div>`;
