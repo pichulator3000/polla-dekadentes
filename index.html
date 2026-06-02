@@ -1821,7 +1821,7 @@ function renderUpcoming() {
       const pred = (uid && !isAdm) ? CACHE.preds.find(p => p.userId===uid && p.matchId===m.id) : null;
 
       // Score inputs (editable if open, hidden for admin)
-      const scoreSection = isAdm
+      const scoreInputHtml = isAdm
         ? (m.realHome!=null
           ? `<span style="font-size:11px;font-weight:800;color:#34d399">${m.realHome}-${m.realAway}</span>`
           : `<span style="font-size:10px;color:#a78bfa">Pendiente</span>`)
@@ -1844,6 +1844,7 @@ function renderUpcoming() {
                value="${pred?.predAway??''}" placeholder="-"
                onchange="saveUpcomingPred('${m.id}')"/>
            </div>`;
+      const scoreSection = `<div style="width:92px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${scoreInputHtml}</div>`;
       const scoreSection = `<div style="width:92px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${scoreInputHtml}</div>`;
 
 
