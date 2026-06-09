@@ -2857,7 +2857,7 @@ function renderStats() {
       const counts={1:0,0:0,'-1':0};
       mp.forEach(x=>{counts[Math.sign(x.predHome-x.predAway)]++;});
       const total=mp.length;
-      if(total>1){contTotal++;const myPct=counts[predSign]/total;if(myPct<0.5)contrarian++;}
+      if(total>1){contTotal++;const minCount=Math.min(counts[1],counts[0],counts[-1]);if(counts[predSign]===minCount)contrarian++;}
     });
     const pct=pj?Math.round((ex+ok)/pj*100):0;
     const contPct=contTotal?Math.round(contrarian/contTotal*100):0;
