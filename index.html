@@ -932,6 +932,22 @@ let currentTab  = 'home';
 let clockInterval = null;
 
 // ═══ PREFS & SESSION (solo locales) ═══
+// ═══ BANDERAS (flagcdn.com) ═══
+const FLAGS = {
+  'Argentina':'ar','Brasil':'br','Colombia':'co','Ecuador':'ec','Paraguay':'py','Uruguay':'uy',
+  'Chile':'cl','Peru':'pe','Bolivia':'bo','Venezuela':'ve',
+  'Mexico':'mx','Estados Unidos':'us','Canada':'ca','Curazao':'cw','Haiti':'ht','Panama':'pa',
+  'Alemania':'de','Austria':'at','Belgica':'be','Croacia':'hr','Escocia':'gb-sct','Espana':'es',
+  'Francia':'fr','Inglaterra':'gb-eng','Noruega':'no','Paises Bajos':'nl','Portugal':'pt','Suiza':'ch',
+  'Argelia':'dz','Cabo Verde':'cv','Costa de Marfil':'ci','Egipto':'eg','Ghana':'gh','Marruecos':'ma',
+  'Republica Democratica del Congo':'cd','Senegal':'sn','Sudafrica':'za','Tunez':'tn',
+  'Arabia Saudita':'sa','Australia':'au','Corea del Sur':'kr','Emiratos Arabes Unidos':'ae','Iran':'ir',
+  'Iraq':'iq','Japon':'jp','Jordania':'jo','Qatar':'qa','Uzbekistan':'uz',
+  'Nueva Zelanda':'nz'
+};
+function flagUrl(team){ const iso = FLAGS[team]; return iso ? 'https://flagcdn.com/w40/'+iso+'.png' : ''; }
+function flagImg(team){ const url = flagUrl(team); return url ? '<img src="'+url+'" style="width:22px;height:15px;border-radius:3px;vertical-align:middle;margin:0 4px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,0.3)" alt="">' : ''; }
+
 const PREFS = {
   get: ()  => JSON.parse(localStorage.getItem('pf_prefs') || '{}'),
   set: (v) => localStorage.setItem('pf_prefs', JSON.stringify(v)),
@@ -1769,7 +1785,7 @@ function renderUpcoming() {
             <div style="font-size:10px;color:#94a3b8">${timeStr}</div>
           </div>
           <div style="flex:1;min-width:0">
-            <span style="font-size:11px;font-weight:700;color:#e8edf5">${m.home} <span style="color:#4a5f78;font-weight:400">vs</span> ${m.away}</span>
+            <span style="font-size:11px;font-weight:700;color:#e8edf5">${flagImg(m.home)}${m.home} <span style="color:#4a5f78;font-weight:400">vs</span> ${m.away}${flagImg(m.away)}</span>
             <div style="font-size:9px;color:#64748b">${m.tournament || ''} · ${normStage(m.stage)}</div>
           </div>
           <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
@@ -1848,7 +1864,7 @@ function renderUpcoming() {
       html += `<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-top:1px solid rgba(56,189,248,0.06)">
         <span style="font-size:11px;font-weight:800;color:#38bdf8;min-width:40px;font-weight:600">${t}</span>
         <div style="flex:1;min-width:0">
-          <span style="font-size:12px;font-weight:700;color:#e8edf5">${m.home} <span style="color:#4a5f78;font-weight:400">vs</span> ${m.away}</span>
+          <span style="font-size:12px;font-weight:700;color:#e8edf5">${flagImg(m.home)}${m.home} <span style="color:#4a5f78;font-weight:400">vs</span> ${m.away}${flagImg(m.away)}</span>
         </div>
         ${scoreSection}
         ${until ? `<span style="font-size:9px;color:#22d3ee;white-space:nowrap;font-weight:600">${until}</span>` : ''}
@@ -2590,7 +2606,7 @@ function renderMatches() {
       </div>
       ${betDistHtml}
       <div style="display:flex;align-items:center;gap:6px">
-        <div style="flex:1;text-align:right;font-weight:800;font-size:13px;line-height:1.2">${m.home}</div>
+        <div style="flex:1;text-align:right;font-weight:800;font-size:13px;line-height:1.2">${flagImg(m.home)}${m.home}</div>
         <div style="flex-shrink:0">
           ${scoreHtml}
           ${resultHtml}
@@ -2599,7 +2615,7 @@ function renderMatches() {
           ${participHtml}
           ${predsPanel}
         </div>
-        <div style="flex:1;text-align:left;font-weight:800;font-size:13px;line-height:1.2">${m.away}</div>
+        <div style="flex:1;text-align:left;font-weight:800;font-size:13px;line-height:1.2">${m.away}${flagImg(m.away)}</div>
       </div>
       ${playerPredsPanel}
       ${potenciadoToggle}
