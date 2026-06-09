@@ -86,11 +86,22 @@ if (process.argv[1] === new URL(import.meta.url).pathname) {
 }
 
 async function run() {
+  // Validate required environment variables
+  const required = ['FIREBASE_SERVICE_ACCOUNT', 'FIREBASE_DATABASE_URL', 'FDATA_API_KEY'];
+  for (const key of required) {
+    if (!process.env[key]) { console.error(`Missing required env var: ${key}`); process.exit(1); }
+  }
+
   const admin = await import('firebase-admin');
   const DRY_RUN = process.env.DRY_RUN === '1';
 
   // Inicializar Firebase Admin
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  let serviceAccount;
+  try {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  } catch {
+    console.error('FIREBASE_SERVICE_ACCOUNT is not valid JSON'); process.exit(1);
+  }
   admin.default.initializeApp({
     credential: admin.default.credential.cert(serviceAccount),
     databaseURL: process.env.FIREBASE_DATABASE_URL,
@@ -118,7 +129,7 @@ async function run() {
   let unmatched = 0;
 
   for (const apiMatch of apiMatches) {
-    const { home, away } = apiMatch.score.fullTime;
+    const { home, away } = apiMatch.score?.fullTime ?? {};
     if (home == null || away == null) continue;
 
     const fbMatch = findFirebaseMatch(apiMatch, mundialMatches);
