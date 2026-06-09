@@ -497,6 +497,15 @@
   <div id="toastMsg" style="padding:10px 20px;border-radius:20px;font-size:14px;font-weight:700;box-shadow:0 4px 24px #0008"></div>
 </div>
 
+<!-- ═══════════════ CALENDARIO OVERLAY ═══════════════ -->
+<div id="calendarioOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0f172a;z-index:900;overflow-y:auto;padding-bottom:80px">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#0f172a;border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:10">
+    <span style="font-weight:900;font-size:17px;color:#f59e0b">📅 Calendario</span>
+    <button onclick="cerrarCalendario()" style="background:#1e293b;border:none;border-radius:8px;padding:8px 14px;color:#94a3b8;font-size:14px;font-weight:700;cursor:pointer">✕ Cerrar</button>
+  </div>
+  <div id="calendarioGrid" style="padding:16px"></div>
+</div>
+
 <!-- ═══════════════ AUTH SCREEN ═══════════════ -->
 <div id="authScreen" style="min-height:100%;min-height:-webkit-fill-available;display:flex;align-items:center;justify-content:center;padding:20px 16px;background:#0f172a">
   <div style="width:100%;max-width:400px">
@@ -880,15 +889,6 @@
     <button class="nav-btn" id="nb-admin" style="display:none" onclick="showTab('admin')">
       <span class="nicon">⚙️</span><span>Admin</span>
     </button>
-    <button class="nav-btn" id="nb-calendario" onclick="showTab('calendarioTab')">
-      <span class="nicon">📅</span><span>Calendario</span>
-    </button>
-  </div>
-
-  <!-- CALENDARIO -->
-  <div id="tabCalendarioTab" style="display:none;padding-top:4px">
-    <h2 style="margin:0 0 14px;font-size:17px;font-weight:900">📅 Calendario</h2>
-    <div id="calendarioGrid"></div>
   </div>
 
 </div><!-- /appScreen -->
@@ -1340,9 +1340,9 @@ function updateClock() {
 }
 
 // ═══ NAVIGATION ═══
-const ALL_TABS = ['home','partidos','ranking','stats','podio','admin','reglas','ajustes','resultados','calendarioTab'];
+const ALL_TABS = ['home','partidos','ranking','stats','podio','admin','reglas','ajustes','resultados'];
 const NAV_MAP  = { home:'nb-home', partidos:'nb-partidos', ranking:'nb-ranking',
-                   stats:'nb-stats', podio:'nb-podio', reglas:'nb-reglas', admin:'nb-admin', resultados:null, calendarioTab:'nb-calendario' };
+                   stats:'nb-stats', podio:'nb-podio', reglas:'nb-reglas', admin:'nb-admin', resultados:null };
 
 function showHome() {
   ALL_TABS.forEach(t => document.getElementById('tab'+cap(t)).style.display = 'none');
@@ -1372,7 +1372,14 @@ function showTab(tab) {
   if (tab === 'ajustes')    renderAjustes();
   if (tab === 'resultados') renderResultados();
   if (tab === 'reglas')     renderReglasPozos();
-  if (tab === 'calendarioTab') renderCalendario();
+}
+
+function abrirCalendario(){
+  renderCalendario();
+  document.getElementById('calendarioOverlay').style.display='block';
+}
+function cerrarCalendario(){
+  document.getElementById('calendarioOverlay').style.display='none';
 }
 
 // ═══ CALENDARIO ═══
@@ -1401,7 +1408,7 @@ function renderCalendario() {
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px">`;
 
     matches.forEach(m => {
-      const pred = preds?.find(p => p.userId === uid && p.matchId === m.id);
+      const pred = CACHE.preds?.find(p => p.userId === uid && p.matchId === m.id);
       const hasHome = pred?.predHome != null;
       const hasAway = pred?.predAway != null;
       const isComplete = hasHome && hasAway;
@@ -1512,7 +1519,7 @@ function renderHomeStats() {
         <div style="font-size:20px;font-weight:900;color:#c084fc">#${myPos}</div>
         <div style="font-size:10px;color:#64748b">Posición</div>
       </div>
-      <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center;cursor:pointer" onclick="showTab('calendarioTab')">
+      <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center;cursor:pointer" onclick="abrirCalendario()">
         <div style="font-size:20px;font-weight:900;color:#f59e0b">📅</div>
         <div style="font-size:10px;color:#64748b">Calendario</div>
       </div>
