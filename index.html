@@ -935,7 +935,6 @@ let clockInterval = null;
 // ═══ BANDERAS (flagcdn.com) ═══
 const FLAGS = {
   'Argentina':'ar','Brasil':'br','Colombia':'co','Ecuador':'ec','Paraguay':'py','Uruguay':'uy',
-  'Chile':'cl','Peru':'pe','Bolivia':'bo','Venezuela':'ve',
   'Mexico':'mx','Estados Unidos':'us','Canada':'ca','Curazao':'cw','Haiti':'ht','Panama':'pa',
   'Republica Checa':'cz','Bosnia':'ba','Suiza':'ch',
   'Marruecos':'ma','Escocia':'gb-sct','Turquia':'tr',
@@ -948,8 +947,17 @@ const FLAGS = {
   'RD Congo':'cd','Uzbekistan':'uz',
   'Inglaterra':'gb-eng','Croacia':'hr','Ghana':'gh',
   'Sudafrica':'za','Corea del Sur':'kr','Australia':'au',
-  'Emiratos Arabes Unidos':'ae'
+  'Emiratos Arabes Unidos':'ae',
+  // Versiones con tilde (como estan en los partidos)
+  'Mexico':'mx','Espana':'es','Sudafrica':'za','Republica Checa':'cz',
+  'Haiti':'ht','Escocia':'gb-sct','Turquia':'tr','Belgica':'be',
+  'Tunez':'tn','Croacia':'hr','Australia':'au','Japon':'jp',
+  'Arabia Saudita':'sa','Noruega':'no','Jordania':'jo',
+  'Uzbekistan':'uz','Iran':'ir','Irak':'iq',
+  'Cabo Verde':'cv','RD Congo':'cd','Emiratos Arabes Unidos':'ae',
+  'Paises Bajos':'nl','Costa de Marfil':'ci'
 };
+function flagUrl(team){ const iso = FLAGS[team]; return iso ? 'https://flagcdn.com/w40/'+iso+'.png' : ''; }
 function flagUrl(team){ const iso = FLAGS[team]; return iso ? 'https://flagcdn.com/w40/'+iso+'.png' : ''; }
 function flagImg(team, big){ const url = flagUrl(team); return url ? '<img src="'+url+'" style="'+(big?'width:36px;height:24px':'width:22px;height:15px')+';border-radius:3px;vertical-align:middle;margin:0 4px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,0.3)" alt="">' : ''; }
 
