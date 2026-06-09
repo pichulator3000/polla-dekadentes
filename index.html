@@ -506,18 +506,16 @@
   <div id="calendarioGrid" style="padding:16px"></div>
 </div>
 
-<!-- Indicador conexión -->
-<div id="onlineIndicator" style="display:none;position:fixed;top:12px;right:12px;z-index:9998;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:#0f172a;border:1px solid #1e293b;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
-  <div id="onlineDot" style="width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,0.6)"></div>
-  <span id="onlineText" style="font-size:11px;font-weight:700;color:#22c55e">En línea</span>
-</div>
-
 <!-- ═══════════════ AUTH SCREEN ═══════════════ -->
 <div id="authScreen" style="min-height:100%;min-height:-webkit-fill-available;display:flex;align-items:center;justify-content:center;padding:20px 16px;background:#0f172a;position:relative;overflow:hidden">
   <video autoplay muted loop playsinline style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0">
     <source src="video-login.mp4" type="video/mp4">
   </video>
   <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(15,23,44,0.75);z-index:1"></div>
+  <div id="onlineIndicator" style="display:none;position:absolute;top:12px;right:12px;z-index:5;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:#0f172a;border:1px solid #1e293b;box-shadow:0 2px 8px rgba(0,0,0,0.4)">
+    <div id="onlineDot" style="width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,0.6)"></div>
+    <span id="onlineText" style="font-size:11px;font-weight:700;color:#22c55e">En línea</span>
+  </div>
   <div style="width:100%;max-width:400px;position:relative;z-index:2">
     <div style="text-align:center;margin-bottom:28px">
       <div class="glow-border glow-active" style="display:inline-block;border-radius:14px;margin-bottom:0">
@@ -1396,7 +1394,7 @@ function cerrarCalendario(){
   document.getElementById('calendarioOverlay').style.display='none';
 }
 
-// ═══ CALENDARIO ═══
+// ═══ INDICADOR CONEXIÓN ═══
 function renderOnlineIndicator(connected){
   const ind = document.getElementById('onlineIndicator');
   const dot = document.getElementById('onlineDot');
@@ -1414,6 +1412,7 @@ function renderOnlineIndicator(connected){
   ind.style.display='flex';
 }
 
+// ═══ CALENDARIO ═══
 function renderCalendario() {
   const el = document.getElementById('calendarioGrid');
   if (!el) return;
