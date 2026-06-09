@@ -1172,17 +1172,19 @@ function autoJump(el, nextId) {
 }
 
 function calcPoints(pred, match, allPreds) {
-  if (match.realHome == null || match.realAway == null) return null;
-  const realO = Math.sign(match.realHome - match.realAway);
-  const predO = Math.sign(pred.predHome  - pred.predAway);
+  const rh = match.realHome ?? match.liveHome;
+  const ra = match.realAway ?? match.liveAway;
+  if (rh == null || ra == null) return null;
+  const realO = Math.sign(rh - ra);
+  const predO = Math.sign(pred.predHome - pred.predAway);
   if (predO !== realO) return 0;
   const mp = (allPreds || CACHE.preds).filter(p => p.matchId === match.id);
   const correctN = mp.filter(p => Math.sign(p.predHome - p.predAway) === realO).length;
   if (!correctN) return 0;
-  let pool  = getPoolForStage(match.stage);
+  let pool = getPoolForStage(match.stage);
   if (match.potenciado) pool *= 2;
   const base  = pool / correctN;
-  const exact = pred.predHome === match.realHome && pred.predAway === match.realAway;
+  const exact = pred.predHome === rh && pred.predAway === ra;
   return Math.round((exact ? base * 2 : base) * 100) / 100;
 }
 
@@ -2362,7 +2364,7 @@ function renderMatches() {
       const badges = {
         open:   `<span class="badge-open">● Abierto</span>`,
         locked: `<span class="badge-lock">🔒 Cerrado</span>`,
-        live:   `<span class="badge-live">🔴 En vivo</span>`,
+        live:   `<span class="badge-live">🔴 En vivo${m.liveHome != null ? ` <b style="color:#fbbf24">${m.liveHome}–${m.liveAway}</b>` : ''}</span>`,
         done:   `<span class="badge-done">✓ Fin</span>`,
       };
 
@@ -2727,6 +2729,10 @@ function renderRanking() {
     ? CACHE.matches.filter(m => !isTournamentHidden(m.tournament || 'Sin Torneo'))
     : CACHE.matches.filter(m => (m.tournament || 'Sin Torneo') === selectedRankTournament && !isTournamentHidden(m.tournament || 'Sin Torneo'));
   const matches = baseMatches;
+  const doneOrLive = matches.filter(m =>
+    m.realHome != null || (m.liveHome != null && m.liveAway != null)
+  );
+  const hasLiveMatch = doneOrLive.some(m => m.realHome == null && m.liveHome != null);
   const preds   = CACHE.preds;
   const incluyePodio = podioAplicaATorneo(selectedRankTournament);
 
@@ -2734,13 +2740,15 @@ function renderRanking() {
     const up = preds.filter(p => p.userId===u.id);
     let pts=0, exact=0, correct=0, played=0;
     up.forEach(p => {
-      const m = matches.find(x => x.id===p.matchId);
-      if (!m || m.realHome===null) return;
+      const m = doneOrLive.find(x => x.id===p.matchId);
+      const rh = m ? (m.realHome ?? m.liveHome) : null;
+      const ra = m ? (m.realAway ?? m.liveAway) : null;
+      if (!m || rh == null) return;
       played++;
       const pt = calcPoints(p,m,preds);
       pts += pt;
-      if (p.predHome===m.realHome && p.predAway===m.realAway) exact++;
-      else if (Math.sign(p.predHome-p.predAway)===Math.sign(m.realHome-m.realAway)) correct++;
+      if (p.predHome===rh && p.predAway===ra) exact++;
+      else if (Math.sign(p.predHome-p.predAway)===Math.sign(rh-ra)) correct++;
     });
     let podioPts = 0;
     if (incluyePodio) {
@@ -2751,9 +2759,9 @@ function renderRanking() {
     return { ...u, pts, exact, correct, played, podioPts };
   }).sort((a,b) => b.pts-a.pts || b.exact-a.exact);
 
-  const total = matches.filter(m => m.realHome!=null).length;
+  const total = doneOrLive.filter(m => m.realHome!=null).length;
   const showPodioCol = incluyePodio && scores.some(s => s.podioPts > 0);
-  let html = `<div class="card" style="overflow:hidden">
+  let html = `${hasLiveMatch ? `<div style="background:#78350f;border:1px solid #f59e0b;border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:12px;color:#fde68a;display:flex;align-items:center;gap:6px"><span style="animation:blink 1s infinite">🔴</span><span>Hay partidos en vivo — puntuación provisional</span></div>` : ''}<div class="card" style="overflow:hidden">
     <table style="width:100%;border-collapse:collapse;font-size:13px">
       <thead><tr style="background:#0f172a;color:#64748b;font-size:11px;text-transform:uppercase">
         <th style="padding:10px 10px;text-align:left">#</th>
@@ -2776,7 +2784,7 @@ function renderRanking() {
         <div style="font-weight:700;font-size:13px">${s.name}${isMine?' <span style="color:#38bdf8;font-size:10px">(tú)</span>':''}</div>
         <div style="color:#475569;font-size:10px">@${s.code}</div>
       </td>
-      <td style="padding:12px 6px;text-align:center;font-weight:900;color:#38bdf8;font-size:16px">${s.pts.toFixed(2)}</td>
+      <td style="padding:12px 6px;text-align:center;font-weight:900;color:${hasLiveMatch?'#fbbf24':'#38bdf8'};font-size:16px">${s.pts.toFixed(2)}</td>
       ${showPodioCol ? `<td style="padding:12px 6px;text-align:center;color:${s.podioPts>0?'#38bdf8':'#475569'};font-weight:700">${s.podioPts>0?('+'+s.podioPts):'—'}</td>` : ''}
       <td style="padding:12px 6px;text-align:center;color:#38bdf8">${s.exact}</td>
       <td style="padding:12px 6px;text-align:center;color:#4ade80">${s.correct}</td>
