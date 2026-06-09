@@ -1,0 +1,39 @@
+# .github/workflows/sync-results.yml
+name: Sync Mundial 2026 Results
+
+on:
+  schedule:
+    # 10:00–23:59 hora Chile (UTC-4) = 14:00–23:59 UTC
+    - cron: '*/5 14-23 * * *'
+    # 00:00–03:00 hora Chile (UTC-4) = 04:00–07:00 UTC
+    - cron: '*/5 0-7 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (no escribe en Firebase)'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install firebase-admin
+
+      - name: Run sync
+        env:
+          FDATA_API_KEY: ${{ secrets.FDATA_API_KEY }}
+          FIREBASE_DATABASE_URL: ${{ secrets.FIREBASE_DATABASE_URL }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          DRY_RUN: ${{ github.event.inputs.dry_run == 'true' && '1' || '0' }}
+        run: node scripts/sync_results.mjs
