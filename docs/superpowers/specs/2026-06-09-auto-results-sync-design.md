@@ -1,14 +1,16 @@
 # Auto-sync de resultados — Mundial 2026
 
 **Fecha:** 2026-06-09  
-**Estado:** Aprobado  
-**Contexto:** La app polla-dekadentes requiere que los admins ingresen resultados manualmente. El Mundial 2026 empieza el 11 de junio, se necesita sincronización automática.
+**Estado:** Aprobado (actualizado con live scores)  
+**Contexto:** La app polla-dekadentes requiere que los admins ingresen resultados manualmente. El Mundial 2026 empieza el 11 de junio, se necesita sincronización automática con marcadores en vivo.
 
 ---
 
 ## Objetivo
 
-Sincronizar automáticamente los resultados finales de los partidos del Mundial 2026 desde football-data.org hacia Firebase Realtime Database, sin intervención manual del admin.
+Sincronizar automáticamente los resultados del Mundial 2026 desde football-data.org hacia Firebase Realtime Database:
+- **Resultados finales** → se guardan en `realHome`/`realAway` al terminar el partido
+- **Marcadores en vivo** → se guardan en `liveHome`/`liveAway` durante el partido; la tabla de posiciones los usa como puntuación provisional
 
 ---
 
@@ -21,109 +23,134 @@ Sincronizar automáticamente los resultados finales de los partidos del Mundial 
         └── dispatch manual
               │
               ▼
-    [sync_results.py]
+    [scripts/sync_results.mjs]
         │
-        ├── GET football-data.org/v4/competitions/WC/matches
-        │       (solo status=FINISHED, jornada actual)
+        ├── GET football-data.org/v4/competitions/WC/matches?status=FINISHED
+        │       → escribe realHome/realAway (no sobreescribe si ya existe)
         │
-        ├── GET Firebase pf/matches (todos los partidos del Mundial)
+        ├── GET football-data.org/v4/competitions/WC/matches?status=IN_PLAY,PAUSED
+        │       → escribe liveHome/liveAway
+        │
+        ├── GET Firebase pf/matches (partidos del Mundial 2026)
         │
         ├── Match por fecha + equipos normalizados (TEAM_ALIASES)
         │
-        └── SET pf/matches/{id}/realHome + realAway
-                (solo si partido terminado y no hay resultado previo)
+        └── SET pf/matches/{id}
+                  realHome/realAway  (partidos terminados)
+                  liveHome/liveAway  (partidos en vivo; null cuando termina)
 ```
 
 ---
 
 ## Componentes
 
-### `sync_results.py`
+### `scripts/sync_results.mjs`
 
-- Llama a `football-data.org/v4/competitions/WC/matches?status=FINISHED`
-- Lee `pf/matches` de Firebase filtrando por `tournament == "Mundial 2026"`
-- Normaliza nombres de equipos con `TEAM_ALIASES` (dict ~30 entradas, inglés → español)
+- Dos fetch a football-data.org: `status=FINISHED` y `status=IN_PLAY,PAUSED`
+- Lee `pf/matches` de Firebase filtrando por `tournament === "Mundial 2026"`
+- Normaliza nombres de equipos con `TEAM_ALIASES` (~50 entradas, inglés → español)
 - Lógica de match: fecha (±1 día de tolerancia) + ambos equipos normalizados
-- Reglas de escritura:
-  - Solo escribe si `status == FINISHED` en football-data
-  - No sobreescribe si ya hay un resultado guardado (safe by default)
+- Reglas de escritura para **partidos terminados**:
+  - Solo escribe si `status === FINISHED`
+  - No sobreescribe `realHome`/`realAway` si ya hay resultado guardado
+  - Cuando escribe `realHome`/`realAway`, también borra `liveHome`/`liveAway` (set null)
   - Si hay discrepancia entre valor guardado y API → loguea warning, no escribe
-  - Si un partido no matchea → loguea "unmatched", no escribe
+- Reglas de escritura para **partidos en vivo**:
+  - Solo escribe `liveHome`/`liveAway` si `status === IN_PLAY || PAUSED`
+  - Sobreescribe siempre (el marcador va cambiando durante el partido)
+  - No escribe si `realHome` ya tiene valor (partido ya terminado en Firebase)
 
 ### `.github/workflows/sync-results.yml`
 
 - Trigger `schedule`: dos entradas cron:
   - `*/5 14-23 * * *` UTC (= 10:00–19:59 UTC-4)
-  - `*/5 0-7 * * *` UTC (= 20:00–03:00 UTC-4, madrugada siguiente)  
-  _(GitHub Actions usa UTC; 14:00 UTC = 10:00 UTC-4, 07:00 UTC = 03:00 UTC-4)_
-- Trigger `workflow_dispatch`: para ejecución manual desde GitHub UI
-- Steps: checkout → setup Python → pip install → run script
-- Secrets requeridos: `FDATA_API_KEY`, `FIREBASE_DATABASE_URL`, `FIREBASE_SERVICE_ACCOUNT`
+  - `*/5 0-7 * * *` UTC (= 20:00–03:00 UTC-4, madrugada siguiente)
+- Trigger `workflow_dispatch` con input opcional `dry_run`
+- Steps: checkout → setup Node 20 → npm install firebase-admin → run script
+- Secrets: `FDATA_API_KEY`, `FIREBASE_DATABASE_URL`, `FIREBASE_SERVICE_ACCOUNT`
 
 ### GitHub Secrets
 
 | Secret | Descripción |
 |---|---|
-| `FDATA_API_KEY` | API key de football-data.org (gratis, registrar en football-data.org) |
-| `FIREBASE_DATABASE_URL` | URL del Realtime DB (`https://polla-dekadentes-default-rtdb.firebaseio.com`) |
-| `FIREBASE_SERVICE_ACCOUNT` | JSON del Service Account de Firebase (con permisos de escritura en Realtime DB) |
+| `FDATA_API_KEY` | API key de football-data.org (gratis) |
+| `FIREBASE_DATABASE_URL` | `https://polla-dekadentes-default-rtdb.firebaseio.com` |
+| `FIREBASE_SERVICE_ACCOUNT` | JSON del Service Account de Firebase |
 
 ---
 
-## Lógica de normalización de equipos
+## Cambios en Firebase (schema)
 
-```python
-TEAM_ALIASES = {
-    "korea republic": "Corea del Sur",
-    "czech republic": "República Checa",
-    "united states": "Estados Unidos",
-    "usa": "Estados Unidos",
-    # ... ~30 entradas
+Campos nuevos en `pf/matches/{id}`:
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `liveHome` | number \| null | Goles local durante el partido (null si no hay partido en vivo) |
+| `liveAway` | number \| null | Goles visita durante el partido |
+
+Los campos `realHome`/`realAway` existentes no cambian.
+
+---
+
+## Lógica de normalización
+
+```js
+const TEAM_ALIASES = {
+  'korea republic': 'Corea del Sur',
+  'czech republic': 'República Checa',
+  'united states': 'Estados Unidos',
+  // ... ~50 entradas
+};
+
+function normalizeTeam(name) {
+  return TEAM_ALIASES[name.toLowerCase().trim()] ?? name;
 }
-
-def normalize(name: str) -> str:
-    key = name.lower().strip()
-    return TEAM_ALIASES.get(key, name)
 ```
 
-Match exitoso = misma fecha (día) + `normalize(home)` == nombre en Firebase + `normalize(away)` == nombre en Firebase.
-
-Si no hay match exacto, intenta coincidencia parcial (uno de los equipos contiene el otro). Si sigue fallando, loguea y continúa.
+Match exitoso = misma fecha (±1 día) + ambos equipos normalizados coinciden con `home`/`away` en Firebase.
 
 ---
 
-## Flujo de datos en la app
+## Cambios en el frontend (index.html)
 
-Cuando el script escribe `realHome`/`realAway` en Firebase:
-1. Los listeners `on('value')` en todos los clientes reciben el cambio
-2. `CACHE.matches` se actualiza
-3. La UI re-renderiza el partido como `done` con los puntos calculados
+### `calcPoints(pred, match, allPreds)`
 
-No se requiere ningún cambio en `index.html`.
+Actualmente retorna `null` si `match.realHome == null`. Se modifica para también calcular puntos provisionales si `match.liveHome != null`:
 
----
-
-## Dependencias Python
-
-```
-requests
-firebase-admin
+```js
+function calcPoints(pred, match, allPreds) {
+  const rh = match.realHome ?? match.liveHome;
+  const ra = match.realAway ?? match.liveAway;
+  if (rh == null || ra == null) return null;
+  // ... resto igual usando rh/ra en vez de match.realHome/realAway
+}
 ```
 
+### `renderRanking()`
+
+- Incluye partidos con `liveHome != null` (además de `realHome != null`) en el cálculo de puntos
+- Si hay al menos un partido live, muestra banner: `⚡ Puntuación provisional — hay partidos en vivo`
+- Puntos provisionales se muestran en amarillo/naranja en vez de azul para distinguirlos
+
+### Match cards (fixture)
+
+- Cuando `status === 'live'` y `liveHome != null`: muestra `liveHome - liveAway` en el badge del partido
+- El badge "🔴 En vivo" existente se mantiene; se agrega el marcador al lado
+
 ---
 
-## Setup requerido (una sola vez)
+## Flujo completo durante un partido
 
-1. Registrar cuenta en football-data.org → obtener API key gratuita
-2. En Firebase Console → IAM → crear Service Account con rol "Firebase Realtime Database Admin" → descargar JSON
-3. Agregar los 3 secrets en GitHub repo → Settings → Secrets → Actions
-4. El workflow queda activo automáticamente desde el merge
+1. **Antes del partido** — `open`: inputs habilitados, sin marcador
+2. **Al empezar** — `locked/live`: inputs bloqueados, badge "🔴 En vivo"
+3. **Primer gol** — sync escribe `liveHome: 1, liveAway: 0`; todos los clientes ven `🔴 1-0`; tabla se actualiza provisionalmente
+4. **Fin del partido** — sync escribe `realHome: 2, realAway: 1` y `liveHome: null, liveAway: null`; partido pasa a `done`; tabla muestra puntos definitivos
 
 ---
 
-## Limitaciones y consideraciones
+## Limitaciones
 
-- football-data.org free tier: 10 req/min — con schedule de 5 min esto es 1 req cada 5 min, muy por debajo del límite
-- GitHub Actions free tier: 2000 min/mes — el workflow dura ~15s, corriendo 5 veces/hora × 17 horas × 64 días del Mundial ≈ 850 ejecuciones × 0.25 min ≈ 213 min. Dentro del límite.
-- El script no arranca partidos (no toca `datetime` ni metadatos), solo escribe resultados finales
-- Si football-data no tiene aún el partido del Mundial 2026 en su base de datos, el script simplemente no encuentra matches y no escribe nada — no rompe nada
+- football-data.org free tier: 10 req/min — 2 req/ejecución (FINISHED + IN_PLAY), muy por debajo
+- GitHub Actions free tier: 2000 min/mes — ~430 min totales (dentro del límite)
+- Los marcadores en vivo dependen de cuándo football-data.org los actualiza (no es instantáneo, puede haber 1-3 min de lag)
+- La tabla provisional puede mostrar puntos distintos a los finales si hay goles tardíos en el último minuto
