@@ -934,28 +934,24 @@ let clockInterval = null;
 // ═══ PREFS & SESSION (solo locales) ═══
 // ═══ BANDERAS (flagcdn.com) ═══
 const FLAGS = {
-  'Argentina':'ar','Brasil':'br','Colombia':'co','Ecuador':'ec','Paraguay':'py','Uruguay':'uy',
-  'Mexico':'mx','Estados Unidos':'us','Canada':'ca','Curazao':'cw','Haiti':'ht','Panama':'pa',
-  'Republica Checa':'cz','Bosnia':'ba','Suiza':'ch',
-  'Marruecos':'ma','Escocia':'gb-sct','Turquia':'tr',
-  'Alemania':'de','Costa de Marfil':'ci',
-  'Paises Bajos':'nl','Japon':'jp','Suecia':'se','Tunez':'tn',
-  'Belgica':'be','Egipto':'eg','Iran':'ir','Nueva Zelanda':'nz',
-  'Espana':'es','Cabo Verde':'cv','Arabia Saudita':'sa',
-  'Francia':'fr','Senegal':'sn','Irak':'iq','Noruega':'no',
-  'Argelia':'dz','Austria':'at','Jordania':'jo',
-  'RD Congo':'cd','Uzbekistan':'uz',
-  'Inglaterra':'gb-eng','Croacia':'hr','Ghana':'gh',
-  'Sudafrica':'za','Corea del Sur':'kr','Australia':'au',
-  'Emiratos Arabes Unidos':'ae',
-  // Versiones con tilde (como estan en los partidos)
-  'Mexico':'mx','Espana':'es','Sudafrica':'za','Republica Checa':'cz',
-  'Haiti':'ht','Escocia':'gb-sct','Turquia':'tr','Belgica':'be',
-  'Tunez':'tn','Croacia':'hr','Australia':'au','Japon':'jp',
-  'Arabia Saudita':'sa','Noruega':'no','Jordania':'jo',
-  'Uzbekistan':'uz','Iran':'ir','Irak':'iq',
-  'Cabo Verde':'cv','RD Congo':'cd','Emiratos Arabes Unidos':'ae',
-  'Paises Bajos':'nl','Costa de Marfil':'ci'
+  'Alemania':'de','Arabia Saudita':'sa','Argelia':'dz','Argentina':'ar','Australia':'au','Austria':'at',
+  'Bosnia':'ba','Brasil':'br','Belgica':'be',
+  'Cabo Verde':'cv','Canada':'ca','Colombia':'co','Corea del Sur':'kr','Costa de Marfil':'ci','Croacia':'hr','Curazao':'cw',
+  'Ecuador':'ec','Egipto':'eg','Escocia':'gb-sct','Espana':'es','Estados Unidos':'us',
+  'Francia':'fr',
+  'Ghana':'gh',
+  'Haiti':'ht',
+  'Inglaterra':'gb-eng','Irak':'iq','Iran':'ir',
+  'Japon':'jp',
+  'Jordania':'jo',
+  'Marruecos':'ma','Mexico':'mx',
+  'Noruega':'no','Nueva Zelanda':'nz',
+  'Panama':'pa','Paraguay':'py','Paises Bajos':'nl','Portugal':'pt',
+  'Qatar':'qa',
+  'RD Congo':'cd','Republica Checa':'cz',
+  'Senegal':'sn','Sudafrica':'za','Suecia':'se','Suiza':'ch',
+  'Tunez':'tn','Turquia':'tr',
+  'Uruguay':'uy','Uzbekistan':'uz'
 };
 function flagUrl(team){ const iso = FLAGS[team]; return iso ? 'https://flagcdn.com/w40/'+iso+'.png' : ''; }
 function flagUrl(team){ const iso = FLAGS[team]; return iso ? 'https://flagcdn.com/w40/'+iso+'.png' : ''; }
