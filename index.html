@@ -880,6 +880,15 @@
     <button class="nav-btn" id="nb-admin" style="display:none" onclick="showTab('admin')">
       <span class="nicon">⚙️</span><span>Admin</span>
     </button>
+    <button class="nav-btn" id="nb-calendario" onclick="showTab('calendarioTab')">
+      <span class="nicon">📅</span><span>Calendario</span>
+    </button>
+  </div>
+
+  <!-- CALENDARIO -->
+  <div id="tabCalendarioTab" style="display:none;padding-top:4px">
+    <h2 style="margin:0 0 14px;font-size:17px;font-weight:900">📅 Calendario</h2>
+    <div id="calendarioGrid"></div>
   </div>
 
 </div><!-- /appScreen -->
@@ -1331,9 +1340,9 @@ function updateClock() {
 }
 
 // ═══ NAVIGATION ═══
-const ALL_TABS = ['home','partidos','ranking','stats','podio','admin','reglas','ajustes','resultados'];
+const ALL_TABS = ['home','partidos','ranking','stats','podio','admin','reglas','ajustes','resultados','calendarioTab'];
 const NAV_MAP  = { home:'nb-home', partidos:'nb-partidos', ranking:'nb-ranking',
-                   stats:'nb-stats', podio:'nb-podio', reglas:'nb-reglas', admin:'nb-admin', resultados:null };
+                   stats:'nb-stats', podio:'nb-podio', reglas:'nb-reglas', admin:'nb-admin', resultados:null, calendarioTab:'nb-calendario' };
 
 function showHome() {
   ALL_TABS.forEach(t => document.getElementById('tab'+cap(t)).style.display = 'none');
@@ -1363,6 +1372,62 @@ function showTab(tab) {
   if (tab === 'ajustes')    renderAjustes();
   if (tab === 'resultados') renderResultados();
   if (tab === 'reglas')     renderReglasPozos();
+  if (tab === 'calendarioTab') renderCalendario();
+}
+
+// ═══ CALENDARIO ═══
+function renderCalendario() {
+  const el = document.getElementById('calendarioGrid');
+  if (!el) return;
+  const uid = currentUser?.id;
+  const done = [...CACHE.matches].filter(m => m.realHome != null).sort((a,b) => new Date(a.datetime)-new Date(b.datetime));
+  const pending = [...CACHE.matches].filter(m => m.realHome == null).sort((a,b) => new Date(a.datetime)-new Date(b.datetime));
+  const all = [...done, ...pending];
+  if (!all.length) { el.innerHTML = '<div style="text-align:center;color:#64748b;padding:20px">No hay partidos</div>'; return; }
+
+  // Agrupar por fecha
+  const byDate = {};
+  all.forEach(m => {
+    const d = new Date(m.datetime).toLocaleDateString('es-CL',{day:'numeric',month:'long',timeZone:'America/Santiago'});
+    if (!byDate[d]) byDate[d] = [];
+    byDate[d].push(m);
+  });
+
+  let html = '';
+  Object.keys(byDate).forEach(date => {
+    const matches = byDate[date];
+    html += `<div style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:800;color:#94a3b8;margin-bottom:8px;padding-left:2px">${date}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px">`;
+
+    matches.forEach(m => {
+      const pred = preds?.find(p => p.userId === uid && p.matchId === m.id);
+      const hasHome = pred?.predHome != null;
+      const hasAway = pred?.predAway != null;
+      const isComplete = hasHome && hasAway;
+      const isPartial = (hasHome || hasAway) && !isComplete;
+      const isDone = m.realHome != null;
+
+      let bg = '#0f172a', border = '#1e293b';
+      if (isComplete) { bg = '#052e16'; border = '#16a34a'; }
+      else if (isPartial) { bg = '#2a1f05'; border = '#f59e0b'; }
+      else if (isDone) { bg = '#0c1a2e'; border = '#1d4ed8'; }
+
+      html += `<div style="background:${bg};border:1.5px solid ${border};border-radius:10px;padding:10px 6px;text-align:center;min-height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <img src="${flagUrl(m.home)}" style="width:22px;height:15px;border-radius:2px;object-fit:cover" alt="" onerror="this.style.display='none'">
+          <span style="font-size:9px;color:#64748b">vs</span>
+          <img src="${flagUrl(m.away)}" style="width:22px;height:15px;border-radius:2px;object-fit:cover" alt="" onerror="this.style.display='none'">
+        </div>
+        ${isDone ? `<div style="font-size:10px;font-weight:800;color:#38bdf8">${m.realHome}-${m.realAway}</div>` : ''}
+        ${isComplete ? `<div style="font-size:10px;font-weight:700;color:#4ade80;margin-top:2px">${pred.predHome}-${pred.predAway}</div>` : ''}
+        ${isPartial ? `<div style="font-size:10px;font-weight:700;color:#f59e0b;margin-top:2px">${hasHome?pred.predHome:'-'}-${hasAway?pred.predAway:'-'}</div>` : ''}
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+  el.innerHTML = html;
 }
 
 // ═══ UPCOMING MATCHES (Home) ═══
@@ -1447,9 +1512,9 @@ function renderHomeStats() {
         <div style="font-size:20px;font-weight:900;color:#c084fc">#${myPos}</div>
         <div style="font-size:10px;color:#64748b">Posición</div>
       </div>
-      <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center;cursor:pointer" onclick="toggleMessagePanel()">
-        <div style="font-size:20px;font-weight:900;color:#f472b6">💌</div>
-        <div style="font-size:10px;color:#64748b">Mensaje</div>
+      <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center;cursor:pointer" onclick="showTab('calendarioTab')">
+        <div style="font-size:20px;font-weight:900;color:#f59e0b">📅</div>
+        <div style="font-size:10px;color:#64748b">Calendario</div>
       </div>
       <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center">
         <div style="font-size:20px;font-weight:900;color:#2dd4bf">${myDone.length}</div>
