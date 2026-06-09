@@ -1387,25 +1387,34 @@ function renderCalendario() {
   const el = document.getElementById('calendarioGrid');
   if (!el) return;
   const uid = currentUser?.id;
-  const done = [...CACHE.matches].filter(m => m.realHome != null).sort((a,b) => new Date(a.datetime)-new Date(b.datetime));
-  const pending = [...CACHE.matches].filter(m => m.realHome == null).sort((a,b) => new Date(a.datetime)-new Date(b.datetime));
-  const all = [...done, ...pending];
-  if (!all.length) { el.innerHTML = '<div style="text-align:center;color:#64748b;padding:20px">No hay partidos</div>'; return; }
+  const all = [...CACHE.matches].sort((a,b) => new Date(a.datetime)-new Date(b.datetime));
+  if (!all.length) { el.innerHTML = '<div style="text-align:center;color:#64748b;padding:40px">No hay partidos cargados</div>'; return; }
 
   // Agrupar por fecha
   const byDate = {};
   all.forEach(m => {
-    const d = new Date(m.datetime).toLocaleDateString('es-CL',{day:'numeric',month:'long',timeZone:'America/Santiago'});
-    if (!byDate[d]) byDate[d] = [];
-    byDate[d].push(m);
+    const dt = new Date(m.datetime);
+    const key = dt.toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric',timeZone:'America/Santiago'});
+    if (!byDate[key]) byDate[key] = [];
+    byDate[key].push(m);
   });
 
-  let html = '';
+  // Leyenda
+  let html = `<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;padding:12px;background:#0a0f1c;border-radius:10px;border:1px solid #1e293b">
+    <div style="display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;border-radius:3px;background:#052e16;border:1.5px solid #16a34a"></div><span style="font-size:11px;color:#4ade80;font-weight:700">Predicción completa</span></div>
+    <div style="display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;border-radius:3px;background:#2a1f05;border:1.5px solid #f59e0b"></div><span style="font-size:11px;color:#f59e0b;font-weight:700">Predicción parcial</span></div>
+    <div style="display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;border-radius:3px;background:#0c1a2e;border:1.5px solid #1d4ed8"></div><span style="font-size:11px;color:#60a5fa;font-weight:700">Sin predecir</span></div>
+    <div style="display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;border-radius:3px;background:#1a0a2e;border:1.5px solid #7c3aed"></div><span style="font-size:11px;color:#c084fc;font-weight:700">⚡ Potenciado</span></div>
+  </div>`;
+
+  // Grid estilo calendario
+  html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">`;
+
   Object.keys(byDate).forEach(date => {
     const matches = byDate[date];
-    html += `<div style="margin-bottom:16px">
-      <div style="font-size:13px;font-weight:800;color:#94a3b8;margin-bottom:8px;padding-left:2px">${date}</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px">`;
+    html += `<div style="background:#0a0f1c;border:1px solid #1e293b;border-radius:12px;overflow:hidden">
+      <div style="background:#1e293b;padding:8px 12px;font-size:12px;font-weight:800;color:#e8edf5;text-align:center;border-bottom:1px solid #334155">${date}</div>
+      <div style="padding:8px;display:flex;flex-direction:column;gap:6px">`;
 
     matches.forEach(m => {
       const pred = CACHE.preds?.find(p => p.userId === uid && p.matchId === m.id);
@@ -1414,26 +1423,40 @@ function renderCalendario() {
       const isComplete = hasHome && hasAway;
       const isPartial = (hasHome || hasAway) && !isComplete;
       const isDone = m.realHome != null;
+      const isPotenciado = m.potenciado;
 
       let bg = '#0f172a', border = '#1e293b';
-      if (isComplete) { bg = '#052e16'; border = '#16a34a'; }
+      if (isPotenciado) { bg = '#1a0a2e'; border = '#7c3aed'; }
+      else if (isComplete) { bg = '#052e16'; border = '#16a34a'; }
       else if (isPartial) { bg = '#2a1f05'; border = '#f59e0b'; }
-      else if (isDone) { bg = '#0c1a2e'; border = '#1d4ed8'; }
+      else { bg = '#0c1a2e'; border = '#1d4ed8'; }
 
-      html += `<div style="background:${bg};border:1.5px solid ${border};border-radius:10px;padding:10px 6px;text-align:center;min-height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
-        <div style="display:flex;align-items:center;gap:6px">
-          <img src="${flagUrl(m.home)}" style="width:22px;height:15px;border-radius:2px;object-fit:cover" alt="" onerror="this.style.display='none'">
-          <span style="font-size:9px;color:#64748b">vs</span>
-          <img src="${flagUrl(m.away)}" style="width:22px;height:15px;border-radius:2px;object-fit:cover" alt="" onerror="this.style.display='none'">
+      const timeStr = new Date(m.datetime).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'America/Santiago'});
+
+      html += `<div style="background:${bg};border:1px solid ${border};border-radius:8px;padding:8px">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px">
+          <div style="display:flex;align-items:center;gap:4px">
+            <img src="${flagUrl(m.home)}" style="width:20px;height:14px;border-radius:2px;object-fit:cover" alt="" onerror="this.style.display='none'">
+            <span style="font-size:10px;font-weight:700;color:#e8edf5">${m.home.length>10?m.home.substring(0,10)+'..':m.home}</span>
+          </div>
+          <span style="font-size:10px;color:#475569;font-weight:900">VS</span>
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="font-size:10px;font-weight:700;color:#e8edf5">${m.away.length>10?m.away.substring(0,10)+'..':m.away}</span>
+            <img src="${flagUrl(m.away)}" style="width:20px;height:14px;border-radius:2px;object-fit:cover" alt="" onerror="this.style.display='none'">
+          </div>
         </div>
-        ${isDone ? `<div style="font-size:10px;font-weight:800;color:#38bdf8">${m.realHome}-${m.realAway}</div>` : ''}
-        ${isComplete ? `<div style="font-size:10px;font-weight:700;color:#4ade80;margin-top:2px">${pred.predHome}-${pred.predAway}</div>` : ''}
-        ${isPartial ? `<div style="font-size:10px;font-weight:700;color:#f59e0b;margin-top:2px">${hasHome?pred.predHome:'-'}-${hasAway?pred.predAway:'-'}</div>` : ''}
+        <div style="text-align:center;font-size:9px;color:#64748b;margin-bottom:2px">⏰ ${timeStr}</div>
+        ${isDone ? `<div style="text-align:center;font-size:11px;font-weight:800;color:#38bdf8">${m.realHome} - ${m.realAway}</div>` : ''}
+        ${isComplete ? `<div style="text-align:center;font-size:10px;font-weight:700;color:#4ade80">Tu pred: ${pred.predHome}-${pred.predAway}</div>` : ''}
+        ${isPartial ? `<div style="text-align:center;font-size:10px;font-weight:700;color:#f59e0b">Tu pred: ${hasHome?pred.predHome:'-'}-${hasAway?pred.predAway:'-'}</div>` : ''}
+        ${isPotenciado ? '<div style="text-align:center;font-size:9px;font-weight:800;color:#c084fc;margin-top:2px">⚡ POTENCIADO</div>' : ''}
       </div>`;
     });
 
     html += `</div></div>`;
   });
+
+  html += `</div>`;
   el.innerHTML = html;
 }
 
