@@ -99,6 +99,17 @@ export function findFirebaseMatchForLive(apiMatch, firebaseMatches) {
   return null;
 }
 
+// Lee los headers de throttling de football-data.org y espera si el cupo se agotó.
+async function throttle(res) {
+  const available = parseInt(res.headers.get('X-RequestsAvailable') ?? '1', 10);
+  const resetIn   = parseInt(res.headers.get('X-RequestCounter-Reset') ?? '0', 10);
+  console.log(`[throttle] requests available: ${available}, reset in: ${resetIn}s`);
+  if (available < 1 && resetIn > 0) {
+    console.log(`[throttle] cupo agotado — esperando ${resetIn + 1}s`);
+    await new Promise(r => setTimeout(r, (resetIn + 1) * 1000));
+  }
+}
+
 // ─── Ejecución principal ──────────────────────────────────────────────────────
 if (process.argv[1] === new URL(import.meta.url).pathname) {
   await run();
@@ -138,6 +149,7 @@ async function run() {
     { headers: { 'X-Auth-Token': process.env.FDATA_API_KEY } }
   );
   if (!finRes.ok) { console.error(`FINISHED fetch error: ${finRes.status}`); process.exit(1); }
+  await throttle(finRes);
   const { matches: finishedMatches } = await finRes.json();
   console.log(`football-data.org: ${finishedMatches.length} partidos terminados`);
 
@@ -173,6 +185,7 @@ async function run() {
     { headers: { 'X-Auth-Token': process.env.FDATA_API_KEY } }
   );
   if (!liveRes.ok) { console.error(`IN_PLAY fetch error: ${liveRes.status}`); process.exit(1); }
+  await throttle(liveRes);
   const { matches: liveMatches } = await liveRes.json();
   console.log(`football-data.org: ${liveMatches.length} partidos en vivo`);
 
