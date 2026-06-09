@@ -933,7 +933,8 @@ let clockInterval = null;
 
 // ═══ PREFS & SESSION (solo locales) ═══
 // ═══ BANDERAS (flagcdn.com) ═══
-const FLAGS = {
+const FLAGS_NORM = {};
+const FLAGS_RAW = {
   'Alemania':'de','Arabia Saudita':'sa','Argelia':'dz','Argentina':'ar','Australia':'au','Austria':'at',
   'Bosnia':'ba','Brasil':'br','Belgica':'be',
   'Cabo Verde':'cv','Canada':'ca','Colombia':'co','Corea del Sur':'kr','Costa de Marfil':'ci','Croacia':'hr','Curazao':'cw',
@@ -953,7 +954,10 @@ const FLAGS = {
   'Tunez':'tn','Turquia':'tr',
   'Uruguay':'uy','Uzbekistan':'uz'
 };
-function flagUrl(team){ const iso = FLAGS[team]; return iso ? 'https://flagcdn.com/w40/'+iso+'.png' : ''; }
+// Normalizar: sin tildes ni minusculas
+function normalize(s){ return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ]/g,''); }
+for(const k in FLAGS_RAW){ FLAGS_NORM[normalize(k)] = FLAGS_RAW[k]; }
+function flagUrl(team){ const iso = FLAGS_RAW[team] || FLAGS_NORM[normalize(team)]; return iso ? 'https://flagcdn.com/w40/'+iso+'.png' : ''; }
 function flagUrl(team){ const iso = FLAGS[team]; return iso ? 'https://flagcdn.com/w40/'+iso+'.png' : ''; }
 function flagImg(team, big){ const url = flagUrl(team); return url ? '<img src="'+url+'" style="'+(big?'width:36px;height:24px':'width:22px;height:15px')+';border-radius:3px;vertical-align:middle;margin:0 4px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,0.3)" alt="">' : ''; }
 
