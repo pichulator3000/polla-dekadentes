@@ -937,16 +937,21 @@ const FLAGS = {
   'Argentina':'ar','Brasil':'br','Colombia':'co','Ecuador':'ec','Paraguay':'py','Uruguay':'uy',
   'Chile':'cl','Peru':'pe','Bolivia':'bo','Venezuela':'ve',
   'Mexico':'mx','Estados Unidos':'us','Canada':'ca','Curazao':'cw','Haiti':'ht','Panama':'pa',
-  'Alemania':'de','Austria':'at','Belgica':'be','Croacia':'hr','Escocia':'gb-sct','Espana':'es',
-  'Francia':'fr','Inglaterra':'gb-eng','Noruega':'no','Paises Bajos':'nl','Portugal':'pt','Suiza':'ch',
-  'Argelia':'dz','Cabo Verde':'cv','Costa de Marfil':'ci','Egipto':'eg','Ghana':'gh','Marruecos':'ma',
-  'Republica Democratica del Congo':'cd','Senegal':'sn','Sudafrica':'za','Tunez':'tn',
-  'Arabia Saudita':'sa','Australia':'au','Corea del Sur':'kr','Emiratos Arabes Unidos':'ae','Iran':'ir',
-  'Iraq':'iq','Japon':'jp','Jordania':'jo','Qatar':'qa','Uzbekistan':'uz',
-  'Nueva Zelanda':'nz'
+  'Republica Checa':'cz','Bosnia':'ba','Suiza':'ch',
+  'Marruecos':'ma','Escocia':'gb-sct','Turquia':'tr',
+  'Alemania':'de','Costa de Marfil':'ci',
+  'Paises Bajos':'nl','Japon':'jp','Suecia':'se','Tunez':'tn',
+  'Belgica':'be','Egipto':'eg','Iran':'ir','Nueva Zelanda':'nz',
+  'Espana':'es','Cabo Verde':'cv','Arabia Saudita':'sa',
+  'Francia':'fr','Senegal':'sn','Irak':'iq','Noruega':'no',
+  'Argelia':'dz','Austria':'at','Jordania':'jo',
+  'RD Congo':'cd','Uzbekistan':'uz',
+  'Inglaterra':'gb-eng','Croacia':'hr','Ghana':'gh',
+  'Sudafrica':'za','Corea del Sur':'kr','Australia':'au',
+  'Emiratos Arabes Unidos':'ae'
 };
 function flagUrl(team){ const iso = FLAGS[team]; return iso ? 'https://flagcdn.com/w40/'+iso+'.png' : ''; }
-function flagImg(team){ const url = flagUrl(team); return url ? '<img src="'+url+'" style="width:22px;height:15px;border-radius:3px;vertical-align:middle;margin:0 4px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,0.3)" alt="">' : ''; }
+function flagImg(team, big){ const url = flagUrl(team); return url ? '<img src="'+url+'" style="'+(big?'width:36px;height:24px':'width:22px;height:15px')+';border-radius:3px;vertical-align:middle;margin:0 4px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,0.3)" alt="">' : ''; }
 
 const PREFS = {
   get: ()  => JSON.parse(localStorage.getItem('pf_prefs') || '{}'),
@@ -2608,7 +2613,7 @@ function renderMatches() {
       </div>
       ${betDistHtml}
       <div style="display:flex;align-items:center;gap:6px">
-        <div style="flex:1;text-align:right;font-weight:800;font-size:13px;line-height:1.2">${flagImg(m.home)}${m.home}</div>
+        <div style="flex:1;text-align:right;font-weight:800;font-size:13px;line-height:1.2">${flagImg(m.home,true)}${m.home}</div>
         <div style="flex-shrink:0">
           ${scoreHtml}
           ${resultHtml}
@@ -2617,7 +2622,7 @@ function renderMatches() {
           ${participHtml}
           ${predsPanel}
         </div>
-        <div style="flex:1;text-align:left;font-weight:800;font-size:13px;line-height:1.2">${m.away}${flagImg(m.away)}</div>
+        <div style="flex:1;text-align:left;font-weight:800;font-size:13px;line-height:1.2">${m.away}${flagImg(m.away,true)}</div>
       </div>
       ${playerPredsPanel}
       ${potenciadoToggle}
