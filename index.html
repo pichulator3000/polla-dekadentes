@@ -2935,14 +2935,17 @@ function renderRanking() {
       <tbody>`;
 
   scores.forEach((s,i) => {
+    const last3 = scores.length >= 3 && i >= scores.length - 3;
     const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
     const isMine = s.id===currentUser.id;
     const rowBg  = isMine ? 'background:#1e3a5f' : (i%2===0?'background:#1e293b':'background:#182030');
+    const pagoHtml = last3 ? '<div style="font-size:9px;color:#f87171;font-weight:700;margin-top:2px">🍺 Pagando 24 pack</div>' : '';
     html += `<tr style="${rowBg}">
       <td style="padding:12px 10px;font-weight:800;font-size:14px">${medal||i+1}</td>
       <td style="padding:12px 4px">
         <div style="font-weight:700;font-size:13px">${s.name}${isMine?' <span style="color:#38bdf8;font-size:10px">(tú)</span>':''}</div>
         <div style="color:#475569;font-size:10px">@${s.code}</div>
+        ${pagoHtml}
       </td>
       <td style="padding:12px 6px;text-align:center;font-weight:900;color:${hasLiveMatch?'#fbbf24':'#38bdf8'};font-size:16px">${s.pts.toFixed(2)}</td>
       ${showPodioCol ? `<td style="padding:12px 6px;text-align:center;color:${s.podioPts>0?'#38bdf8':'#475569'};font-weight:700">${s.podioPts>0?('+'+s.podioPts):'—'}</td>` : ''}
