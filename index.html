@@ -2907,7 +2907,7 @@ function renderRanking() {
       played++;
       const pt = calcPoints(p,m,preds);
       pts += pt;
-      if (p.predHome===rh && p.predAway===ra) exact++;
+      if (p.predHome===rh && p.predAway===ra) { exact++; correct++; }
       else if (Math.sign(p.predHome-p.predAway)===Math.sign(rh-ra)) correct++;
     });
     let podioPts = 0;
