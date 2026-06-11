@@ -1228,6 +1228,17 @@ function fmtDate(iso) {
          d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:tz});
 }
 
+function toDatetimeLocal(iso) {
+  // Convierte ISO UTC a formato "YYYY-MM-DDTHH:MM" en hora Chile (UTC-4)
+  const d = new Date(iso);
+  const tz = 'America/Santiago';
+  const y = d.toLocaleString('en-CA',{year:'numeric',timeZone:tz});
+  const mo = d.toLocaleString('en-CA',{month:'2-digit',timeZone:tz});
+  const da = d.toLocaleString('en-CA',{day:'2-digit',timeZone:tz});
+  const h = d.toLocaleString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:tz});
+  return `${y}-${mo}-${da}T${h}`;
+}
+
 function timeUntil(iso) {
   const diff = new Date(iso) - new Date();
   if (diff <= 0) return null;
@@ -3515,6 +3526,9 @@ function buildAdminGestion() {
           <input id="es_${m.id}" class="auth-input" value="${m.stage||''}" placeholder="Fase" style="font-size:12px;padding:8px"/>
           <input id="et_${m.id}" class="auth-input" value="${m.tournament||''}" placeholder="Torneo" style="font-size:12px;padding:8px"/>
         </div>
+        <div style="margin-bottom:6px">
+          <input id="ed_${m.id}" type="datetime-local" class="auth-input" value="${toDatetimeLocal(m.datetime)}" placeholder="Fecha y hora" style="font-size:12px;padding:8px;width:100%"/>
+        </div>
         <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#1e293b;border-radius:8px;margin-bottom:6px">
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:18px">⚡</span>
@@ -3701,9 +3715,19 @@ async function saveEditMatch(id) {
   const away  = document.getElementById('ea_'+id)?.value.trim();
   const stage = document.getElementById('es_'+id)?.value.trim();
   const tour  = document.getElementById('et_'+id)?.value.trim();
+  const dt    = document.getElementById('ed_'+id)?.value;
   const m = CACHE.matches.find(x => x.id === id);
   if (!home || !away) return toast('Local y visita son obligatorios', 'err');
-  await DB.updateMatch(id, { home, away, stage: stage||'\u2014', tournament: tour||'Mundial 2026', potenciado: m?.potenciado || false });
+  const updates = { home, away, stage: stage||'\u2014', tournament: tour||'Mundial 2026', potenciado: m?.potenciado || false };
+  if (dt) {
+    // datetime-local da hora Chile, convertir a UTC (+4h)
+    const dtParsed = new Date(dt);
+    const asUTC = Date.UTC(dtParsed.getFullYear(), dtParsed.getMonth(), dtParsed.getDate(),
+                           dtParsed.getHours(), dtParsed.getMinutes(), 0);
+    updates.datetime = new Date(asUTC + 4 * 3600000).toISOString();
+    updates.closesAtMs = new Date(updates.datetime).getTime();
+  }
+  await DB.updateMatch(id, updates);
   toast('\u2713 Partido actualizado');
 }
 
