@@ -3300,9 +3300,10 @@ function renderResultados() {
     return;
   }
 
-  // Matches filtered by tournament, solo partidos que ya se jugaron (realHome != null)
+  // Matches filtered by tournament, solo partidos que ya empezaron (datetime <= now)
+  const now = new Date();
   const matches = CACHE.matches
-    .filter(m => m.realHome != null)
+    .filter(m => new Date(m.datetime) <= now)
     .filter(m => tourSel === '__all__' || (m.tournament || 'Sin Torneo') === tourSel)
     .sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
 
