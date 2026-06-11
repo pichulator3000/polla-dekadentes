@@ -163,11 +163,18 @@ async function run() {
   let updatedFinal = 0;
   for (const apiMatch of finishedMatches) {
     const { home, away } = apiMatch.score?.fullTime ?? {};
-    if (home == null || away == null) continue;
+    if (home == null || away == null) { console.warn(`[sin score] ${apiMatch.homeTeam.name} vs ${apiMatch.awayTeam.name} score=${JSON.stringify(apiMatch.score)}`); continue; }
 
+    const apiHome = normalizeTeam(apiMatch.homeTeam.name);
+    const apiAway = normalizeTeam(apiMatch.awayTeam.name);
     const fbMatch = findFirebaseMatch(apiMatch, mundialMatches);
     if (!fbMatch) {
-      console.warn(`[sin match FINISHED] ${apiMatch.homeTeam.name} vs ${apiMatch.awayTeam.name}`);
+      console.warn(`[sin match FINISHED] ${apiMatch.homeTeam.name}(${apiHome}) vs ${apiMatch.awayTeam.name}(${apiAway}) utcDate=${apiMatch.utcDate}`);
+      // Debug: list Firebase matches for that day
+      const apiDay = apiMatch.utcDate.slice(0, 10);
+      const sameDay = mundialMatches.filter(fm => { const d = new Date(fm.datetime).toISOString().slice(0,10); return Math.abs((new Date(apiDay)-new Date(d))/86400000) <= 1; });
+      console.warn(`  Firebase same day (${apiDay}): ${sameDay.length} matches`);
+      sameDay.forEach(fm => console.warn(`    - ${fm.home} vs ${fm.away} (${fm.datetime}) real=${fm.realHome}`));
       continue;
     }
 
