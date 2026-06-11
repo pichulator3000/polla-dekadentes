@@ -28,12 +28,11 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm install firebase-admin
+        run: npm install firebase-admin node-fetch
 
-      - name: Run sync
+      - name: Run sync (ESPN)
         env:
-          FDATA_API_KEY: ${{ secrets.FDATA_API_KEY }}
           FIREBASE_DATABASE_URL: ${{ secrets.FIREBASE_DATABASE_URL }}
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           DRY_RUN: ${{ github.event.inputs.dry_run == 'true' && '1' || '0' }}
-        run: node scripts/sync_results.mjs
+        run: node scripts/sync_espn.mjs
