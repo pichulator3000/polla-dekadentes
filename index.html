@@ -3490,10 +3490,75 @@ function renderAdmin() {
   const subNav = '';
 
   document.getElementById('adminContent').innerHTML =
-    subNav + buildAdminPozos() + buildAdminPodio() + buildAdminTorneos() + buildAdminGestion();
+    subNav + buildAdminPodioEdit() + buildAdminGestion();
 }
 
 function setAdminTab(t) { adminSubTab=t; renderAdmin(); }
+
+function buildAdminPodioEdit() {
+  const users = CACHE.users.filter(u => !u.isAdmin);
+  if (!users.length) return '';
+
+  let html = `
+  <div class="card" style="padding:16px;margin-bottom:12px">
+    <h3 style="font-weight:800;font-size:14px;color:#c084fc;margin:0 0 4px">🏅 Editar Podio de Jugadores</h3>
+    <p style="font-size:11px;color:#64748b;margin:0 0 12px">Admin: cambia campeón, subcampeón o goleador de cualquier jugador que haya olvidado poner su predicción.</p>
+    <div style="display:flex;flex-direction:column;gap:8px">`;
+
+  users.forEach(u => {
+    const podio = CACHE.podio.find(p => p.userId === u.id) || {};
+    const hasPodio = podio.champion ? true : false;
+    html += `
+    <div style="background:#0f172a;border-radius:10px;padding:12px;border:1px solid ${hasPodio?'rgba(74,222,128,0.15)':'rgba(248,113,113,0.15)'}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-weight:700;font-size:13px;color:#e8edf5">${u.name}</div>
+        <div style="font-size:10px;color:${hasPodio?'#4ade80':'#f87171'};font-weight:700">${hasPodio?'✓ Predicción hecha':'✗ Sin predicción'}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+        <div>
+          <label style="font-size:9px;color:#64748b;font-weight:700;text-transform:uppercase">🥇 Campeón</label>
+          <select class="auth-input" id="pe_champ_${u.id}" style="font-size:12px;padding:8px;margin-top:4px">
+            <option value="">-- Seleccionar --</option>
+            ${PODIO_TEAMS.map(t => `<option value="${t}" ${t===(podio.champion||'')?'selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:9px;color:#64748b;font-weight:700;text-transform:uppercase">🥈 Subcampeón</label>
+          <select class="auth-input" id="pe_runner_${u.id}" style="font-size:12px;padding:8px;margin-top:4px">
+            <option value="">-- Seleccionar --</option>
+            ${PODIO_TEAMS.map(t => `<option value="${t}" ${t===(podio.runner||'')?'selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:8px">
+        <label style="font-size:9px;color:#64748b;font-weight:700;text-transform:uppercase">⚽ Goleador</label>
+        <input id="pe_scorer_${u.id}" class="auth-input" type="text" placeholder="Ej: Mbappe, Messi..." value="${podio.scorer||''}" style="font-size:12px;padding:8px;margin-top:4px"/>
+      </div>
+      <button class="btn-primary" onclick="savePodioAdmin('${u.id}')" style="width:100%;padding:8px;font-size:12px">💾 Guardar podio de ${u.name}</button>
+    </div>`;
+  });
+
+  html += `</div></div>`;
+  return html;
+}
+
+async function savePodioAdmin(userId) {
+  const champion = document.getElementById('pe_champ_' + userId).value;
+  const runner   = document.getElementById('pe_runner_' + userId).value;
+  const scorer   = document.getElementById('pe_scorer_' + userId).value.trim();
+
+  if (!champion) return toast('Selecciona un campeón', 'err');
+  if (!runner) return toast('Selecciona un subcampeón', 'err');
+  if (champion === runner) return toast('Campeón y subcampeón no pueden ser el mismo', 'err');
+  if (!scorer) return toast('Escribe el nombre del goleador', 'err');
+
+  await RT.ref('pf/podio/' + userId).set({
+    userId: userId,
+    champion, runner, scorer
+  });
+  toast('✅ Podio de ' + (CACHE.users.find(u=>u.id===userId)?.name || userId) + ' actualizado');
+  renderAdmin();
+}
 
 function buildAdminGestion() {
   const matches = [...CACHE.matches].sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
