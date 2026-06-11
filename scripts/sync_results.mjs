@@ -99,14 +99,21 @@ export function findFirebaseMatchForLive(apiMatch, firebaseMatches) {
   return null;
 }
 
-// Lee los headers de throttling de football-data.org y espera si el cupo se agotó.
+// Lee los headers de throttling y espera si el cupo está bajo.
+// Retorna los headers para que el caller pueda decidir si esperar antes del próximo request.
 async function throttle(res) {
   const available = parseInt(res.headers.get('X-RequestsAvailable') ?? '1', 10);
   const resetIn   = parseInt(res.headers.get('X-RequestCounter-Reset') ?? '0', 10);
   console.log(`[throttle] requests available: ${available}, reset in: ${resetIn}s`);
-  if (available < 1 && resetIn > 0) {
-    console.log(`[throttle] cupo agotado — esperando ${resetIn + 1}s`);
-    await new Promise(r => setTimeout(r, (resetIn + 1) * 1000));
+  return { available, resetIn };
+}
+
+// Espera si el cupo está agotado, ANTES de hacer el próximo request.
+async function waitForQuota(available, resetIn) {
+  if (available < 2 && resetIn > 0) {
+    const wait = (resetIn + 2) * 1000;
+    console.log(`[throttle] cupo bajo (${available}) — esperando ${wait/1000}s antes del próximo request`);
+    await new Promise(r => setTimeout(r, wait));
   }
 }
 
@@ -149,7 +156,7 @@ async function run() {
     { headers: { 'X-Auth-Token': process.env.FDATA_API_KEY } }
   );
   if (!finRes.ok) { console.error(`FINISHED fetch error: ${finRes.status}`); process.exit(1); }
-  await throttle(finRes);
+  const finQuota = await throttle(finRes);
   const { matches: finishedMatches } = await finRes.json();
   console.log(`football-data.org: ${finishedMatches.length} partidos terminados`);
 
@@ -180,6 +187,7 @@ async function run() {
   }
 
   // ── Partidos en vivo ─────────────────────────────────────────────────────
+  await waitForQuota(finQuota.available, finQuota.resetIn);
   const liveRes = await fetch(
     'https://api.football-data.org/v4/competitions/WC/matches?status=IN_PLAY,PAUSED',
     { headers: { 'X-Auth-Token': process.env.FDATA_API_KEY } }
