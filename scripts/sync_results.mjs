@@ -57,6 +57,11 @@ export function normalizeTeam(name) {
   return TEAM_ALIASES[key] ?? name;
 }
 
+// Normaliza para comparación: lowercase, sin acentos, sin espacios extra
+function normCompare(s) {
+  return s.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+}
+
 // Retorna el partido de Firebase que corresponde al partido de la API,
 // o null si no hay match o si ya tiene resultado.
 export function findFirebaseMatch(apiMatch, firebaseMatches) {
@@ -75,7 +80,7 @@ export function findFirebaseMatch(apiMatch, firebaseMatches) {
     );
     if (dayDiff > 1) continue;
 
-    if (fm.home === apiHome && fm.away === apiAway) return fm;
+    if (normCompare(fm.home) === normCompare(apiHome) && normCompare(fm.away) === normCompare(apiAway)) return fm;
   }
   return null;
 }
@@ -94,7 +99,7 @@ export function findFirebaseMatchForLive(apiMatch, firebaseMatches) {
     );
     if (dayDiff > 1) continue;
 
-    if (fm.home === apiHome && fm.away === apiAway) return fm;
+    if (normCompare(fm.home) === normCompare(apiHome) && normCompare(fm.away) === normCompare(apiAway)) return fm;
   }
   return null;
 }
