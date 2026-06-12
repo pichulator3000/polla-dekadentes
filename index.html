@@ -1550,28 +1550,35 @@ function renderHomeStats() {
   const users = CACHE.users.filter(u => !u.isAdmin);
   const done  = CACHE.matches.filter(m => m.realHome != null && !isTournamentHidden(m.tournament || 'Sin Torneo'))
     .sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
+  const live  = CACHE.matches.filter(m => m.liveHome != null && m.realHome == null && !isTournamentHidden(m.tournament || 'Sin Torneo'));
+  const doneOrLive = [...done, ...live];
   const preds = CACHE.preds;
 
   if (isAdm) { container.style.display = 'none'; return; }
   container.style.display = 'block';
 
-  // KPIs for current user
+  // KPIs for current user (incluye live)
   const myPreds = preds.filter(p => p.userId === uid);
-  const myDone  = myPreds.filter(p => done.find(m => m.id === p.matchId));
+  const myDone  = myPreds.filter(p => doneOrLive.find(m => m.id === p.matchId));
   const myPts   = myDone.reduce((s, p) => {
-    const m = done.find(x => x.id === p.matchId);
+    const m = doneOrLive.find(x => x.id === p.matchId);
     return s + (m ? calcPoints(p, m, preds) : 0);
   }, 0);
   const avg = myDone.length ? (myPts / myDone.length).toFixed(2) : '0.00';
   const exact = myDone.filter(p => {
-    const m = done.find(x => x.id === p.matchId);
+    const m = doneOrLive.find(x => x.id === p.matchId);
     return m && p.predHome === m.realHome && p.predAway === m.realAway;
   }).length;
 
-  kpiEl.innerHTML = `
+  const hasLive = live.length > 0;
+  const liveBanner = hasLive
+    ? `<div style="background:#78350f;border:1px solid #f59e0b;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#fde68a;display:flex;align-items:center;gap:6px;cursor:pointer" onclick="document.getElementById('mainContent').scrollTo({top:0,behavior:'smooth'})"><span style="animation:blink 1s infinite">🔴</span><span><b>${live.length} partido${live.length>1?'s':''} en vivo</b> — puntuación provisional</span></div>`
+    : '';
+
+  kpiEl.innerHTML = liveBanner + `
     <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center">
       <div style="font-size:20px;font-weight:900;color:#38bdf8">${myPts.toFixed(2)}</div>
-      <div style="font-size:10px;color:#64748b">Mis puntos</div>
+      <div style="font-size:10px;color:#64748b">Mis puntos${hasLive?' (incl. prov.)':''}</div>
     </div>
     <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center">
       <div style="font-size:20px;font-weight:900;color:#60a5fa">${avg}</div>
@@ -1582,12 +1589,12 @@ function renderHomeStats() {
       <div style="font-size:10px;color:#64748b">Exactos 🥇</div>
     </div>`;
 
-  // Calcular posición en el ranking
+  // Calcular posición en el ranking (incluye live)
   const ranking = users.map(u => {
     const uPreds = preds.filter(p => p.userId === u.id);
-    const uDone = uPreds.filter(p => done.find(m => m.id === p.matchId));
+    const uDone = uPreds.filter(p => doneOrLive.find(m => m.id === p.matchId));
     const uPts = uDone.reduce((s, p) => {
-      const m = done.find(x => x.id === p.matchId);
+      const m = doneOrLive.find(x => x.id === p.matchId);
       return s + (m ? calcPoints(p, m, preds) : 0);
     }, 0);
     return { name: u.name, pts: uPts, id: u.id };
@@ -1597,12 +1604,12 @@ function renderHomeStats() {
   // Calcular racha (últimos partidos con puntos > 0)
   let streak = 0;
   const myDoneSorted = myDone.sort((a, b) => {
-    const ma = done.find(x => x.id === a.matchId);
-    const mb = done.find(x => x.id === b.matchId);
+    const ma = doneOrLive.find(x => x.id === a.matchId);
+    const mb = doneOrLive.find(x => x.id === b.matchId);
     return new Date(mb?.datetime) - new Date(ma?.datetime);
   });
   for (const p of myDoneSorted) {
-    const m = done.find(x => x.id === p.matchId);
+    const m = doneOrLive.find(x => x.id === p.matchId);
     const pts = m ? calcPoints(p, m, preds) : 0;
     if (pts > 0) streak++;
     else break;
@@ -1988,12 +1995,62 @@ function renderUpcoming() {
     // El adminHtml se prependea al final
   }
 
+  // ══ PARTIDOS EN VIVO ══
+  const liveMatches = [...CACHE.matches]
+    .filter(m => {
+      const s = getStatus(m);
+      return (s === 'live' || (s === 'locked' && m.liveHome != null)) && m.home !== 'Por definir' && !isTournamentHidden(m.tournament || 'Sin Torneo');
+    })
+    .sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
+
+  let liveHtml = '';
+  if (liveMatches.length > 0 && !isAdm) {
+    liveHtml += `<div style="background:rgba(127,29,29,0.15);border:1px solid rgba(251,146,60,0.3);border-radius:10px;padding:10px 12px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:800;color:#fbbf24;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+        <span style="animation:blink 1s infinite">🔴</span> En Vivo Ahora (${liveMatches.length})
+      </div>`;
+    liveMatches.forEach(m => {
+      const pred = uid ? CACHE.preds.find(p => p.userId===uid && p.matchId===m.id) : null;
+      const displayRH = m.realHome ?? m.liveHome;
+      const displayRA = m.realAway ?? m.liveAway;
+      const hasScore = displayRH != null;
+      // Puntos provisionales
+      let ptsBadge = '';
+      if (pred && hasScore) {
+        const p = calcPoints(pred, m, CACHE.preds);
+        if (p !== null) {
+          const isExact = pred.predHome===displayRH && pred.predAway===displayRA;
+          const col = isExact ? '#38bdf8' : p > 0 ? '#4ade80' : '#f87171';
+          ptsBadge = `<span style="background:${col}22;color:${col};padding:2px 8px;border-radius:6px;font-size:11px;font-weight:800">${isExact?'🥇':p>0?'✅':'❌'} ${p.toFixed(2)} pts (prov.)</span>`;
+        }
+      }
+      const predHtml = pred
+        ? `<span style="font-size:11px;color:#94a3b8">Tu pred: <b style="color:#e8edf5">${pred.predHome}-${pred.predAway}</b></span>`
+        : '';
+      liveHtml += `
+        <div style="padding:8px 0;border-bottom:1px solid rgba(251,146,60,0.1)">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div>
+              <span style="font-size:12px;font-weight:700;color:#e8edf5">${flagImg(m.home)}${m.home} <span style="color:#4a5f78">vs</span> ${m.away}${flagImg(m.away)}</span>
+              <div style="font-size:9px;color:#64748b">${m.tournament || ''} · ${normStage(m.stage)}</div>
+              ${pred ? `<div style="margin-top:2px">${predHtml}</div>` : ''}
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:18px;font-weight:900;color:#fbbf24">${hasScore ? `${displayRH} - ${displayRA}` : '—'}</div>
+              ${ptsBadge ? `<div style="margin-top:4px">${ptsBadge}</div>` : ''}
+            </div>
+          </div>
+        </div>`;
+    });
+    liveHtml += `</div>`;
+  }
+
   const upcoming = [...CACHE.matches]
     .filter(m => new Date(m.datetime) > now && m.home !== 'Por definir' && !isTournamentHidden(m.tournament || 'Sin Torneo'))
     .sort((a,b) => new Date(a.datetime) - new Date(b.datetime))
     .slice(0, 20);
 
-  if (!upcoming.length) { el.innerHTML = '<p style="color:#475569;font-size:12px">No hay próximos partidos</p>'; return; }
+  if (!upcoming.length && !liveMatches.length) { el.innerHTML = '<p style="color:#475569;font-size:12px">No hay próximos partidos</p>'; return; }
 
   // Group by day (Chile tz)
   const tz = 'America/Santiago';
@@ -2054,7 +2111,7 @@ function renderUpcoming() {
     });
     html += `</div>`;
   }
-  el.innerHTML = (adminHtml || '') + html;
+  el.innerHTML = (adminHtml || '') + liveHtml + html;
 }
 
 async function saveUpcomingResult(matchId) {
