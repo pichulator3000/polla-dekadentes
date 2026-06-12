@@ -3675,7 +3675,20 @@ async function syncESPNResults() {
       }
     }
     if (Object.keys(updates).length > 0) {
-      await Promise.all(Object.entries(updates).map(([id, val]) => RT.ref('pf/matches/' + id).update(val)));
+      console.log('[ESPN Sync] Escribiendo updates:', JSON.stringify(updates));
+      const writePromises = Object.entries(updates).map(([id, val]) =>
+        RT.ref('pf/matches/' + id).update(val).then(() => {
+          console.log('[ESPN Sync] Escrito match', id, val);
+          return { id, val, ok: true };
+        }).catch(err => {
+          console.error('[ESPN Sync] Error escribiendo match', id, err);
+          return { id, val, ok: false, error: err.message };
+        })
+      );
+      const results = await Promise.all(writePromises);
+      const okCount = results.filter(r => r.ok).length;
+      const failCount = results.filter(r => !r.ok).length;
+      console.log(`[ESPN Sync] Resultado: ${okCount} OK, ${failCount} fallidos`);
       // Actualizar CACHE local inmediatamente para que se vea sin esperar el listener
       for (const [id, val] of Object.entries(updates)) {
         const idx = CACHE.matches.findIndex(m => m.id === id);
@@ -3687,8 +3700,10 @@ async function syncESPNResults() {
       if (currentTab !== 'home') {
         showHome();
       }
+      toast(`\u2705 Sync: ${updatedFinal} finales, ${updatedLive} en vivo (${okCount} escritos)`, 'ok');
+    } else {
+      toast('ℹ️ No hay partidos para actualizar', 'info');
     }
-    toast(`\u2705 Sync: ${updatedFinal} finales, ${updatedLive} en vivo actualizados`, 'ok');
   } catch (err) {
     console.error('ESPN sync error:', err);
     toast('❌ Error en sync: ' + err.message, 'err');
