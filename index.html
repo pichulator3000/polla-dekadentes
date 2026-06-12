@@ -3601,11 +3601,7 @@ async function syncESPNResults() {
       }
     }
     if (Object.keys(updates).length > 0) {
-      const matchUpdates = {};
-      for (const [id, val] of Object.entries(updates)) {
-        matchUpdates[`pf/matches/${id}`] = val;
-      }
-      await RT.ref().update(matchUpdates);
+      await Promise.all(Object.entries(updates).map(([id, val]) => RT.ref('pf/matches/' + id).update(val)));
     }
     toast(`✅ Sync: ${updatedFinal} finales, ${updatedLive} en vivo actualizados`, 'ok');
   } catch (err) {
