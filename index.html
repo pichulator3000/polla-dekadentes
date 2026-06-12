@@ -2548,16 +2548,25 @@ function renderMatches() {
         done:   `<span class="badge-done">✓ Fin</span>`,
       };
 
+    // Puntos: mostrar en done y en live (provisional)
     let ptsHtml = '';
-    if (!isAdm && pred && status === 'done') {
+    if (!isAdm && pred && (status === 'done' || status === 'live')) {
       const p = calcPoints(pred, m, preds);
-      const isExact = pred.predHome===m.realHome && pred.predAway===m.realAway;
-      const col = isExact ? '#38bdf8' : p > 0 ? '#4ade80' : '#64748b';
-      ptsHtml = `<div style="text-align:center;margin-top:6px;font-size:18px;font-weight:900;color:${col}">${isExact?'🥇':p>0?'✅':'❌'} ${p.toFixed(2)} pts</div>`;
+      if (p !== null) {
+        const rh = m.realHome ?? m.liveHome;
+        const ra = m.realAway ?? m.liveAway;
+        const isExact = pred.predHome===rh && pred.predAway===ra;
+        const col = isExact ? '#38bdf8' : p > 0 ? '#4ade80' : '#64748b';
+        const provisional = status === 'live' ? ' (prov.)' : '';
+        ptsHtml = `<div style="text-align:center;margin-top:6px;font-size:18px;font-weight:900;color:${col}">${isExact?'🥇':p>0?'✅':'❌'} ${p.toFixed(2)} pts${provisional}</div>`;
+      }
     }
 
-    const resultHtml = status==='done' && m.realHome!=null
-      ? `<div style="text-align:center;font-size:11px;color:#64748b;margin-top:2px">Resultado: <b style="color:#e8edf5">${m.realHome}-${m.realAway}</b></div>`
+    // Resultado: mostrar en done y en vivo
+    const displayRH = m.realHome ?? m.liveHome;
+    const displayRA = m.realAway ?? m.liveAway;
+    const resultHtml = displayRH != null
+      ? `<div style="text-align:center;font-size:11px;color:#64748b;margin-top:2px">${status==='live'?'🔴 En vivo: ':'Resultado: '}<b style="color:${status==='live'?'#fbbf24':'#e8edf5'}">${displayRH}-${displayRA}</b></div>`
       : '';
 
     // ══ ADMIN: inputs para resultado oficial ══
@@ -2576,10 +2585,17 @@ function renderMatches() {
          </div>`;
     } else if (locked) {
       const hasP = pred?.predHome != null;
-      scoreHtml = `<div style="display:flex;align-items:center;gap:0;justify-content:center;margin:8px 0;position:relative">
+      const isLive = status === 'live';
+      const liveScoreHtml = isLive && m.liveHome != null
+        ? `<div style="text-align:center;font-size:20px;font-weight:900;color:#fbbf24;margin-bottom:4px">⚽ ${m.liveHome} - ${m.liveAway}</div>`
+        : '';
+      scoreHtml = `<div style="display:flex;flex-direction:column;align-items:center;margin:8px 0">
+           ${liveScoreHtml}
+           <div style="display:flex;align-items:center;gap:0;position:relative">
            <div class="score-input-locked" style="opacity:${hasP?'0.4':'0.2'};color:#64748b">${hasP ? pred.predHome : '-'}</div>
-           <span style="font-size:16px;position:relative;z-index:1;margin:0 -4px;filter:drop-shadow(0 0 4px rgba(0,0,0,0.8))">🔒</span>
+           <span style="font-size:16px;position:relative;z-index:1;margin:0 -4px;filter:drop-shadow(0 0 4px rgba(0,0,0,0.8))">${isLive?'🔴':'🔒'}</span>
            <div class="score-input-locked" style="opacity:${hasP?'0.4':'0.2'};color:#64748b">${hasP ? pred.predAway : '-'}</div>
+           </div>
          </div>`;
     } else {
       scoreHtml = `<div style="display:flex;align-items:center;gap:8px;justify-content:center;margin:8px 0">
