@@ -1995,13 +1995,10 @@ function renderUpcoming() {
     // El adminHtml se prependea al final
   }
 
-  // ══ PARTIDOS EN VIVO ══
+  // ══ PARTIDOS EN VIVO (cualquier partido con liveHome) ══
   const liveMatches = [...CACHE.matches]
-    .filter(m => {
-      const s = getStatus(m);
-      return (s === 'live' || (s === 'locked' && m.liveHome != null)) && m.home !== 'Por definir' && !isTournamentHidden(m.tournament || 'Sin Torneo');
-    })
-    .sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
+    .filter(m => m.liveHome != null && m.home !== 'Por definir' && !isTournamentHidden(m.tournament || 'Sin Torneo'))
+    .sort((a,b) => new Date(b.datetime) - new Date(a.datetime)); // más recientes primero
 
   let liveHtml = '';
   if (liveMatches.length > 0) {
