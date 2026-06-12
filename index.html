@@ -3637,6 +3637,7 @@ function findFirebaseMatchESPN(espnEvent, firebaseMatches) {
   const eventDate = new Date(espnEvent.date);
   const apiDay = eventDate.toISOString().slice(0, 10);
   for (const fm of firebaseMatches) {
+    // Saltar partidos finalizados que ya tienen resultado correcto (no necesitan live)
     if (fm.realHome != null && fm.realAway != null) continue;
     const fmDay = new Date(fm.datetime).toISOString().slice(0, 10);
     const dayDiff = Math.abs((new Date(apiDay) - new Date(fmDay)) / 86400000);
@@ -3675,8 +3676,19 @@ async function syncESPNResults() {
     }
     if (Object.keys(updates).length > 0) {
       await Promise.all(Object.entries(updates).map(([id, val]) => RT.ref('pf/matches/' + id).update(val)));
+      // Actualizar CACHE local inmediatamente para que se vea sin esperar el listener
+      for (const [id, val] of Object.entries(updates)) {
+        const idx = CACHE.matches.findIndex(m => m.id === id);
+        if (idx !== -1) Object.assign(CACHE.matches[idx], val);
+      }
+      // Forzar re-render de la pestaña activa
+      refreshActiveTab();
+      // Si no está en home, navegar automáticamente para mostrar los resultados
+      if (currentTab !== 'home') {
+        showHome();
+      }
     }
-    toast(`✅ Sync: ${updatedFinal} finales, ${updatedLive} en vivo actualizados`, 'ok');
+    toast(`\u2705 Sync: ${updatedFinal} finales, ${updatedLive} en vivo actualizados`, 'ok');
   } catch (err) {
     console.error('ESPN sync error:', err);
     toast('❌ Error en sync: ' + err.message, 'err');
