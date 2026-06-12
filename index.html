@@ -3524,6 +3524,98 @@ async function savePodio() {
   renderPodio();
 }
 
+// ═══ ESPN SYNC (Admin) ═══
+const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
+
+const TEAM_ALIASES_ESPN = {
+  'mexico': 'México', 'south africa': 'Sudáfrica', 'korea republic': 'Corea del Sur',
+  'south korea': 'Corea del Sur', 'czech republic': 'República Checa', 'czechia': 'República Checa',
+  'germany': 'Alemania', 'saudi arabia': 'Arabia Saudita', 'algeria': 'Argelia',
+  'austria': 'Austria', 'bosnia and herzegovina': 'Bosnia', 'bosnia-herzegovina': 'Bosnia',
+  'brazil': 'Brasil', 'belgium': 'Bélgica', 'cape verde': 'Cabo Verde', 'canada': 'Canadá',
+  "côte d'ivoire": 'Costa de Marfil', 'ivory coast': 'Costa de Marfil', 'croatia': 'Croacia',
+  'curaçao': 'Curazao', 'curacao': 'Curazao', 'egypt': 'Egipto', 'scotland': 'Escocia',
+  'spain': 'España', 'united states': 'Estados Unidos', 'usa': 'Estados Unidos',
+  'france': 'Francia', 'haiti': 'Haití', 'england': 'Inglaterra', 'iraq': 'Irak', 'iran': 'Irán',
+  'japan': 'Japón', 'jordan': 'Jordania', 'morocco': 'Marruecos', 'norway': 'Noruega',
+  'new zealand': 'Nueva Zelanda', 'panama': 'Panamá', 'netherlands': 'Países Bajos',
+  'holland': 'Países Bajos', 'dr congo': 'RD Congo', 'congo dr': 'RD Congo',
+  'democratic republic of congo': 'RD Congo', 'sweden': 'Suecia', 'switzerland': 'Suiza',
+  'turkey': 'Turquía', 'türkiye': 'Turquía', 'tunisia': 'Túnez', 'uzbekistan': 'Uzbekistán',
+};
+
+function normalizeTeamESPN(name) {
+  const key = name.toLowerCase().trim();
+  return TEAM_ALIASES_ESPN[key] || name;
+}
+
+function normCompareESPN(s) {
+  return s.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+}
+
+function findFirebaseMatchESPN(espnEvent, firebaseMatches) {
+  const comp = espnEvent.competitions?.[0];
+  if (!comp) return null;
+  const homeTeam = comp.competitors?.[0]?.team?.displayName;
+  const awayTeam = comp.competitors?.[1]?.team?.displayName;
+  if (!homeTeam || !awayTeam) return null;
+  const apiHome = normalizeTeamESPN(homeTeam);
+  const apiAway = normalizeTeamESPN(awayTeam);
+  const eventDate = new Date(espnEvent.date);
+  const apiDay = eventDate.toISOString().slice(0, 10);
+  for (const fm of firebaseMatches) {
+    if (fm.realHome != null && fm.realAway != null) continue;
+    const fmDay = new Date(fm.datetime).toISOString().slice(0, 10);
+    const dayDiff = Math.abs((new Date(apiDay) - new Date(fmDay)) / 86400000);
+    if (dayDiff > 1) continue;
+    if (normCompareESPN(fm.home) === normCompareESPN(apiHome) && normCompareESPN(fm.away) === normCompareESPN(apiAway)) return fm;
+  }
+  return null;
+}
+
+async function syncESPNResults() {
+  const btn = document.getElementById('espnSyncBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Sincronizando...'; }
+  try {
+    const res = await fetch(ESPN_BASE, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const mundialMatches = CACHE.matches.filter(m => m.tournament === 'Mundial 2026');
+    let updatedFinal = 0, updatedLive = 0, noMatch = 0;
+    const updates = {};
+    for (const event of (data.events ?? [])) {
+      const comp = event.competitions?.[0];
+      if (!comp) continue;
+      const status = event.status?.type?.name;
+      const homeScore = comp.competitors?.[0]?.score;
+      const awayScore = comp.competitors?.[1]?.score;
+      if (homeScore == null || awayScore == null) continue;
+      const fbMatch = findFirebaseMatchESPN(event, mundialMatches);
+      if (!fbMatch) { noMatch++; continue; }
+      if (status === 'STATUS_FINAL' || status === 'STATUS_FULL_TIME') {
+        updates[fbMatch.id] = { realHome: parseInt(homeScore), realAway: parseInt(awayScore), liveHome: null, liveAway: null };
+        updatedFinal++;
+      } else if (['STATUS_IN_PLAY','STATUS_FIRST_HALF','STATUS_SECOND_HALF','STATUS_HALFTIME','STATUS_DELAYED'].includes(status)) {
+        updates[fbMatch.id] = { liveHome: parseInt(homeScore), liveAway: parseInt(awayScore) };
+        updatedLive++;
+      }
+    }
+    if (Object.keys(updates).length > 0) {
+      const matchUpdates = {};
+      for (const [id, val] of Object.entries(updates)) {
+        matchUpdates[`pf/matches/${id}`] = val;
+      }
+      await RT.ref().update(matchUpdates);
+    }
+    toast(`✅ Sync: ${updatedFinal} finales, ${updatedLive} en vivo actualizados`, 'ok');
+  } catch (err) {
+    console.error('ESPN sync error:', err);
+    toast('❌ Error en sync: ' + err.message, 'err');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '🔄 Sincronizar Resultados ESPN'; }
+  }
+}
+
 // ═══ ADMIN ═══
 let adminSubTab = 'gestion';
 
@@ -3608,7 +3700,14 @@ function buildAdminGestion() {
   const users   = CACHE.users.filter(u=>!u.isAdmin);
   const preds   = CACHE.preds;
 
+  // Botón de sync ESPN
   let html = `
+  <div class="card" style="padding:16px;margin-bottom:12px">
+    <h3 style="font-weight:800;font-size:14px;color:#38bdf8;margin:0 0 8px">🔄 Sincronización Automática</h3>
+    <p style="font-size:11px;color:#64748b;margin:0 0 10px">Importar resultados finales y marcadores en vivo de la API de ESPN para el Mundial 2026. Se empareja automáticamente por nombre de equipo y fecha.</p>
+    <button id="espnSyncBtn" class="btn-primary" onclick="syncESPNResults()" style="width:100%;padding:12px;font-size:14px">🔄 Sincronizar Resultados ESPN</button>
+  </div>
+
   <!-- Resultados -->
   <div class="card" style="padding:16px;margin-bottom:12px">
     <details>
