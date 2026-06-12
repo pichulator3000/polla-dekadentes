@@ -2004,7 +2004,7 @@ function renderUpcoming() {
     .sort((a,b) => new Date(a.datetime) - new Date(b.datetime));
 
   let liveHtml = '';
-  if (liveMatches.length > 0 && !isAdm) {
+  if (liveMatches.length > 0) {
     liveHtml += `<div style="background:rgba(127,29,29,0.15);border:1px solid rgba(251,146,60,0.3);border-radius:10px;padding:10px 12px;margin-bottom:12px">
       <div style="font-size:12px;font-weight:800;color:#fbbf24;margin-bottom:8px;display:flex;align-items:center;gap:6px">
         <span style="animation:blink 1s infinite">🔴</span> En Vivo Ahora (${liveMatches.length})
@@ -3675,38 +3675,40 @@ async function syncESPNResults() {
       }
     }
     if (Object.keys(updates).length > 0) {
-      console.log('[ESPN Sync] Escribiendo updates:', JSON.stringify(updates));
+      // Escribir en Firebase
       const writePromises = Object.entries(updates).map(([id, val]) =>
-        RT.ref('pf/matches/' + id).update(val).then(() => {
-          console.log('[ESPN Sync] Escrito match', id, val);
-          return { id, val, ok: true };
-        }).catch(err => {
-          console.error('[ESPN Sync] Error escribiendo match', id, err);
-          return { id, val, ok: false, error: err.message };
-        })
+        RT.ref('pf/matches/' + id).update(val).then(() => ({ id, ok: true })).catch(err => ({ id, ok: false, error: err.message }))
       );
       const results = await Promise.all(writePromises);
       const okCount = results.filter(r => r.ok).length;
-      const failCount = results.filter(r => !r.ok).length;
-      console.log(`[ESPN Sync] Resultado: ${okCount} OK, ${failCount} fallidos`);
-      // Actualizar CACHE local inmediatamente para que se vea sin esperar el listener
+      console.log(`[ESPN Sync] ${okCount}/${results.length} escritos OK`);
+      // Actualizar CACHE local
       for (const [id, val] of Object.entries(updates)) {
         const idx = CACHE.matches.findIndex(m => m.id === id);
         if (idx !== -1) Object.assign(CACHE.matches[idx], val);
       }
-      // Forzar re-render de la pestaña activa
-      refreshActiveTab();
-      // Si no está en home, navegar automáticamente para mostrar los resultados
-      if (currentTab !== 'home') {
-        showHome();
-      }
-      toast(`\u2705 Sync: ${updatedFinal} finales, ${updatedLive} en vivo (${okCount} escritos)`, 'ok');
+    }
+    // Navegar al home y forzar render SIEMPRE (sin importar la pestaña actual)
+    // 1. Cambiar la pestaña visualmente
+    ALL_TABS.forEach(t => document.getElementById('tab'+cap(t)).style.display = 'none');
+    document.getElementById('tabHome').style.display = 'block';
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('nav-active'));
+    document.getElementById('nb-home').classList.add('nav-active');
+    document.getElementById('mainContent').scrollTop = 0;
+    currentTab = 'home';
+    // 2. Renderizar el home con datos actualizados
+    renderHomeStats();
+    renderPotenciado();
+    renderUpcoming();
+    // 3. Notificar
+    if (Object.keys(updates).length > 0) {
+      toast(`\u2705 Sync OK: ${updatedFinal} finales, ${updatedLive} en vivo`, 'ok');
     } else {
-      toast('ℹ️ No hay partidos para actualizar', 'info');
+      toast('ℹ️ Sin cambios — datos ya actualizados', 'info');
     }
   } catch (err) {
     console.error('ESPN sync error:', err);
-    toast('❌ Error en sync: ' + err.message, 'err');
+    toast('❌ Error: ' + err.message, 'err');
   } finally {
     if (btn) { btn.disabled = false; btn.innerHTML = '🔄 Sincronizar Resultados ESPN'; }
   }
