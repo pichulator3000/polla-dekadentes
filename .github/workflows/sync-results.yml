@@ -35,4 +35,4 @@ jobs:
           FIREBASE_DATABASE_URL: ${{ secrets.FIREBASE_DATABASE_URL }}
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           DRY_RUN: ${{ github.event.inputs.dry_run == 'true' && '1' || '0' }}
-        run: node scripts/sync_espn.mjs
+        run: node scripts/sync_results.mjs

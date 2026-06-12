@@ -3,7 +3,9 @@ import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 import { normalizeTeam, findFirebaseMatch, findFirebaseMatchForLive } from './sync_results.mjs';
 
-test('normalizeTeam: convierte nombre inglés a español', () => {
+// ─── normalizeTeam ─────────────────────────────────────────────────────────────
+
+test('normalizeTeam: converts English names to Spanish aliases', () => {
   assert.equal(normalizeTeam('Korea Republic'), 'Corea del Sur');
   assert.equal(normalizeTeam('Czech Republic'), 'República Checa');
   assert.equal(normalizeTeam('United States'), 'Estados Unidos');
@@ -14,9 +16,11 @@ test('normalizeTeam: convierte nombre inglés a español', () => {
   assert.equal(normalizeTeam('Switzerland'), 'Suiza');
   assert.equal(normalizeTeam('Morocco'), 'Marruecos');
   assert.equal(normalizeTeam('Ivory Coast'), 'Costa de Marfil');
+  assert.equal(normalizeTeam('Bosnia-Herzegovina'), 'Bosnia');
+  assert.equal(normalizeTeam('Bosnia and Herzegovina'), 'Bosnia');
 });
 
-test('normalizeTeam: nombres ya en español pasan sin cambio', () => {
+test('normalizeTeam: already-Spanish names pass through unchanged', () => {
   assert.equal(normalizeTeam('Argentina'), 'Argentina');
   assert.equal(normalizeTeam('Brasil'), 'Brasil');
   assert.equal(normalizeTeam('Colombia'), 'Colombia');
@@ -27,130 +31,90 @@ test('normalizeTeam: case-insensitive', () => {
   assert.equal(normalizeTeam('GERMANY'), 'Alemania');
 });
 
-test('findFirebaseMatch: encuentra partido por fecha y equipos', () => {
-  const firebaseMatches = [
-    {
-      id: 'abc',
-      home: 'México',
-      away: 'Sudáfrica',
-      datetime: '2026-06-11T15:00:00.000-04:00',
-      tournament: 'Mundial 2026',
-      realHome: null,
-      realAway: null,
-    },
-    {
-      id: 'def',
-      home: 'Corea del Sur',
-      away: 'República Checa',
-      datetime: '2026-06-11T22:00:00.000-04:00',
-      tournament: 'Mundial 2026',
-      realHome: null,
-      realAway: null,
-    },
-  ];
+// ─── findFirebaseMatch (ESPN event shape) ─────────────────────────────────────
 
-  const apiMatch = {
-    utcDate: '2026-06-11T19:00:00Z',
-    homeTeam: { name: 'Mexico' },
-    awayTeam: { name: 'South Africa' },
-    score: { fullTime: { home: 2, away: 1 } },
-    status: 'FINISHED',
+function makeEspnEvent(homeTeam, awayTeam, dateISO, homeScore = null, awayScore = null) {
+  return {
+    date: dateISO,
+    competitions: [{
+      competitors: [
+        { team: { displayName: homeTeam }, score: homeScore },
+        { team: { displayName: awayTeam }, score: awayScore },
+      ],
+    }],
   };
+}
 
-  const result = findFirebaseMatch(apiMatch, firebaseMatches);
+const firebaseMatches = [
+  {
+    id: 'abc',
+    home: 'México',
+    away: 'Sudáfrica',
+    datetime: '2026-06-11T15:00:00.000-04:00',
+    tournament: 'Mundial 2026',
+    realHome: null,
+    realAway: null,
+  },
+  {
+    id: 'def',
+    home: 'Corea del Sur',
+    away: 'República Checa',
+    datetime: '2026-06-11T22:00:00.000-04:00',
+    tournament: 'Mundial 2026',
+    realHome: null,
+    realAway: null,
+  },
+  {
+    id: 'ghi',
+    home: 'Argentina',
+    away: 'Francia',
+    datetime: '2026-07-19T17:00:00.000-04:00',
+    tournament: 'Mundial 2026',
+    realHome: 3,
+    realAway: 3,
+  },
+];
+
+test('findFirebaseMatch: finds match by date and team names', () => {
+  const event = makeEspnEvent('Mexico', 'South Africa', '2026-06-11T19:00:00Z', 2, 1);
+  const result = findFirebaseMatch(event, firebaseMatches);
   assert.equal(result.id, 'abc');
 });
 
-test('findFirebaseMatch: retorna null si no hay match', () => {
-  const firebaseMatches = [
-    {
-      id: 'abc',
-      home: 'Argentina',
-      away: 'Brasil',
-      datetime: '2026-06-15T21:00:00.000-04:00',
-      tournament: 'Mundial 2026',
-      realHome: null,
-      realAway: null,
-    },
-  ];
+test('findFirebaseMatch: returns null when no match exists', () => {
+  const event = makeEspnEvent('Japan', 'Brazil', '2026-06-20T19:00:00Z', 1, 0);
+  const result = findFirebaseMatch(event, firebaseMatches);
+  assert.equal(result, null);
+});
 
+test('findFirebaseMatch: does not match games that already have a final result', () => {
+  const event = makeEspnEvent('Argentina', 'France', '2026-07-19T21:00:00Z', 2, 2);
+  const result = findFirebaseMatch(event, firebaseMatches);
+  assert.equal(result, null);
+});
+
+test('findFirebaseMatch: handles ±1 day difference (UTC vs local)', () => {
+  // Firebase stores datetime in UTC-4, ESPN gives UTC — the match should still work
+  const event = makeEspnEvent('Mexico', 'South Africa', '2026-06-12T02:00:00Z', 1, 0);
+  const result = findFirebaseMatch(event, firebaseMatches);
+  assert.equal(result.id, 'abc');
+});
+
+// ─── findFirebaseMatchForLive (legacy football-data.org shape) ────────────────
+
+test('findFirebaseMatchForLive: matches a live game', () => {
   const apiMatch = {
     utcDate: '2026-06-11T19:00:00Z',
     homeTeam: { name: 'Mexico' },
     awayTeam: { name: 'South Africa' },
-    score: { fullTime: { home: 2, away: 1 } },
-    status: 'FINISHED',
-  };
-
-  const result = findFirebaseMatch(apiMatch, firebaseMatches);
-  assert.equal(result, null);
-});
-
-test('findFirebaseMatch: no matchea partidos ya con resultado', () => {
-  const firebaseMatches = [
-    {
-      id: 'abc',
-      home: 'México',
-      away: 'Sudáfrica',
-      datetime: '2026-06-11T15:00:00.000-04:00',
-      tournament: 'Mundial 2026',
-      realHome: 2,
-      realAway: 1,
-    },
-  ];
-
-  const apiMatch = {
-    utcDate: '2026-06-11T19:00:00Z',
-    homeTeam: { name: 'Mexico' },
-    awayTeam: { name: 'South Africa' },
-    score: { fullTime: { home: 2, away: 1 } },
-    status: 'FINISHED',
-  };
-
-  const result = findFirebaseMatch(apiMatch, firebaseMatches);
-  assert.equal(result, null);
-});
-
-test('findFirebaseMatchForLive: matchea partido en vivo', () => {
-  const firebaseMatches = [
-    {
-      id: 'abc',
-      home: 'Argentina',
-      away: 'Francia',
-      datetime: '2026-07-19T17:00:00.000-04:00',
-      tournament: 'Mundial 2026',
-      realHome: null,
-      realAway: null,
-      liveHome: 1,
-      liveAway: 0,
-    },
-  ];
-
-  const apiMatch = {
-    utcDate: '2026-07-19T21:00:00Z',
-    homeTeam: { name: 'Argentina' },
-    awayTeam: { name: 'France' },
     score: { fullTime: { home: null, away: null } },
     status: 'IN_PLAY',
   };
-
   const result = findFirebaseMatchForLive(apiMatch, firebaseMatches);
   assert.equal(result.id, 'abc');
 });
 
-test('findFirebaseMatchForLive: no matchea si ya tiene resultado final', () => {
-  const firebaseMatches = [
-    {
-      id: 'abc',
-      home: 'Argentina',
-      away: 'Francia',
-      datetime: '2026-07-19T17:00:00.000-04:00',
-      tournament: 'Mundial 2026',
-      realHome: 3,
-      realAway: 3,
-    },
-  ];
-
+test('findFirebaseMatchForLive: does not match if already has final result', () => {
   const apiMatch = {
     utcDate: '2026-07-19T21:00:00Z',
     homeTeam: { name: 'Argentina' },
@@ -158,7 +122,6 @@ test('findFirebaseMatchForLive: no matchea si ya tiene resultado final', () => {
     score: { fullTime: { home: null, away: null } },
     status: 'IN_PLAY',
   };
-
   const result = findFirebaseMatchForLive(apiMatch, firebaseMatches);
   assert.equal(result, null);
 });

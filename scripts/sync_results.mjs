@@ -1,6 +1,18 @@
-// scripts/sync_results.mjs
+// scripts/sync_results.mjs — FIFA World Cup scoreboard sync via ESPN API
+// Free, no API key required, real-time updates.
+//
+// Usage:
+//   node scripts/sync_results.mjs
+//   DRY_RUN=1 node scripts/sync_results.mjs
+//
+// Required env vars:
+//   FIREBASE_SERVICE_ACCOUNT  — JSON string of the service account key
+//   FIREBASE_DATABASE_URL     — e.g. https://myproject-default-rtdb.firebaseio.com
 
-// ─── Alias de equipos: inglés (football-data.org) → español (Firebase) ───────
+const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
+
+// ─── Team name aliases: English (ESPN) → Spanish (Firebase) ────────────────────
+
 const TEAM_ALIASES = {
   'mexico': 'México',
   'south africa': 'Sudáfrica',
@@ -13,6 +25,7 @@ const TEAM_ALIASES = {
   'algeria': 'Argelia',
   'austria': 'Austria',
   'bosnia and herzegovina': 'Bosnia',
+  'bosnia-herzegovina': 'Bosnia',
   'bosnia': 'Bosnia',
   'brazil': 'Brasil',
   'belgium': 'Bélgica',
@@ -52,32 +65,47 @@ const TEAM_ALIASES = {
   'uzbekistan': 'Uzbekistán',
 };
 
+/**
+ * Translate an English team name (as returned by ESPN) to its Spanish Firebase alias.
+ * If no alias is found, the original name is returned unchanged.
+ */
 export function normalizeTeam(name) {
   const key = name.toLowerCase().trim();
   return TEAM_ALIASES[key] ?? name;
 }
 
-// Normaliza para comparación: lowercase, sin acentos, sin espacios extra
+// Normalize a string for comparison: lowercase, no accents, only [a-z0-9]
 function normCompare(s) {
-  return s.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+  return s.toLowerCase().trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '');
 }
 
-// Retorna el partido de Firebase que corresponde al partido de la API,
-// o null si no hay match o si ya tiene resultado.
-export function findFirebaseMatch(apiMatch, firebaseMatches) {
-  const apiDay = apiMatch.utcDate.slice(0, 10); // "YYYY-MM-DD" en UTC
-  const apiHome = normalizeTeam(apiMatch.homeTeam.name);
-  const apiAway = normalizeTeam(apiMatch.awayTeam.name);
+// ─── Firebase matching helpers ─────────────────────────────────────────────────
+
+/**
+ * Given raw ESPN competitor data, find the matching Firebase match object.
+ * Returns null if no match exists or the match already has a final result.
+ */
+export function findFirebaseMatch(espnEvent, firebaseMatches) {
+  const comp = espnEvent.competitions?.[0];
+  if (!comp) return null;
+
+  const homeTeam = comp.competitors?.[0]?.team?.displayName;
+  const awayTeam = comp.competitors?.[1]?.team?.displayName;
+  if (!homeTeam || !awayTeam) return null;
+
+  const apiHome = normalizeTeam(homeTeam);
+  const apiAway = normalizeTeam(awayTeam);
+  const eventDate = new Date(espnEvent.date);
+  const apiDay = eventDate.toISOString().slice(0, 10);
 
   for (const fm of firebaseMatches) {
-    // Ignorar si ya tiene resultado
     if (fm.realHome != null && fm.realAway != null) continue;
 
-    // Comparar día (la fecha UTC del partido puede diferir ±1 día con UTC-4)
     const fmDay = new Date(fm.datetime).toISOString().slice(0, 10);
-    const dayDiff = Math.abs(
-      (new Date(apiDay) - new Date(fmDay)) / (1000 * 60 * 60 * 24)
-    );
+    const dayDiff = Math.abs((new Date(apiDay) - new Date(fmDay)) / 86400000);
     if (dayDiff > 1) continue;
 
     if (normCompare(fm.home) === normCompare(apiHome) && normCompare(fm.away) === normCompare(apiAway)) return fm;
@@ -85,44 +113,26 @@ export function findFirebaseMatch(apiMatch, firebaseMatches) {
   return null;
 }
 
-export function findFirebaseMatchForLive(apiMatch, firebaseMatches) {
-  const apiDay = apiMatch.utcDate.slice(0, 10);
-  const apiHome = normalizeTeam(apiMatch.homeTeam.name);
-  const apiAway = normalizeTeam(apiMatch.awayTeam.name);
-
-  for (const fm of firebaseMatches) {
-    if (fm.realHome != null && fm.realAway != null) continue;
-
-    const fmDay = new Date(fm.datetime).toISOString().slice(0, 10);
-    const dayDiff = Math.abs(
-      (new Date(apiDay) - new Date(fmDay)) / (1000 * 60 * 60 * 24)
-    );
-    if (dayDiff > 1) continue;
-
-    if (normCompare(fm.home) === normCompare(apiHome) && normCompare(fm.away) === normCompare(apiAway)) return fm;
-  }
-  return null;
+// Legacy helper for tests that used the football-data.org shape.
+// Accepts { homeTeam: { name }, awayTeam: { name }, utcDate } for backward compat.
+export function findFirebaseMatchLegacy(apiMatch, firebaseMatches) {
+  const fakeEvent = {
+    date: apiMatch.utcDate,
+    competitions: [{
+      competitors: [
+        { team: { displayName: apiMatch.homeTeam.name } },
+        { team: { displayName: apiMatch.awayTeam.name } },
+      ],
+    }],
+  };
+  return findFirebaseMatch(fakeEvent, firebaseMatches);
 }
 
-// Lee los headers de throttling y espera si el cupo está bajo.
-// Retorna los headers para que el caller pueda decidir si esperar antes del próximo request.
-async function throttle(res) {
-  const available = parseInt(res.headers.get('X-RequestsAvailable') ?? '1', 10);
-  const resetIn   = parseInt(res.headers.get('X-RequestCounter-Reset') ?? '0', 10);
-  console.log(`[throttle] requests available: ${available}, reset in: ${resetIn}s`);
-  return { available, resetIn };
-}
+// Alias so existing tests can import it (same logic, different name for semantic clarity)
+export const findFirebaseMatchForLive = findFirebaseMatchLegacy;
 
-// Espera si el cupo está agotado, ANTES de hacer el próximo request.
-async function waitForQuota(available, resetIn) {
-  if (available < 2 && resetIn > 0) {
-    const wait = (resetIn + 2) * 1000;
-    console.log(`[throttle] cupo bajo (${available}) — esperando ${wait/1000}s antes del próximo request`);
-    await new Promise(r => setTimeout(r, wait));
-  }
-}
+// ─── Main runner ───────────────────────────────────────────────────────────────
 
-// ─── Ejecución principal ──────────────────────────────────────────────────────
 if (process.argv[1] === new URL(import.meta.url).pathname) {
   await run();
 }
@@ -130,7 +140,7 @@ if (process.argv[1] === new URL(import.meta.url).pathname) {
 async function run() {
   const DRY_RUN = process.env.DRY_RUN === '1';
 
-  const required = ['FIREBASE_SERVICE_ACCOUNT', 'FIREBASE_DATABASE_URL', 'FDATA_API_KEY'];
+  const required = ['FIREBASE_SERVICE_ACCOUNT', 'FIREBASE_DATABASE_URL'];
   for (const key of required) {
     if (!process.env[key]) { console.error(`Missing required env var: ${key}`); process.exit(1); }
   }
@@ -149,86 +159,66 @@ async function run() {
   });
   const db = admin.default.database();
 
-  // Obtener partidos del Mundial 2026 desde Firebase
+  // Load matches from Firebase
   const snap = await db.ref('pf/matches').once('value');
   const allMatches = Object.values(snap.val() ?? {});
   const mundialMatches = allMatches.filter(m => m.tournament === 'Mundial 2026');
   console.log(`Firebase: ${mundialMatches.length} partidos del Mundial 2026`);
 
-  // ── Partidos terminados ──────────────────────────────────────────────────
-  const finRes = await fetch(
-    'https://api.football-data.org/v4/competitions/WC/matches?status=FINISHED',
-    { headers: { 'X-Auth-Token': process.env.FDATA_API_KEY } }
-  );
-  if (!finRes.ok) { console.error(`FINISHED fetch error: ${finRes.status}`); process.exit(1); }
-  const finQuota = await throttle(finRes);
-  const { matches: finishedMatches } = await finRes.json();
-  console.log(`football-data.org: ${finishedMatches.length} partidos terminados`);
+  // Fetch ESPN scoreboard
+  const res = await fetch(ESPN_BASE, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+  if (!res.ok) { console.error(`ESPN fetch error: ${res.status}`); process.exit(1); }
+  const data = await res.json();
 
   let updatedFinal = 0;
-  for (const apiMatch of finishedMatches) {
-    const { home, away } = apiMatch.score?.fullTime ?? {};
-    if (home == null || away == null) { console.warn(`[sin score] ${apiMatch.homeTeam.name} vs ${apiMatch.awayTeam.name} score=${JSON.stringify(apiMatch.score)}`); continue; }
-
-    const apiHome = normalizeTeam(apiMatch.homeTeam.name);
-    const apiAway = normalizeTeam(apiMatch.awayTeam.name);
-    const fbMatch = findFirebaseMatch(apiMatch, mundialMatches);
-    if (!fbMatch) {
-      console.warn(`[sin match FINISHED] ${apiMatch.homeTeam.name}(${apiHome}) vs ${apiMatch.awayTeam.name}(${apiAway}) utcDate=${apiMatch.utcDate}`);
-      // Debug: list Firebase matches for that day
-      const apiDay = apiMatch.utcDate.slice(0, 10);
-      const sameDay = mundialMatches.filter(fm => { const d = new Date(fm.datetime).toISOString().slice(0,10); return Math.abs((new Date(apiDay)-new Date(d))/86400000) <= 1; });
-      console.warn(`  Firebase same day (${apiDay}): ${sameDay.length} matches`);
-      sameDay.forEach(fm => console.warn(`    - ${fm.home} vs ${fm.away} (${fm.datetime}) real=${fm.realHome}`));
-      continue;
-    }
-
-    if (DRY_RUN) {
-      console.log(`[dry-run FINAL] ${fbMatch.home} ${home}-${away} ${fbMatch.away}`);
-      continue;
-    }
-
-    await db.ref(`pf/matches/${fbMatch.id}`).update({
-      realHome: home,
-      realAway: away,
-      liveHome: null,
-      liveAway: null,
-    });
-    console.log(`✓ FINAL ${fbMatch.home} ${home}-${away} ${fbMatch.away}`);
-    updatedFinal++;
-  }
-
-  // ── Partidos en vivo ─────────────────────────────────────────────────────
-  await waitForQuota(finQuota.available, finQuota.resetIn);
-  const liveRes = await fetch(
-    'https://api.football-data.org/v4/competitions/WC/matches?status=IN_PLAY,PAUSED',
-    { headers: { 'X-Auth-Token': process.env.FDATA_API_KEY } }
-  );
-  if (!liveRes.ok) { console.error(`IN_PLAY fetch error: ${liveRes.status}`); process.exit(1); }
-  await throttle(liveRes);
-  const { matches: liveMatches } = await liveRes.json();
-  console.log(`football-data.org: ${liveMatches.length} partidos en vivo`);
-
   let updatedLive = 0;
-  for (const apiMatch of liveMatches) {
-    const score = apiMatch.score?.fullTime ?? {};
-    const lh = score.home ?? 0;
-    const la = score.away ?? 0;
 
-    const fbMatch = findFirebaseMatchForLive(apiMatch, mundialMatches);
+  for (const event of (data.events ?? [])) {
+    const comp = event.competitions?.[0];
+    if (!comp) continue;
+
+    const status = event.status?.type?.name;
+    const homeTeam = comp.competitors?.[0]?.team?.displayName;
+    const awayTeam = comp.competitors?.[1]?.team?.displayName;
+    const homeScore = comp.competitors?.[0]?.score;
+    const awayScore = comp.competitors?.[1]?.score;
+
+    if (!homeTeam || !awayTeam) continue;
+    if (homeScore == null || awayScore == null) continue;
+
+    const fbMatch = findFirebaseMatch(event, mundialMatches);
     if (!fbMatch) {
-      console.warn(`[sin match LIVE] ${apiMatch.homeTeam.name} vs ${apiMatch.awayTeam.name}`);
+      const espHome = normalizeTeam(homeTeam);
+      const espAway = normalizeTeam(awayTeam);
+      console.warn(`[sin match ${status}] ${espHome} ${homeScore}-${awayScore} ${espAway}`);
       continue;
     }
 
-    if (DRY_RUN) {
-      console.log(`[dry-run LIVE] ${fbMatch.home} ${lh}-${la} ${fbMatch.away}`);
-      continue;
+    if (status === 'STATUS_FINAL' || status === 'STATUS_FULL_TIME') {
+      if (DRY_RUN) {
+        console.log(`[dry-run FINAL] ${fbMatch.home} ${homeScore}-${awayScore} ${fbMatch.away}`);
+        continue;
+      }
+      await db.ref(`pf/matches/${fbMatch.id}`).update({
+        realHome: parseInt(homeScore),
+        realAway: parseInt(awayScore),
+        liveHome: null,
+        liveAway: null,
+      });
+      console.log(`FINAL ${fbMatch.home} ${homeScore}-${awayScore} ${fbMatch.away}`);
+      updatedFinal++;
+    } else if (status === 'STATUS_IN_PLAY' || status === 'STATUS_FIRST_HALF' || status === 'STATUS_SECOND_HALF' || status === 'STATUS_HALFTIME' || status === 'STATUS_DELAYED') {
+      if (DRY_RUN) {
+        console.log(`[dry-run LIVE] ${fbMatch.home} ${homeScore}-${awayScore} ${fbMatch.away}`);
+        continue;
+      }
+      await db.ref(`pf/matches/${fbMatch.id}`).update({
+        liveHome: parseInt(homeScore),
+        liveAway: parseInt(awayScore),
+      });
+      console.log(`LIVE ${fbMatch.home} ${homeScore}-${awayScore} ${fbMatch.away}`);
+      updatedLive++;
     }
-
-    await db.ref(`pf/matches/${fbMatch.id}`).update({ liveHome: lh, liveAway: la });
-    console.log(`🔴 LIVE ${fbMatch.home} ${lh}-${la} ${fbMatch.away}`);
-    updatedLive++;
   }
 
   console.log(`\nResumen: ${updatedFinal} finales, ${updatedLive} en vivo actualizados`);
