@@ -1177,7 +1177,26 @@ function tryAutoLogin() {
   const sess = SESSION.get();
   if (!sess) return;
   const fresh = CACHE.users.find(u => u.id === sess.id);
-  if (fresh) launchApp(fresh);
+  if (!fresh) {
+    // User no longer exists in DB → force logout
+    if (currentUser) doLogout();
+    return;
+  }
+  if (currentUser) {
+    // Already logged in via instant login — just refresh user data
+    currentUser = fresh;
+    SESSION.set(fresh);
+    refreshActiveTab();
+  } else {
+    launchApp(fresh);
+  }
+}
+
+function tryInstantLogin() {
+  const sess = SESSION.get();
+  if (!sess || !sess.id) return;
+  // Launch immediately with cached data; Firebase will refresh on onAllLoaded
+  launchApp(sess);
 }
 
 // ═══ HELPERS ═══
@@ -4327,6 +4346,7 @@ function toggleShowUser() {
 }
 
 // ═══ INIT ═══
+tryInstantLogin();
 initFirebase();
 </script>
 
