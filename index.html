@@ -1995,51 +1995,55 @@ function renderUpcoming() {
     // El adminHtml se prependea al final
   }
 
-  // ══ PARTIDOS EN VIVO (cualquier partido con liveHome) ══
-  const liveMatches = [...CACHE.matches]
-    .filter(m => m.liveHome != null && m.home !== 'Por definir' && !isTournamentHidden(m.tournament || 'Sin Torneo'))
-    .sort((a,b) => new Date(b.datetime) - new Date(a.datetime)); // más recientes primero
+  // ══ PARTIDOS CON RESULTADO (finalizados o en vivo) ══
+  const resultadoMatches = [...CACHE.matches]
+    .filter(m => (m.realHome != null || m.liveHome != null) && m.home !== 'Por definir' && !isTournamentHidden(m.tournament || 'Sin Torneo'))
+    .sort((a,b) => new Date(b.datetime) - new Date(a.datetime)) // más recientes primero
+    .slice(0, 10);
 
-  let liveHtml = '';
-  if (liveMatches.length > 0) {
-    liveHtml += `<div style="background:rgba(127,29,29,0.15);border:1px solid rgba(251,146,60,0.3);border-radius:10px;padding:10px 12px;margin-bottom:12px">
-      <div style="font-size:12px;font-weight:800;color:#fbbf24;margin-bottom:8px;display:flex;align-items:center;gap:6px">
-        <span style="animation:blink 1s infinite">🔴</span> En Vivo Ahora (${liveMatches.length})
-      </div>`;
-    liveMatches.forEach(m => {
+  let resultadoHtml = '';
+  if (resultadoMatches.length > 0 && !isAdm) {
+    resultadoHtml += `<div style="background:rgba(15,23,44,0.7);border:1px solid rgba(56,189,248,0.2);border-radius:10px;padding:10px 12px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:800;color:#38bdf8;margin-bottom:8px">⚽ Resultados Recientes</div>`;
+    resultadoMatches.forEach(m => {
       const pred = uid ? CACHE.preds.find(p => p.userId===uid && p.matchId===m.id) : null;
       const displayRH = m.realHome ?? m.liveHome;
       const displayRA = m.realAway ?? m.liveAway;
-      const hasScore = displayRH != null;
-      // Puntos provisionales
+      const isDone = m.realHome != null;
+      const isLive = !isDone && m.liveHome != null;
+      // Puntos
       let ptsBadge = '';
-      if (pred && hasScore) {
+      if (pred) {
         const p = calcPoints(pred, m, CACHE.preds);
         if (p !== null) {
-          const isExact = pred.predHome===displayRH && pred.predAway===displayRA;
+          const rh = displayRH, ra = displayRA;
+          const isExact = pred.predHome===rh && pred.predAway===ra;
           const col = isExact ? '#38bdf8' : p > 0 ? '#4ade80' : '#f87171';
-          ptsBadge = `<span style="background:${col}22;color:${col};padding:2px 8px;border-radius:6px;font-size:11px;font-weight:800">${isExact?'🥇':p>0?'✅':'❌'} ${p.toFixed(2)} pts (prov.)</span>`;
+          ptsBadge = `<span style="background:${col}18;color:${col};padding:2px 8px;border-radius:6px;font-size:11px;font-weight:800">${isExact?'🥇':p>0?'✅':'❌'} ${p.toFixed(2)} pts${isLive?' (prov.)':''}</span>`;
         }
       }
+      const statusLabel = isLive
+        ? `<span style="background:#dc2626;color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:3px;margin-left:4px;animation:blink 1.5s infinite">EN VIVO</span>`
+        : `<span style="background:#16a34a;color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:3px;margin-left:4px">FIN</span>`;
       const predHtml = pred
-        ? `<span style="font-size:11px;color:#94a3b8">Tu pred: <b style="color:#e8edf5">${pred.predHome}-${pred.predAway}</b></span>`
+        ? `<span style="font-size:10px;color:#94a3b8">Tu pred: <b style="color:#e8edf5">${pred.predHome}-${pred.predAway}</b></span>`
         : '';
-      liveHtml += `
-        <div style="padding:8px 0;border-bottom:1px solid rgba(251,146,60,0.1)">
+      resultadoHtml += `
+        <div style="padding:8px 0;border-bottom:1px solid rgba(56,189,248,0.06)">
           <div style="display:flex;align-items:center;justify-content:space-between">
             <div>
-              <span style="font-size:12px;font-weight:700;color:#e8edf5">${flagImg(m.home)}${m.home} <span style="color:#4a5f78">vs</span> ${m.away}${flagImg(m.away)}</span>
-              <div style="font-size:9px;color:#64748b">${m.tournament || ''} · ${normStage(m.stage)}</div>
+              <span style="font-size:12px;font-weight:700;color:#e8edf5">${flagImg(m.home)}${m.home} <span style="color:#4a5f78">vs</span> ${m.away}${flagImg(m.away)}</span>${statusLabel}
+              <div style="font-size:9px;color:#64748b">${normStage(m.stage)}</div>
               ${pred ? `<div style="margin-top:2px">${predHtml}</div>` : ''}
             </div>
             <div style="text-align:right">
-              <div style="font-size:18px;font-weight:900;color:#fbbf24">${hasScore ? `${displayRH} - ${displayRA}` : '—'}</div>
+              <div style="font-size:18px;font-weight:900;color:${isLive?'#fbbf24':'#34d399'}">${displayRH} - ${displayRA}</div>
               ${ptsBadge ? `<div style="margin-top:4px">${ptsBadge}</div>` : ''}
             </div>
           </div>
         </div>`;
     });
-    liveHtml += `</div>`;
+    resultadoHtml += `</div>`;
   }
 
   const upcoming = [...CACHE.matches]
@@ -2108,7 +2112,7 @@ function renderUpcoming() {
     });
     html += `</div>`;
   }
-  el.innerHTML = (adminHtml || '') + liveHtml + html;
+  el.innerHTML = (adminHtml || '') + resultadoHtml + html;
 }
 
 async function saveUpcomingResult(matchId) {
