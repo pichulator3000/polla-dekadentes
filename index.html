@@ -2112,7 +2112,7 @@ function renderUpcoming() {
     });
     html += `</div>`;
   }
-  el.innerHTML = (adminHtml || '') + resultadoHtml + html;
+  el.innerHTML = (adminHtml || '') + html + resultadoHtml;
 }
 
 async function saveUpcomingResult(matchId) {
