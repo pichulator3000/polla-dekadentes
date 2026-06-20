@@ -542,7 +542,7 @@
     #liveDash { position:fixed; inset:0; z-index:1100; background:#080c16; transform:translateY(100%); transition:transform .35s cubic-bezier(.22,1,.36,1); overflow-y:auto; overscroll-behavior:contain; display:none; }
     #liveDash.open { transform:translateY(0); }
     .ld-inner { max-width:480px; margin:0 auto; padding:14px 16px 48px; }
-    .ld-head { display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; padding:6px 0 12px; background:#080c16; z-index:5; }
+    .ld-head { display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; padding:calc(env(safe-area-inset-top) + 10px) 0 12px; background:#080c16; z-index:5; }
     .ld-close { background:#1e293b; border:none; color:#e8edf5; width:38px; height:38px; border-radius:12px; font-size:18px; cursor:pointer; font-weight:700; }
     .ld-title { font-size:13px; font-weight:900; color:#94a3b8; text-transform:uppercase; letter-spacing:.05em; }
     .ld-score { text-align:center; padding:16px 0 6px; }
@@ -1371,8 +1371,10 @@ function autoJump(el, nextId) {
 }
 
 function calcPoints(pred, match, allPreds) {
-  const rh = match.realHome ?? match.liveHome;
-  const ra = match.realAway ?? match.liveAway;
+  return _pointsAt(pred, match, allPreds, match.realHome ?? match.liveHome, match.realAway ?? match.liveAway);
+}
+// Puntos de una predicción dado un marcador rh-ra arbitrario (para proyección en vivo)
+function _pointsAt(pred, match, allPreds, rh, ra) {
   if (rh == null || ra == null) return null;
   const realO = Math.sign(rh - ra);
   const predO = Math.sign(pred.predHome - pred.predAway);
@@ -2392,7 +2394,8 @@ function _nextCardHtml(m){
 }
 
 function _liveCardHtml(m){
-  const sh = m.realHome ?? m.liveHome, sa = m.realAway ?? m.liveAway;
+  // Partido en vivo: si no hay marcador cargado, va 0–0
+  const sh = m.realHome ?? m.liveHome ?? 0, sa = m.realAway ?? m.liveAway ?? 0;
   const pot = !!m.potenciado;
   const col = matchColors(m);
   return `<div class="pm-card pm-live${pot?' pm-pot':''}" onclick="openLiveDash('${m.id}')">
@@ -2402,7 +2405,7 @@ function _liveCardHtml(m){
     </div>
     <div class="pm-livescore">
       <div class="pm-lt"><div class="pm-fl">${flagBig(m.home,34)}</div><div class="pm-nm" style="color:${col.L}">${m.home}</div></div>
-      <div class="pm-lnum">${sh??'-'}</div><div class="pm-lsep">–</div><div class="pm-lnum">${sa??'-'}</div>
+      <div class="pm-lnum">${sh}</div><div class="pm-lsep">–</div><div class="pm-lnum">${sa}</div>
       <div class="pm-lt"><div class="pm-fl">${flagBig(m.away,34)}</div><div class="pm-nm" style="color:${col.V}">${m.away}</div></div>
     </div>
     <div class="pm-cta">👆 Toca para ver el dashboard en vivo</div>
@@ -2469,7 +2472,7 @@ function _projRows(){
   return preds.map(p => {
     const u = CACHE.users.find(x=>x.id===p.userId);
     return { userId:p.userId, name:u?u.name:'?', predHome:p.predHome, predAway:p.predAway,
-             pts: calcPoints(p,m,CACHE.preds) || 0, me:p.userId===currentUser.id };
+             pts: _pointsAt(p,m,CACHE.preds,LD.sh,LD.sa) || 0, me:p.userId===currentUser.id };
   }).sort((a,b)=>b.pts-a.pts);
 }
 function _ldChips(arr){
@@ -2487,7 +2490,10 @@ function renderLiveDash(){
   const col = matchColors(m);
   const pot = !!m.potenciado;
   const pool = getPoolForStage(m.stage) * (pot?2:1);
-  const sh = m.realHome ?? m.liveHome, sa = m.realAway ?? m.liveAway;
+  // Marcador efectivo: si el partido ya empezó y no hay marcador cargado, va 0–0
+  const started = getStatus(m) !== 'open';
+  const sh = m.realHome ?? m.liveHome ?? (started ? 0 : null);
+  const sa = m.realAway ?? m.liveAway ?? (started ? 0 : null);
   const mine = CACHE.preds.find(p => p.userId===currentUser.id && p.matchId===m.id);
   LD = { m, preds, col, pot, pool, sh, sa, mine, hasScore:(sh!=null && sa!=null) };
 
@@ -2648,7 +2654,6 @@ function ldRenderHeat(){
       const oc = y>x?col.L : y===x?col.E : col.V;
       const bg = c?_hexA(oc,t):'rgba(255,255,255,.025)';
       const cls = ['ld-cell']; if(!c) cls.push('empty');
-      if (LD.hasScore && LD.sh===y && LD.sa===x) cls.push('sel');
       const bd = (LD.mine && LD.mine.predHome===y && LD.mine.predAway===x) ? 'border-color:#38bdf8' : '';
       html += `<div class="${cls.join(' ')}" style="background:${bg};${bd}" ${c?`onclick="ldShowCell(${y},${x})"`:''}>${c||''}</div>`;
     }
@@ -2677,7 +2682,7 @@ function ldShowCell(h,a){
     `<div class="ld-detail-title">${LD.m.home} ${h} – ${a} ${LD.m.away}${liveTag}</div>${arr.length?_ldChips(arr):'<div class="ld-empty">Nadie apostó este marcador</div>'}`;
   document.querySelectorAll('#ldHeat .ld-cell').forEach(c=>{
     const oc = c.getAttribute('onclick');
-    if (oc) c.classList.toggle('clk', oc===`ldShowCell(${h},${a})`);
+    c.classList.toggle('sel', !!oc && oc===`ldShowCell(${h},${a})`);
   });
 }
 
