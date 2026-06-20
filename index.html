@@ -2654,8 +2654,7 @@ function ldRenderHeat(){
       const oc = y>x?col.L : y===x?col.E : col.V;
       const bg = c?_hexA(oc,t):'rgba(255,255,255,.025)';
       const cls = ['ld-cell']; if(!c) cls.push('empty');
-      const bd = (LD.mine && LD.mine.predHome===y && LD.mine.predAway===x) ? 'border-color:#38bdf8' : '';
-      html += `<div class="${cls.join(' ')}" style="background:${bg};${bd}" ${c?`onclick="ldShowCell(${y},${x})"`:''}>${c||''}</div>`;
+      html += `<div class="${cls.join(' ')}" style="background:${bg}" ${c?`onclick="ldShowCell(${y},${x})"`:''}>${c||''}</div>`;
     }
   }
   html += `<div></div>`;
