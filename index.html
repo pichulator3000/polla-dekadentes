@@ -2460,7 +2460,7 @@ function _liveCardHtml(m){
   const mine = uid ? CACHE.preds.find(p => p.userId===uid && p.matchId===m.id && p.predHome!=null) : null;
   let mineHtml;
   if (!mine){
-    mineHtml = `<div class="pm-mine empty">😴 No pronosticaste este partido</div>`;
+    mineHtml = `<div class="pm-mine empty">😴 Aweonao, no pronosticaste este partido</div>`;
   } else {
     const hasScore = (m.realHome ?? m.liveHome) != null;
     let stat = '', cls = '';
