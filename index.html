@@ -2321,6 +2321,29 @@ function flagBig(team,size){ const u=flagUrl(team); return u?`<img src="${u}" st
 const _fmtPts = v => Math.round(v*100)/100;
 const _outcome = p => p.predHome>p.predAway ? 'L' : p.predHome===p.predAway ? 'E' : 'V';
 
+// ── Aweonaos: quienes olvidaron pronosticar ──
+function _tienePred(uid, mid){
+  return CACHE.preds.some(p => p.userId===uid && p.matchId===mid && p.predHome!=null);
+}
+function _matchElegible(m){
+  return m.home!=='Por definir' && m.away!=='Por definir'
+      && !isTournamentHidden(m.tournament||'Sin Torneo');
+}
+function aweonaosDeMatch(m){
+  if (getStatus(m)==='open' || !_matchElegible(m)) return [];
+  return CACHE.users.filter(u => !u.isAdmin && !_tienePred(u.id, m.id));
+}
+function aweonaoStats(scope){
+  const cerrados = CACHE.matches.filter(m =>
+    _matchElegible(m) && getStatus(m)!=='open' &&
+    (scope==='__all__' || (m.tournament||'Sin Torneo')===scope));
+  const jugadores = CACHE.users.filter(u => !u.isAdmin);
+  return jugadores.map(u => ({
+    id: u.id, name: u.name,
+    olvidos: cerrados.filter(m => !_tienePred(u.id, m.id)).length
+  })).sort((a,b) => b.olvidos - a.olvidos || a.name.localeCompare(b.name));
+}
+
 // ── Home strip: en vivo (arriba) + próximo partido ──
 function renderHomeMatchStrip(){
   const el = document.getElementById('homeMatchStrip');
