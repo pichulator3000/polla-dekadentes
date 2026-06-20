@@ -616,6 +616,16 @@
     .ld-ppts { font-size:14px; font-weight:900; min-width:50px; text-align:right; font-variant-numeric:tabular-nums; }
     .ld-soul { font-size:12px; color:#64748b; text-align:center; margin-top:12px; }
     .ld-soul b { color:#fbbf24; }
+    /* tu pronóstico */
+    .ld-mine { margin-top:14px; background:#0c1320; border:1px solid #1e293b; border-radius:14px; padding:10px 14px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .ld-mine-lbl { font-size:11px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
+    .ld-mine-sc { display:flex; align-items:center; gap:7px; font-size:18px; font-weight:900; color:#e8edf5; font-variant-numeric:tabular-nums; }
+    .ld-mine-sc b { color:#38bdf8; }
+    .ld-mine-stat { margin-left:auto; font-size:12px; font-weight:800; }
+    .ld-mine.ok { border-color:#16613f; } .ld-mine.ok .ld-mine-stat { color:#4ade80; }
+    .ld-mine.exact { border-color:#0e7490; box-shadow:0 0 14px rgba(56,189,248,.12); } .ld-mine.exact .ld-mine-stat { color:#38bdf8; }
+    .ld-mine.bad .ld-mine-stat { color:#f87171; }
+    .ld-mine-empty { color:#64748b; font-size:13px; font-weight:700; justify-content:center; }
     /* carrusel proyección / tabla general */
     .ld-dots { margin-left:auto; display:inline-flex; gap:6px; align-items:center; }
     .ld-dots i { width:7px; height:7px; border-radius:50%; background:#334155; transition:all .25s; }
@@ -2514,6 +2524,7 @@ function renderLiveDash(){
   document.getElementById('ldTitle').innerHTML = pot ? '⚡ Dashboard · POTENCIADO' : '⚡ Dashboard en vivo';
   document.getElementById('ldBody').innerHTML = `
     <div id="ldScore"></div>
+    <div id="ldMine"></div>
     <div id="ldPot"></div>
     <div id="ldCallout"></div>
     <div class="ld-sec">📊 ¿Qué apostó la gente?
@@ -2547,7 +2558,7 @@ function renderLiveDash(){
     <div class="ld-sec">🧠 Aweonaos <span class="ld-sub">no pronosticaron este partido</span></div>
     <div id="ldAweonaos"></div>`;
 
-  _ldScore(); _ldPotBanner(); _ldCallout();
+  _ldScore(); _ldMine(); _ldPotBanner(); _ldCallout();
   ldRenderBar(); ldRenderPay(); ldRenderHeat(); ldRenderProj(); ldRenderGeneral(); _ldSwipeInit(); _ldAweonaos();
 }
 
@@ -2658,6 +2669,28 @@ function _ldScore(){
       <div class="ld-num">${sh??'-'}</div><div class="ld-sep">–</div><div class="ld-num">${sa??'-'}</div>
       <div class="ld-st">${flagBig(m.away,48)}<div class="ld-nm" style="color:${col.V}">${m.away}</div></div>
     </div>`;
+}
+function _ldMine(){
+  const {m,mine,sh,sa,hasScore} = LD;
+  const el = document.getElementById('ldMine');
+  if (!el) return;
+  if (!mine){
+    el.innerHTML = `<div class="ld-mine ld-mine-empty">😴 No pronosticaste este partido</div>`;
+    return;
+  }
+  let stat = '', cls = '';
+  if (hasScore){
+    const pts = _pointsAt(mine, m, CACHE.preds, sh, sa) || 0;
+    const exact = mine.predHome===sh && mine.predAway===sa;
+    if (exact){ stat = `🎯 Exacto · +${_fmtPts(pts)} pts`; cls = 'ok exact'; }
+    else if (pts>0){ stat = `✅ Resultado · +${_fmtPts(pts)} pts`; cls = 'ok'; }
+    else { stat = `❌ Sin puntos por ahora`; cls = 'bad'; }
+  }
+  el.innerHTML = `<div class="ld-mine ${cls}">
+    <span class="ld-mine-lbl">Tu pronóstico</span>
+    <span class="ld-mine-sc">${flagBig(m.home,20)} <b>${mine.predHome}</b> – <b>${mine.predAway}</b> ${flagBig(m.away,20)}</span>
+    ${stat?`<span class="ld-mine-stat">${stat}</span>`:''}
+  </div>`;
 }
 function _ldPotBanner(){
   document.getElementById('ldPot').innerHTML = LD.pot
