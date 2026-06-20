@@ -2514,10 +2514,24 @@ function renderLiveDash(){
     </div>
     <div class="ld-sec">🏆 Quién gana más puntos <span class="ld-sub" id="ldProjSub"></span></div>
     <div class="ld-proj" id="ldProj"></div>
-    <div class="ld-soul" id="ldSoul"></div>`;
+    <div class="ld-soul" id="ldSoul"></div>
+    <div class="ld-sec">🧠 Aweonaos <span class="ld-sub">no pronosticaron este partido</span></div>
+    <div id="ldAweonaos"></div>`;
 
   _ldScore(); _ldPotBanner(); _ldCallout();
-  ldRenderBar(); ldRenderPay(); ldRenderHeat(); ldRenderProj();
+  ldRenderBar(); ldRenderPay(); ldRenderHeat(); ldRenderProj(); _ldAweonaos();
+}
+
+function _ldAweonaos(){
+  const aw = aweonaosDeMatch(LD.m);
+  const el = document.getElementById('ldAweonaos');
+  if (!el) return;
+  el.innerHTML = aw.length
+    ? `<div class="ld-chips">${aw.map(u=>{
+        const me = u.id===currentUser.id;
+        return `<span class="ld-chip${me?' me':''}">${u.name}${me?' (tú)':''}</span>`;
+      }).join('')}</div>`
+    : `<div class="ld-empty" style="padding:8px 4px">✅ No hubieron aweonaos este partido, todos pusieron sus pronósticos</div>`;
 }
 
 function _ldScore(){
