@@ -2456,6 +2456,27 @@ function _liveCardHtml(m){
   const sh = m.realHome ?? m.liveHome ?? 0, sa = m.realAway ?? m.liveAway ?? 0;
   const pot = !!m.potenciado;
   const col = matchColors(m);
+  const uid = currentUser?.id;
+  const mine = uid ? CACHE.preds.find(p => p.userId===uid && p.matchId===m.id && p.predHome!=null) : null;
+  let mineHtml;
+  if (!mine){
+    mineHtml = `<div class="pm-mine empty">😴 No pronosticaste este partido</div>`;
+  } else {
+    const hasScore = (m.realHome ?? m.liveHome) != null;
+    let stat = '', cls = '';
+    if (hasScore){
+      const pts = _pointsAt(mine, m, CACHE.preds, sh, sa) || 0;
+      const exact = mine.predHome===sh && mine.predAway===sa;
+      if (exact){ stat = `🎯 Exacto · +${_fmtPts(pts)}`; cls = 'ok exact'; }
+      else if (pts>0){ stat = `✅ +${_fmtPts(pts)} pts`; cls = 'ok'; }
+      else { stat = `❌ Sin puntos`; cls = 'bad'; }
+    }
+    mineHtml = `<div class="pm-mine ${cls}">
+      <span class="pm-mine-lbl">Tu pronóstico</span>
+      <span class="pm-mine-sc"><b>${mine.predHome}</b> – <b>${mine.predAway}</b></span>
+      ${stat?`<span class="pm-mine-stat">${stat}</span>`:''}
+    </div>`;
+  }
   return `<div class="pm-card pm-live${pot?' pm-pot':''}" onclick="openLiveDash('${m.id}')">
     <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
       <span class="badge-live">🔴 EN VIVO</span>
@@ -2466,6 +2487,7 @@ function _liveCardHtml(m){
       <div class="pm-lnum">${sh}</div><div class="pm-lsep">–</div><div class="pm-lnum">${sa}</div>
       <div class="pm-lt"><div class="pm-fl">${flagBig(m.away,34)}</div><div class="pm-nm" style="color:${col.V}">${m.away}</div></div>
     </div>
+    ${mineHtml}
     <div class="pm-cta">👆 Toca para ver el dashboard en vivo</div>
   </div>`;
 }
