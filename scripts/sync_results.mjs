@@ -108,9 +108,24 @@ export function findFirebaseMatch(espnEvent, firebaseMatches) {
     const dayDiff = Math.abs((new Date(apiDay) - new Date(fmDay)) / 86400000);
     if (dayDiff > 1) continue;
 
-    if (normCompare(fm.home) === normCompare(apiHome) && normCompare(fm.away) === normCompare(apiAway)) return fm;
+    // Match in either orientation: ESPN's home/away designation may be the
+    // reverse of how the fixture was entered in Firebase. Scores are realigned
+    // later via resolveScores().
+    const sameOrder = normCompare(fm.home) === normCompare(apiHome) && normCompare(fm.away) === normCompare(apiAway);
+    const swapOrder = normCompare(fm.home) === normCompare(apiAway) && normCompare(fm.away) === normCompare(apiHome);
+    if (sameOrder || swapOrder) return fm;
   }
   return null;
+}
+
+/**
+ * Align ESPN scores to the Firebase match's home/away orientation.
+ * apiHome/apiAway are the (already normalized) ESPN team names.
+ * Returns { home, away } scores ordered to match fm.home / fm.away.
+ */
+export function resolveScores(fm, apiHome, apiAway, homeScore, awayScore) {
+  const swapped = normCompare(fm.home) !== normCompare(apiHome);
+  return swapped ? { home: awayScore, away: homeScore } : { home: homeScore, away: awayScore };
 }
 
 // Legacy helper for tests that used the football-data.org shape.
@@ -194,29 +209,34 @@ async function run() {
       continue;
     }
 
+    // Align scores to the Firebase home/away orientation (ESPN may have them reversed)
+    const { home: fbHomeScore, away: fbAwayScore } = resolveScores(
+      fbMatch, normalizeTeam(homeTeam), normalizeTeam(awayTeam), homeScore, awayScore,
+    );
+
     if (status === 'STATUS_FINAL' || status === 'STATUS_FULL_TIME') {
       if (DRY_RUN) {
-        console.log(`[dry-run FINAL] ${fbMatch.home} ${homeScore}-${awayScore} ${fbMatch.away}`);
+        console.log(`[dry-run FINAL] ${fbMatch.home} ${fbHomeScore}-${fbAwayScore} ${fbMatch.away}`);
         continue;
       }
       await db.ref(`pf/matches/${fbMatch.id}`).update({
-        realHome: parseInt(homeScore),
-        realAway: parseInt(awayScore),
+        realHome: parseInt(fbHomeScore),
+        realAway: parseInt(fbAwayScore),
         liveHome: null,
         liveAway: null,
       });
-      console.log(`FINAL ${fbMatch.home} ${homeScore}-${awayScore} ${fbMatch.away}`);
+      console.log(`FINAL ${fbMatch.home} ${fbHomeScore}-${fbAwayScore} ${fbMatch.away}`);
       updatedFinal++;
     } else if (status === 'STATUS_IN_PLAY' || status === 'STATUS_FIRST_HALF' || status === 'STATUS_SECOND_HALF' || status === 'STATUS_HALFTIME' || status === 'STATUS_DELAYED') {
       if (DRY_RUN) {
-        console.log(`[dry-run LIVE] ${fbMatch.home} ${homeScore}-${awayScore} ${fbMatch.away}`);
+        console.log(`[dry-run LIVE] ${fbMatch.home} ${fbHomeScore}-${fbAwayScore} ${fbMatch.away}`);
         continue;
       }
       await db.ref(`pf/matches/${fbMatch.id}`).update({
-        liveHome: parseInt(homeScore),
-        liveAway: parseInt(awayScore),
+        liveHome: parseInt(fbHomeScore),
+        liveAway: parseInt(fbAwayScore),
       });
-      console.log(`LIVE ${fbMatch.home} ${homeScore}-${awayScore} ${fbMatch.away}`);
+      console.log(`LIVE ${fbMatch.home} ${fbHomeScore}-${fbAwayScore} ${fbMatch.away}`);
       updatedLive++;
     }
   }
