@@ -1833,7 +1833,7 @@ function renderHomeStats() {
         <div style="font-size:10px;color:#64748b">Calendario</div>
       </div>
       <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center">
-        <div style="font-size:20px;font-weight:900;color:#2dd4bf">${myDone.length}</div>
+        <div style="font-size:20px;font-weight:900;color:#2dd4bf">${myDone.length}/${doneOrLive.length}</div>
         <div style="font-size:10px;color:#64748b">Partidos</div>
       </div>`;
   }
@@ -2536,7 +2536,12 @@ function openLiveDash(mid){
   renderLiveDash();
   const ov = document.getElementById('liveDash');
   ov.style.display = 'block';
-  requestAnimationFrame(()=> ov.classList.add('open'));
+  requestAnimationFrame(()=> {
+    ov.classList.add('open');
+    // recalcular altura del carrusel ya con el overlay visible (al renderizar oculto medía 0)
+    const sw = document.getElementById('ldSwipe');
+    if (sw && sw._fit) sw._fit();
+  });
   document.body.style.overflow = 'hidden';
 }
 function closeLiveDash(){
@@ -2685,7 +2690,7 @@ function _ldSwipeInit(){
   if (!sw) return;
   const titles = ['🏆 Quién gana más puntos', '📊 Tabla general en vivo'];
   const slides = sw.querySelectorAll('.ld-slide');
-  const fitHeight = (i) => { if (slides[i]) sw.style.height = slides[i].offsetHeight + 'px'; };
+  const fitHeight = (i) => { const h = slides[i] && slides[i].offsetHeight; sw.style.height = h ? h+'px' : 'auto'; };
   const update = () => {
     const i = Math.round(sw.scrollLeft / sw.clientWidth);
     document.getElementById('ldSlideTitle').textContent = titles[i] || titles[0];
@@ -2694,6 +2699,7 @@ function _ldSwipeInit(){
     fitHeight(i);
   };
   sw.onscroll = update;
+  sw._fit = () => fitHeight(Math.round(sw.scrollLeft / sw.clientWidth) || 0);
   fitHeight(0);
   document.querySelectorAll('#ldSwipeHead .ld-dots i').forEach(d => d.onclick = () => {
     sw.scrollTo({ left: (+d.dataset.i) * sw.clientWidth, behavior:'smooth' });
