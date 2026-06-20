@@ -2596,7 +2596,7 @@ function ldRenderBar(){
 function setLdBarMode(mode){
   LD_BARMODE = mode;
   document.querySelectorAll('#ldPill button').forEach(b=>b.classList.toggle('on', b.textContent.trim()===(mode==='pct'?'%':'N°')));
-  ldRenderBar();
+  ldRenderBar(); ldRenderHeat();
 }
 function showLdBar(k){
   const arr = LD.barGrp[k];
@@ -2642,6 +2642,7 @@ function ldRenderHeat(){
   if (LD.hasScore) goals.push(LD.sh, LD.sa);
   const maxG = Math.min(6, Math.max(3, ...(goals.length?goals:[0])));
   const maxC = Math.max(...Object.values(counts), 1);
+  const total = preds.length || 1;
   const N = maxG+1;
   const heat = document.getElementById('ldHeat');
   heat.style.gridTemplateColumns = `22px repeat(${N},1fr)`;
@@ -2654,7 +2655,8 @@ function ldRenderHeat(){
       const oc = y>x?col.L : y===x?col.E : col.V;
       const bg = c?_hexA(oc,t):'rgba(255,255,255,.025)';
       const cls = ['ld-cell']; if(!c) cls.push('empty');
-      html += `<div class="${cls.join(' ')}" style="background:${bg}" ${c?`onclick="ldShowCell(${y},${x})"`:''}>${c||''}</div>`;
+      const lbl = c ? (LD_BARMODE==='pct' ? Math.round(c/total*100)+'%' : c) : '';
+      html += `<div class="${cls.join(' ')}" style="background:${bg}" ${c?`onclick="ldShowCell(${y},${x})"`:''}>${lbl}</div>`;
     }
   }
   html += `<div></div>`;
