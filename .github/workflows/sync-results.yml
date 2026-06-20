@@ -3,7 +3,10 @@ name: Sync Mundial 2026 Results
 
 on:
   schedule:
-    # Cada 5 minutos — el job corre el sync 3 veces internamente (cada ~2 min)
+    # GitHub estrangula los cron cortos (puede saltarse runs durante alta carga),
+    # por eso NO confiamos en este intervalo para la frecuencia real. Cada run es
+    # un loop largo que sincroniza cada ~2 min; el cron solo reencadena el loop
+    # cuando el anterior termina (o si GitHub se saltó alguno).
     - cron: '*/5 * * * *'
   workflow_dispatch:
     inputs:
@@ -13,9 +16,17 @@ on:
         default: false
         type: boolean
 
+# Un solo loop a la vez: si ya hay uno corriendo, el nuevo run espera en cola y
+# arranca apenas el anterior termina -> sincronización casi continua sin solapes.
+concurrency:
+  group: sync-mundial
+  cancel-in-progress: false
+
 jobs:
   sync:
     runs-on: ubuntu-latest
+    # Tope de job de GitHub es 6h; cerramos antes para reencadenar limpio.
+    timeout-minutes: 350
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -28,14 +39,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run sync loop (ESPN)
+      - name: Run continuous sync loop (ESPN)
         env:
           FIREBASE_DATABASE_URL: ${{ secrets.FIREBASE_DATABASE_URL }}
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           DRY_RUN: ${{ github.event.inputs.dry_run == 'true' && '1' || '0' }}
         run: |
-          for i in 1 2 3; do
-            echo "=== Sync #$i ==="
-            node scripts/sync_results.mjs
-            if [ $i -lt 3 ]; then sleep 110; fi
+          # Corre ~5h45m sincronizando cada 120s, luego sale para que el cron
+          # reencadene un nuevo run. Una falla transitoria no corta el loop.
+          END=$(( $(date +%s) + 20700 ))
+          i=0
+          while [ "$(date +%s)" -lt "$END" ]; do
+            i=$((i + 1))
+            echo "=== Sync #$i ($(date -u +%H:%M:%S) UTC) ==="
+            node scripts/sync_results.mjs || echo ">> sync #$i falló, continúo con el siguiente ciclo"
+            sleep 120
           done
+          echo "Loop terminado tras $i ciclos; el cron reencadenará un nuevo run."
