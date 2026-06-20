@@ -180,6 +180,25 @@ async function run() {
   const mundialMatches = allMatches.filter(m => m.tournament === 'Mundial 2026');
   console.log(`Firebase: ${mundialMatches.length} partidos del Mundial 2026`);
 
+  // ─── Self-heal: invariante "si hay resultado final, no hay live" ──────────────
+  // Si un partido tiene realHome/realAway pero quedó con liveHome/liveAway colgados
+  // (final cargado a mano, o un FINAL que el sync no alcanzó a capturar mientras el
+  // partido aún estaba en vivo y luego salió de la ventana de ESPN), el frontend
+  // muestra el live viejo como si siguiera en juego. Lo limpiamos en cada ciclo.
+  let clearedStale = 0;
+  for (const fm of mundialMatches) {
+    const hasReal = fm.realHome != null && fm.realAway != null;
+    const hasLive = fm.liveHome != null || fm.liveAway != null;
+    if (!hasReal || !hasLive) continue;
+    if (DRY_RUN) {
+      console.log(`[dry-run CLEAR-LIVE] ${fm.home} ${fm.away} (real ${fm.realHome}-${fm.realAway}, live colgado ${fm.liveHome}-${fm.liveAway})`);
+      continue;
+    }
+    await db.ref(`pf/matches/${fm.id}`).update({ liveHome: null, liveAway: null });
+    console.log(`CLEAR-LIVE ${fm.home} ${fm.away} (real ${fm.realHome}-${fm.realAway})`);
+    clearedStale++;
+  }
+
   // Fetch ESPN scoreboard
   const res = await fetch(ESPN_BASE, { headers: { 'User-Agent': 'Mozilla/5.0' } });
   if (!res.ok) { console.error(`ESPN fetch error: ${res.status}`); process.exit(1); }
@@ -241,6 +260,6 @@ async function run() {
     }
   }
 
-  console.log(`\nResumen: ${updatedFinal} finales, ${updatedLive} en vivo actualizados`);
+  console.log(`\nResumen: ${updatedFinal} finales, ${updatedLive} en vivo actualizados, ${clearedStale} live colgados limpiados`);
   process.exit(0);
 }
