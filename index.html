@@ -779,7 +779,7 @@
 
       <!-- Mini Stats -->
       <div id="homeStats" style="display:none;margin-bottom:14px">
-        <h3 style="font-weight:900;font-size:15px;margin:0 0 10px;color:#e8edf5">📊 Mi Resumen</h3>
+        <h3 style="font-weight:900;font-size:15px;margin:0 0 10px;color:#e8edf5;display:flex;align-items:center;gap:8px">📊 Mi Resumen<span id="homeStatsLiveBadge" style="display:none;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#ef4444"><span style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block;animation:blink 1s infinite"></span>en vivo</span></h3>
         <div class="card" style="padding:12px 14px">
           <div id="homeStatsKPIs" style="display:flex;gap:10px;margin-bottom:10px"></div>
           <div id="homeExtraStats" style="display:flex;gap:10px"></div>
@@ -1780,11 +1780,10 @@ function renderHomeStats() {
   }).length;
 
   const hasLive = live.length > 0;
-  const liveBanner = hasLive
-    ? `<div style="background:#78350f;border:1px solid #f59e0b;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#fde68a;display:flex;align-items:center;gap:6px;cursor:pointer" onclick="document.getElementById('mainContent').scrollTo({top:0,behavior:'smooth'})"><span style="animation:blink 1s infinite">🔴</span><span><b>${live.length} partido${live.length>1?'s':''} en vivo</b> — puntuación provisional</span></div>`
-    : '';
+  const liveBadge = document.getElementById('homeStatsLiveBadge');
+  if (liveBadge) liveBadge.style.display = hasLive ? 'inline-flex' : 'none';
 
-  kpiEl.innerHTML = liveBanner + `
+  kpiEl.innerHTML = `
     <div style="flex:1;background:#0f172a;border-radius:8px;padding:10px;text-align:center">
       <div style="font-size:20px;font-weight:900;color:#38bdf8">${myPts.toFixed(2)}</div>
       <div style="font-size:10px;color:#64748b">Mis puntos${hasLive?' (incl. prov.)':''}</div>
