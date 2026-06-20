@@ -616,6 +616,20 @@
     .ld-ppts { font-size:14px; font-weight:900; min-width:50px; text-align:right; font-variant-numeric:tabular-nums; }
     .ld-soul { font-size:12px; color:#64748b; text-align:center; margin-top:12px; }
     .ld-soul b { color:#fbbf24; }
+    /* carrusel proyección / tabla general */
+    .ld-dots { margin-left:auto; display:inline-flex; gap:6px; align-items:center; }
+    .ld-dots i { width:7px; height:7px; border-radius:50%; background:#334155; transition:all .25s; }
+    .ld-dots i.on { background:#38bdf8; width:18px; border-radius:4px; }
+    .ld-swipehint { font-size:10px; color:#475569; font-weight:700; }
+    .ld-swipe { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+    .ld-swipe::-webkit-scrollbar { display:none; }
+    .ld-slide { flex:0 0 100%; min-width:100%; scroll-snap-align:start; box-sizing:border-box; padding:0 1px; }
+    .ld-gtable { background:#0c1320; border:1px solid #1e293b; border-radius:16px; overflow:hidden; }
+    .ld-gtable table { width:100%; border-collapse:collapse; font-size:13px; }
+    .ld-gtable th { padding:9px 8px; color:#64748b; font-size:10px; text-transform:uppercase; font-weight:800; }
+    .ld-gtable td { padding:10px 8px; }
+    .ld-grow.me { background:#0c3a52; }
+    .ld-gpts { font-weight:900; font-variant-numeric:tabular-nums; }
   </style>
 </head>
 <body>
@@ -2518,14 +2532,99 @@ function renderLiveDash(){
       <div class="ld-heatleg" id="ldHeatLeg"></div>
       <div class="ld-detail" id="ldHeatDetail" style="margin-top:14px"></div>
     </div>
-    <div class="ld-sec">🏆 Quién gana más puntos <span class="ld-sub" id="ldProjSub"></span></div>
-    <div class="ld-proj" id="ldProj"></div>
-    <div class="ld-soul" id="ldSoul"></div>
+    <div class="ld-sec" id="ldSwipeHead"><span id="ldSlideTitle">🏆 Quién gana más puntos</span> <span class="ld-sub" id="ldProjSub"></span>
+      <span class="ld-dots"><i class="on" data-i="0"></i><i data-i="1"></i></span>
+    </div>
+    <div class="ld-swipe" id="ldSwipe">
+      <div class="ld-slide">
+        <div class="ld-proj" id="ldProj"></div>
+        <div class="ld-soul" id="ldSoul"></div>
+      </div>
+      <div class="ld-slide">
+        <div id="ldGeneral"></div>
+      </div>
+    </div>
     <div class="ld-sec">🧠 Aweonaos <span class="ld-sub">no pronosticaron este partido</span></div>
     <div id="ldAweonaos"></div>`;
 
   _ldScore(); _ldPotBanner(); _ldCallout();
-  ldRenderBar(); ldRenderPay(); ldRenderHeat(); ldRenderProj(); _ldAweonaos();
+  ldRenderBar(); ldRenderPay(); ldRenderHeat(); ldRenderProj(); ldRenderGeneral(); _ldSwipeInit(); _ldAweonaos();
+}
+
+// Tabla general en vivo: destaca quién sumó puntos y quién subió/bajó de posición
+// comparando el estado YA finalizado (solo marcadores reales) vs el estado en vivo.
+function ldRenderGeneral(){
+  const el = document.getElementById('ldGeneral');
+  if (!el) return;
+  const users = CACHE.users.filter(u => !u.isAdmin);
+  const matches = CACHE.matches.filter(m => !isTournamentHidden(m.tournament || 'Sin Torneo'));
+  const incluyePodio = podioAplicaATorneo('__all__');
+
+  // useLive=false → solo partidos finalizados (posición "antes")
+  // useLive=true  → incluye marcadores en vivo (posición "ahora")
+  const calc = (useLive) => users.map(u => {
+    const up = CACHE.preds.filter(p => p.userId===u.id);
+    let pts=0, exact=0;
+    up.forEach(p => {
+      const m = matches.find(x => x.id===p.matchId);
+      if (!m) return;
+      const rh = useLive ? (m.realHome ?? m.liveHome) : m.realHome;
+      const ra = useLive ? (m.realAway ?? m.liveAway) : m.realAway;
+      if (rh == null || ra == null) return;
+      pts += _pointsAt(p, m, CACHE.preds, rh, ra) || 0;
+      if (p.predHome===rh && p.predAway===ra) exact++;
+    });
+    if (incluyePodio) { const mp = CACHE.podio.find(p => p.userId===u.id); pts += calcPodioPoints(mp).total; }
+    return { id:u.id, name:u.name, pts, exact };
+  }).sort((a,b) => b.pts-a.pts || b.exact-a.exact);
+
+  const prev = calc(false);
+  const live = calc(true);
+  const prevRank = {}, prevPts = {};
+  prev.forEach((s,i) => { prevRank[s.id]=i; prevPts[s.id]=s.pts; });
+
+  el.innerHTML = `<div class="ld-gtable"><table>
+    <thead><tr style="background:#0f172a;text-align:left">
+      <th style="width:42px">#</th><th>Jugador</th>
+      <th style="text-align:center">Pts</th><th style="text-align:center">🥇</th>
+    </tr></thead><tbody>` +
+    live.map((s,i) => {
+      const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+      const me = s.id===currentUser.id;
+      const gained = s.pts - (prevPts[s.id] ?? 0);
+      const dr = (prevRank[s.id] ?? i) - i; // >0 subió, <0 bajó
+      const mov = dr>0 ? `<span style="color:#4ade80;font-size:11px;font-weight:900">▲${dr}</span>`
+                : dr<0 ? `<span style="color:#f87171;font-size:11px;font-weight:900">▼${-dr}</span>`
+                : '';
+      const sumo = gained > 0.001;
+      const gainTag = sumo ? `<span style="color:#4ade80;font-size:10px;font-weight:800;margin-left:5px">+${gained.toFixed(2)}</span>` : '';
+      const bg = me ? '#0c3a52' : sumo ? '#11261b' : (i%2?'#0c1320':'#101a2c');
+      return `<tr class="ld-grow${me?' me':''}" style="background:${bg}">
+        <td style="font-weight:900;white-space:nowrap"><span style="display:inline-block;min-width:16px">${medal}</span> ${mov}</td>
+        <td style="font-weight:700">${s.name}${me?' <span style="color:#38bdf8;font-size:10px">(tú)</span>':''}${gainTag}</td>
+        <td class="ld-gpts" style="text-align:center;color:${sumo?'#4ade80':'#fbbf24'}">${s.pts.toFixed(2)}</td>
+        <td style="text-align:center;color:#38bdf8">${s.exact}</td>
+      </tr>`;
+    }).join('') +
+    (live.length?'':'<tr><td colspan="4" style="text-align:center;padding:24px;color:#475569">Sin participantes</td></tr>') +
+    `</tbody></table></div>
+    <div style="font-size:10px;color:#475569;text-align:center;margin-top:8px">▲▼ cambio de posición vs. resultados ya cerrados · <span style="color:#4ade80">verde</span> = sumó en vivo</div>`;
+}
+
+function _ldSwipeInit(){
+  const sw = document.getElementById('ldSwipe');
+  if (!sw) return;
+  const titles = ['🏆 Quién gana más puntos', '📊 Tabla general en vivo'];
+  const update = () => {
+    const i = Math.round(sw.scrollLeft / sw.clientWidth);
+    document.getElementById('ldSlideTitle').textContent = titles[i] || titles[0];
+    document.getElementById('ldProjSub').style.display = i===0 ? '' : 'none';
+    document.querySelectorAll('#ldSwipeHead .ld-dots i').forEach(d => d.classList.toggle('on', +d.dataset.i===i));
+  };
+  sw.onscroll = update;
+  document.querySelectorAll('#ldSwipeHead .ld-dots i').forEach(d => d.onclick = () => {
+    sw.scrollTo({ left: (+d.dataset.i) * sw.clientWidth, behavior:'smooth' });
+  });
 }
 
 function _ldAweonaos(){
