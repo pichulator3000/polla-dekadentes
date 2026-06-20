@@ -3625,6 +3625,27 @@ function renderRanking() {
 
   if (!scores.length) html += `<tr><td colspan="${showPodioCol?7:6}" style="text-align:center;padding:32px;color:#475569">Sin participantes aún</td></tr>`;
   html += `</tbody></table></div>`;
+
+  // ── Los más aweonaos ──
+  const aw = aweonaoStats(selectedRankTournament).filter(a => a.olvidos > 0);
+  html += `<div style="margin-top:18px">
+    <h3 style="font-weight:900;font-size:15px;margin:0 0 8px;color:#e8edf5">🧠 Los más aweonaos</h3>`;
+  if (!aw.length) {
+    html += `<div class="card" style="padding:14px;text-align:center;font-size:12px;color:#4ade80">✅ Nadie ha olvidado pronosticar… por ahora</div>`;
+  } else {
+    html += `<div class="card" style="overflow:hidden;padding:0"><table style="width:100%;border-collapse:collapse;font-size:13px"><tbody>`;
+    aw.forEach((a,i) => {
+      const bg = i % 2 === 0 ? '#0f172a' : '#111827';
+      html += `<tr style="background:${bg}">
+        <td style="padding:9px 12px;width:36px;font-weight:900;color:#64748b">${i===0?'🤡':(i+1)}</td>
+        <td style="padding:9px 8px;font-weight:700;color:#e8edf5">${a.name}</td>
+        <td style="padding:9px 12px;text-align:right;font-weight:900;color:#f87171">${a.olvidos} <span style="font-size:10px;color:#64748b;font-weight:600">olvido${a.olvidos>1?'s':''}</span></td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+  html += `</div>`;
+
   document.getElementById('rankingTable').innerHTML = html;
 }
 
