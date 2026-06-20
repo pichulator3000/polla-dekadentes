@@ -515,6 +515,12 @@
     .pm-flipnum.pm-anim { animation:pmFlip .4s ease; }
     @keyframes pmFlip { 0%{ transform:translateY(-55%) scaleY(.4); opacity:0; } 100%{ transform:none; opacity:1; } }
     .pm-fliplbl { font-size:9px; color:#64748b; font-weight:700; margin-top:4px; text-transform:lowercase; }
+    @media (max-width:480px) {
+      .pm-cd { gap:4px; }
+      .pm-flipbox { width:38px; height:44px; }
+      .pm-flipnum { font-size:21px; }
+      .pm-body { gap:8px; }
+    }
     .pm-livescore { display:flex; align-items:center; justify-content:center; gap:16px; margin:12px 0 4px; }
     .pm-lt { text-align:center; flex:1; }
     .pm-lt .pm-fl { display:inline-block; }
