@@ -489,6 +489,133 @@
     }
     .toggle.on::after { left: 21px; }
     .toggle:hover { box-shadow: 0 0 8px rgba(56, 189, 248, 0.15); }
+
+    /* ═══ Próximo partido / En vivo (home strip) ═══ */
+    #homeMatchStrip { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
+    .pm-card { border-radius:18px; padding:15px; cursor:pointer; position:relative; overflow:hidden; transition:transform .15s, box-shadow .2s; border:1px solid #1e293b; background:linear-gradient(180deg,#101725,#0c1320); }
+    .pm-card:active { transform:scale(.985); }
+    .pm-next { border-color:#3a3320; background:linear-gradient(180deg,#13131f,#0d1018); }
+    .pm-next::before { content:""; position:absolute; inset:0; background:radial-gradient(120% 80% at 10% 0%, rgba(250,204,21,.06), transparent 60%); pointer-events:none; }
+    .pm-live { border-color:#7f1d1d; background:linear-gradient(180deg,#1a0f12,#120a0c); }
+    .pm-live::before { content:""; position:absolute; inset:0; background:radial-gradient(120% 80% at 90% 0%, rgba(239,68,68,.10), transparent 60%); pointer-events:none; }
+    .pm-live.pm-pot { border-color:#f97316; box-shadow:0 0 24px rgba(249,115,22,.18); }
+    .pm-head { display:flex; align-items:center; gap:7px; font-size:11px; font-weight:800; letter-spacing:.05em; color:#94a3b8; text-transform:uppercase; }
+    .pm-body { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+    .pm-left { flex:1; min-width:0; }
+    .pm-teams { font-size:19px; font-weight:900; color:#f1f5f9; margin:8px 0 4px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+    .pm-teams .pm-vs { color:#475569; font-size:15px; font-weight:800; }
+    .pm-when { font-size:12px; color:#64748b; font-weight:600; }
+    .pm-pred-ok { color:#4ade80; font-size:13px; font-weight:800; margin-top:10px; }
+    .pm-pred-none { color:#fbbf24; font-size:13px; font-weight:800; margin-top:10px; }
+    .pm-cd { display:flex; gap:6px; flex-shrink:0; }
+    .pm-flip { text-align:center; }
+    .pm-flipbox { background:linear-gradient(180deg,#1c1c24,#101016); border:1px solid #2a2a35; border-radius:11px; width:46px; height:52px; display:flex; align-items:center; justify-content:center; box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 4px 12px rgba(0,0,0,.4); position:relative; overflow:hidden; }
+    .pm-flipbox::after { content:""; position:absolute; left:6px; right:6px; top:50%; height:1px; background:rgba(0,0,0,.5); }
+    .pm-flipnum { font-size:26px; font-weight:900; color:#facc15; font-variant-numeric:tabular-nums; line-height:1; display:inline-block; }
+    .pm-flipnum.pm-anim { animation:pmFlip .4s ease; }
+    @keyframes pmFlip { 0%{ transform:translateY(-55%) scaleY(.4); opacity:0; } 100%{ transform:none; opacity:1; } }
+    .pm-fliplbl { font-size:9px; color:#64748b; font-weight:700; margin-top:4px; text-transform:lowercase; }
+    .pm-livescore { display:flex; align-items:center; justify-content:center; gap:16px; margin:12px 0 4px; }
+    .pm-lt { text-align:center; flex:1; }
+    .pm-lt .pm-fl { display:inline-block; }
+    .pm-lt .pm-nm { font-size:12px; font-weight:800; color:#e8edf5; margin-top:2px; }
+    .pm-lnum { font-size:38px; font-weight:900; color:#fff; font-variant-numeric:tabular-nums; }
+    .pm-pot .pm-lnum { color:#fbbf24; }
+    .pm-lsep { font-size:24px; font-weight:900; color:#64748b; }
+    .pm-cta { text-align:center; font-size:11px; color:#fca5a5; font-weight:700; margin-top:6px; }
+
+    .pulse-hl { animation:pulseHl 2s ease-out; }
+    @keyframes pulseHl {
+      0%   { box-shadow:0 0 0 0 rgba(56,189,248,0); }
+      15%  { box-shadow:0 0 0 4px rgba(56,189,248,.5), 0 0 30px rgba(56,189,248,.4); border-color:#38bdf8; }
+      100% { box-shadow:0 0 0 0 rgba(56,189,248,0); }
+    }
+
+    /* potenciado badge/banner (compartido) */
+    .pot-badge { display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg,#38bdf8,#f97316); color:#0b1018; font-size:11px; font-weight:900; padding:5px 13px; border-radius:20px; letter-spacing:.03em; box-shadow:0 2px 14px rgba(56,189,248,.4); animation:potPulse 2.2s ease-in-out infinite; }
+    @keyframes potPulse { 50% { box-shadow:0 2px 22px rgba(249,115,22,.6); } }
+    .pot-banner { background:linear-gradient(135deg,rgba(56,189,248,.16),rgba(249,115,22,.16)); border:1px solid rgba(249,115,22,.4); border-radius:14px; padding:13px 14px; text-align:center; margin:14px 0; position:relative; overflow:hidden; }
+    .pot-banner::after { content:""; position:absolute; top:0; left:-60%; width:40%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent); animation:shimmer 2.8s infinite; }
+    @keyframes shimmer { to { left:120%; } }
+
+    /* ═══ Dashboard en vivo (overlay) ═══ */
+    #liveDash { position:fixed; inset:0; z-index:1100; background:#080c16; transform:translateY(100%); transition:transform .35s cubic-bezier(.22,1,.36,1); overflow-y:auto; overscroll-behavior:contain; display:none; }
+    #liveDash.open { transform:translateY(0); }
+    .ld-inner { max-width:480px; margin:0 auto; padding:14px 16px 48px; }
+    .ld-head { display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; padding:6px 0 12px; background:#080c16; z-index:5; }
+    .ld-close { background:#1e293b; border:none; color:#e8edf5; width:38px; height:38px; border-radius:12px; font-size:18px; cursor:pointer; font-weight:700; }
+    .ld-title { font-size:13px; font-weight:900; color:#94a3b8; text-transform:uppercase; letter-spacing:.05em; }
+    .ld-score { text-align:center; padding:16px 0 6px; }
+    .ld-score-row { display:flex; align-items:center; justify-content:center; gap:18px; }
+    .ld-st { text-align:center; }
+    .ld-st .ld-nm { font-size:13px; font-weight:800; margin-top:4px; }
+    .ld-num { font-size:54px; font-weight:900; font-variant-numeric:tabular-nums; line-height:1; }
+    .ld-pot .ld-num { color:#fbbf24; }
+    .ld-sep { font-size:30px; color:#475569; font-weight:900; }
+    .ld-minute { font-size:12px; color:#fca5a5; font-weight:800; margin-top:10px; }
+    .ld-sec { font-size:14px; font-weight:900; color:#e8edf5; margin:22px 0 10px; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+    .ld-sec .ld-sub { font-size:11px; color:#64748b; font-weight:600; }
+    .ld-panel { background:#0c1320; border:1px solid #1e293b; border-radius:16px; padding:16px; }
+    .ld-callout { background:linear-gradient(135deg,#0c2a3a,#0b1a26); border:1px solid #1e4257; border-radius:14px; padding:14px; text-align:center; margin:14px 0; font-size:13px; color:#cbd5e1; }
+    .ld-callout b { color:#38bdf8; }
+    /* barra */
+    .ld-bar { height:42px; border-radius:10px; overflow:hidden; display:flex; gap:2px; }
+    .ld-seg { display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:900; color:#0b1018; min-width:0; cursor:pointer; transition:flex .5s cubic-bezier(.22,1,.36,1); }
+    .ld-seg.sel { outline:2px solid #fff; outline-offset:-2px; }
+    .ld-barleg { display:flex; justify-content:space-between; font-size:11px; font-weight:800; margin-top:8px; gap:6px; flex-wrap:wrap; }
+    .ld-pill { margin-left:auto; display:inline-flex; background:#0c1320; border:1px solid #1e293b; border-radius:20px; padding:2px; }
+    .ld-pill button { border:none; background:transparent; color:#64748b; font-family:inherit; font-size:11px; font-weight:800; padding:3px 12px; border-radius:16px; cursor:pointer; }
+    .ld-pill button.on { background:#1e293b; color:#e8edf5; }
+    /* pagos */
+    .ld-pay { display:flex; flex-direction:column; gap:8px; }
+    .ld-pay-row { display:flex; align-items:center; gap:12px; background:#0c1320; border:1px solid #1e293b; border-radius:14px; padding:12px 14px; position:relative; overflow:hidden; }
+    .ld-pay-row.hot { border-color:#facc15; box-shadow:0 0 16px rgba(250,204,21,.12); }
+    .ld-pay-bar { position:absolute; left:0; top:0; bottom:0; opacity:.10; }
+    .ld-pay-ic { width:8px; height:38px; border-radius:4px; flex-shrink:0; }
+    .ld-pay-info { flex:1; min-width:0; position:relative; }
+    .ld-pay-lbl { font-size:13px; font-weight:800; color:#e8edf5; }
+    .ld-pay-sub { font-size:11px; color:#64748b; font-weight:600; margin-top:1px; }
+    .ld-pay-amt { text-align:right; position:relative; flex-shrink:0; }
+    .ld-pay-big { font-size:18px; font-weight:900; font-variant-numeric:tabular-nums; }
+    .ld-pay-x2 { font-size:10px; color:#facc15; font-weight:800; }
+    .ld-pay-none { font-size:11px; color:#475569; font-style:italic; }
+    .ld-hot-tag { font-size:9px; font-weight:900; color:#0b1018; background:#facc15; padding:1px 6px; border-radius:10px; margin-left:6px; vertical-align:middle; }
+    .ld-pay-foot { font-size:11px; color:#64748b; text-align:center; margin-top:10px; line-height:1.5; }
+    /* heatmap */
+    .ld-heatwrap { display:flex; align-items:stretch; gap:4px; }
+    .ld-heatwrap .ld-heat { flex:1; }
+    .ld-heat { display:grid; gap:5px; }
+    .ld-cell { aspect-ratio:1; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:900; color:#fff; cursor:pointer; transition:transform .12s; border:2px solid transparent; }
+    .ld-cell.empty { cursor:default; }
+    .ld-cell:not(.empty):active { transform:scale(.92); }
+    .ld-cell.sel { border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.12); }
+    .ld-axis { display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:#475569; }
+    .ld-ytitle { writing-mode:vertical-rl; transform:rotate(180deg); text-align:center; font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
+    .ld-xtitle { text-align:center; font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:.04em; margin-top:4px; }
+    .ld-heatleg { display:flex; flex-wrap:wrap; gap:14px; justify-content:center; font-size:10px; font-weight:700; color:#94a3b8; margin-top:12px; }
+    .ld-heatleg i { display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:5px; vertical-align:middle; }
+    /* detalle + chips */
+    .ld-detail { background:#0a0f1a; border:1px solid #1e293b; border-radius:14px; padding:13px 14px; }
+    .ld-detail-title { font-size:15px; font-weight:900; color:#f1f5f9; margin-bottom:10px; }
+    .ld-chips { display:flex; flex-wrap:wrap; gap:7px; }
+    .ld-chip { background:#1e293b; color:#cbd5e1; font-size:12px; font-weight:700; padding:5px 12px; border-radius:20px; }
+    .ld-chip.me { background:#0c3a52; color:#7dd3fc; box-shadow:inset 0 0 0 1px #38bdf8; }
+    .ld-empty { font-size:12px; color:#475569; font-style:italic; }
+    /* proyección */
+    .ld-proj { background:#0c1320; border:1px solid #1e293b; border-radius:16px; padding:6px 14px; }
+    .ld-prow { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid #141c2b; }
+    .ld-prow:last-child { border-bottom:none; }
+    .ld-prank { font-size:13px; font-weight:900; color:#64748b; width:18px; }
+    .ld-pinfo { flex:1; min-width:0; }
+    .ld-ptop { display:flex; align-items:center; gap:6px; margin-bottom:5px; }
+    .ld-pname { font-size:13px; font-weight:700; }
+    .ld-pname.me { color:#38bdf8; }
+    .ld-ppred { font-size:11px; font-weight:800; color:#64748b; margin-left:auto; font-variant-numeric:tabular-nums; }
+    .ld-ptrack { height:8px; background:#141c2b; border-radius:6px; overflow:hidden; }
+    .ld-pfill { height:100%; border-radius:6px; width:0; transition:width .9s cubic-bezier(.22,1,.36,1); }
+    .ld-ppts { font-size:14px; font-weight:900; min-width:50px; text-align:right; font-variant-numeric:tabular-nums; }
+    .ld-soul { font-size:12px; color:#64748b; text-align:center; margin-top:12px; }
+    .ld-soul b { color:#fbbf24; }
   </style>
 </head>
 <body>
@@ -604,6 +731,9 @@
         <div style="margin-bottom:16px;text-align:center"><img src="panini.png" alt="Polla Dekadentes" width="120" height="120" style="border-radius:14px;display:inline-block;"></div>
         <p id="homeGreet" style="color:#64748b;font-size:14px;margin:0"></p>
       </div>
+
+      <!-- Próximo partido / En vivo -->
+      <div id="homeMatchStrip" style="display:none"></div>
 
       <!-- Partido Potenciado -->
       <div id="homePotenciado" style="display:none;margin-bottom:14px"></div>
@@ -862,6 +992,17 @@
     </div>
 
   </div><!-- /mainContent -->
+
+  <!-- DASHBOARD EN VIVO (overlay) -->
+  <div id="liveDash">
+    <div class="ld-inner">
+      <div class="ld-head">
+        <div class="ld-title" id="ldTitle">⚡ Dashboard en vivo</div>
+        <button class="ld-close" onclick="closeLiveDash()">✕</button>
+      </div>
+      <div id="ldBody"></div>
+    </div>
+  </div>
 
   <!-- MESSAGE PANEL (expandible) -->
   <div id="messagePanel" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:flex-end;justify-content:center">
@@ -1162,7 +1303,7 @@ function refreshActiveTab() {
   if (selectedStatsTournament !== '__all__' && isTournamentHidden(selectedStatsTournament)) {
     selectedStatsTournament = '__all__';
   }
-  if (currentTab === 'home')     { renderHomeStats(); renderPotenciado(); renderUpcoming(); }
+  if (currentTab === 'home')     { renderHomeStats(); renderHomeMatchStrip(); renderPotenciado(); renderUpcoming(); }
   if (currentTab === 'partidos') renderMatches();
   if (currentTab === 'ranking')  renderRanking();
   if (currentTab === 'stats')    renderStats();
@@ -1171,6 +1312,7 @@ function refreshActiveTab() {
   if (currentTab === 'ajustes')    renderAjustes();
   if (currentTab === 'resultados') renderResultados();
   if (currentTab === 'reglas')     renderReglasPozos();
+  if (LD_MID != null)              renderLiveDash();
 }
 
 function tryAutoLogin() {
@@ -1384,6 +1526,7 @@ function launchApp(user) {
 function updateClock() {
   const el = document.getElementById('clockDisplay');
   if (el) el.textContent = new Date().toLocaleTimeString('es-CL',{hour12:false,timeZone:'America/Santiago'}) + ' 🇨🇱';
+  updateMatchCountdown();
 }
 
 // ═══ NAVIGATION ═══
@@ -1399,6 +1542,7 @@ function showHome() {
   document.getElementById('mainContent').scrollTop = 0;
   currentTab = 'home';
   renderHomeStats();
+  renderHomeMatchStrip();
   renderPotenciado();
   renderUpcoming();
 }
@@ -2151,6 +2295,389 @@ async function saveUpcomingPred(matchId) {
   renderUpcoming();
 }
 
+// ═══════════════════════════════════════════════════
+// ═══ PRÓXIMO PARTIDO / EN VIVO + DASHBOARD ═══
+// ═══════════════════════════════════════════════════
+
+// Color asignado a cada selección del Mundial
+const TEAM_COLORS = {
+  'Argentina':'#6cabdd','Brasil':'#fbbf24','Uruguay':'#3b9ae1','Chile':'#d52b1e','Colombia':'#fcd116','Ecuador':'#ffd100','Paraguay':'#d52b1e','Perú':'#e1122c','Venezuela':'#9d2235','Bolivia':'#2e8b57',
+  'España':'#c60b1e','Francia':'#3a64b0','Alemania':'#9aa0a6','Inglaterra':'#cf142b','Portugal':'#c8102e','Italia':'#1f6fc4','Países Bajos':'#f36c21','Bélgica':'#e30613','Croacia':'#d62718','Noruega':'#ba0c2f','Suecia':'#ffcd00','Dinamarca':'#c60c30','Suiza':'#d52b1e','Serbia':'#c6363c','Polonia':'#dc143c','Ucrania':'#ffd700','Turquía':'#e30a17','República Checa':'#d7141a','Escocia':'#0065bf','Grecia':'#0d5eaf','Austria':'#ed2939','Hungría':'#cd2a3e','Rumania':'#fcd116',
+  'México':'#00834a','Estados Unidos':'#5a6bb0','Canadá':'#d52b1e','Costa Rica':'#d72b2b','Panamá':'#d21034','Honduras':'#1f8be0','Jamaica':'#009b3a','Haití':'#1a3aa8','Trinidad y Tobago':'#da1a35','El Salvador':'#1f63c0','Guatemala':'#5aa0e0',
+  'Japón':'#1f3a93','Corea del Sur':'#c8102e','Australia':'#d4a017','Nueva Zelanda':'#cbd5e1','Irán':'#2aa84a','Arabia Saudita':'#1f8a4a','Qatar':'#8a1538','Iraq':'#1f8a4a','Uzbekistán':'#1eb53a','Jordania':'#ce1126',
+  'Nigeria':'#1aa64a','Egipto':'#d11a2e','Senegal':'#1aa64a','Marruecos':'#c1272d','Túnez':'#e21b2c','Argelia':'#1f8b4a','Ghana':'#fcd116','Costa de Marfil':'#f77f00','Camerún':'#1f8b5e','Sudáfrica':'#1f8b4a',
+  'Por definir':'#64748b','TBD':'#64748b'
+};
+function teamColor(name){
+  if (TEAM_COLORS[name]) return TEAM_COLORS[name];
+  let h = 0; for (const ch of (name||'')) h = ch.charCodeAt(0) + ((h<<5)-h);
+  return `hsl(${((h%360)+360)%360},58%,60%)`;
+}
+function _rgbOf(c){ if(c[0]!=='#') return null; const n=parseInt(c.slice(1),16); return [n>>16&255,n>>8&255,n&255]; }
+function _tooClose(a,b){ const x=_rgbOf(a),y=_rgbOf(b); if(!x||!y) return false; return Math.hypot(x[0]-y[0],x[1]-y[1],x[2]-y[2])<75; }
+function _hexA(c,a){ if(c[0]!=='#') return c; const n=parseInt(c.slice(1),16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; }
+function matchColors(m){ const o={L:teamColor(m.home),E:'#94a3b8',V:teamColor(m.away)}; if(_tooClose(o.L,o.V))o.V='#f87171'; if(_tooClose(o.L,o.E))o.E='#cbd5e1'; return o; }
+function flagBig(team,size){ const u=flagUrl(team); return u?`<img src="${u}" style="width:${size}px;height:${Math.round(size*0.67)}px;border-radius:4px;object-fit:cover;box-shadow:0 2px 6px rgba(0,0,0,.4);display:inline-block" alt="">`:`<span style="font-size:${size}px">🏳️</span>`; }
+const _fmtPts = v => Math.round(v*100)/100;
+const _outcome = p => p.predHome>p.predAway ? 'L' : p.predHome===p.predAway ? 'E' : 'V';
+
+// ── Home strip: en vivo (arriba) + próximo partido ──
+function renderHomeMatchStrip(){
+  const el = document.getElementById('homeMatchStrip');
+  if (!el) return;
+  if (!CACHE.matches || !CACHE.matches.length) { el.style.display='none'; return; }
+  const now = new Date();
+  const visible = m => !isTournamentHidden(m.tournament||'Sin Torneo') && m.home!=='Por definir' && m.away!=='Por definir';
+  const lives = CACHE.matches.filter(m => visible(m) && getStatus(m)==='live')
+                             .sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
+  const next  = CACHE.matches.filter(m => visible(m) && new Date(m.datetime)>now)
+                             .sort((a,b)=>new Date(a.datetime)-new Date(b.datetime))[0];
+  let html = '';
+  lives.forEach(m => html += _liveCardHtml(m));   // en vivo arriba
+  if (next) html += _nextCardHtml(next);
+  if (!html) { el.style.display='none'; return; }
+  el.style.display = 'flex';
+  el.innerHTML = html;
+  updateMatchCountdown();
+}
+
+function _nextCardHtml(m){
+  const isAdm = currentUser?.isAdmin;
+  const pred = isAdm ? null : CACHE.preds.find(p => p.userId===currentUser.id && p.matchId===m.id);
+  const tz = 'America/Santiago';
+  const d = new Date(m.datetime);
+  const when = d.toLocaleDateString('es-CL',{day:'numeric',month:'short',timeZone:tz}) + ' · ' +
+               d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:tz}) + ' hrs Chile';
+  const predLine = isAdm ? '' :
+    (pred && pred.predHome!=null ? `<div class="pm-pred-ok">✓ Tu pronóstico: ${pred.predHome} – ${pred.predAway}</div>`
+                                 : `<div class="pm-pred-none">⚠️ Aún no pronosticas</div>`);
+  return `<div class="pm-card pm-next" onclick="jumpToMatch('${m.id}')">
+    <div class="pm-body">
+      <div class="pm-left">
+        <div class="pm-head">⏱ Próximo partido</div>
+        <div class="pm-teams">${flagImg(m.home)}${m.home} <span class="pm-vs">vs</span> ${flagImg(m.away)}${m.away}</div>
+        <div class="pm-when">${when}</div>
+        ${predLine}
+      </div>
+      <div class="pm-cd" id="pmCd" data-iso="${m.datetime}">
+        <div class="pm-flip"><div class="pm-flipbox"><span class="pm-flipnum" id="pm-cd-1">--</span></div><div class="pm-fliplbl" id="pm-cl-1">hrs</div></div>
+        <div class="pm-flip"><div class="pm-flipbox"><span class="pm-flipnum" id="pm-cd-2">--</span></div><div class="pm-fliplbl" id="pm-cl-2">min</div></div>
+        <div class="pm-flip"><div class="pm-flipbox"><span class="pm-flipnum" id="pm-cd-3">--</span></div><div class="pm-fliplbl" id="pm-cl-3">seg</div></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function _liveCardHtml(m){
+  const sh = m.realHome ?? m.liveHome, sa = m.realAway ?? m.liveAway;
+  const pot = !!m.potenciado;
+  const col = matchColors(m);
+  return `<div class="pm-card pm-live${pot?' pm-pot':''}" onclick="openLiveDash('${m.id}')">
+    <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
+      <span class="badge-live">🔴 EN VIVO</span>
+      ${pot?'<span class="pot-badge">⚡ POTENCIADO ×2</span>':''}
+    </div>
+    <div class="pm-livescore">
+      <div class="pm-lt"><div class="pm-fl">${flagBig(m.home,34)}</div><div class="pm-nm" style="color:${col.L}">${m.home}</div></div>
+      <div class="pm-lnum">${sh??'-'}</div><div class="pm-lsep">–</div><div class="pm-lnum">${sa??'-'}</div>
+      <div class="pm-lt"><div class="pm-fl">${flagBig(m.away,34)}</div><div class="pm-nm" style="color:${col.V}">${m.away}</div></div>
+    </div>
+    <div class="pm-cta">👆 Toca para ver el dashboard en vivo</div>
+  </div>`;
+}
+
+function _setPmFlip(id,val){ const e=document.getElementById(id); if(e && e.textContent!==val){ e.textContent=val; e.classList.remove('pm-anim'); void e.offsetWidth; e.classList.add('pm-anim'); } }
+function updateMatchCountdown(){
+  const cd = document.getElementById('pmCd');
+  if (!cd) return;
+  const diff = new Date(cd.dataset.iso) - new Date();
+  if (diff <= 0) { renderHomeMatchStrip(); return; }   // arrancó → pasa a en vivo
+  const pad = n => String(n).padStart(2,'0');
+  let v1,v2,v3,l1,l2,l3;
+  if (diff >= 48*3600000) {
+    const days=Math.floor(diff/86400000), h=Math.floor((diff%86400000)/3600000), m=Math.floor((diff%3600000)/60000);
+    v1=pad(days); v2=pad(h); v3=pad(m); l1='días'; l2='hrs'; l3='min';
+  } else {
+    const h=Math.floor(diff/3600000), m=Math.floor((diff%3600000)/60000), s=Math.floor((diff%60000)/1000);
+    v1=pad(h); v2=pad(m); v3=pad(s); l1='hrs'; l2='min'; l3='seg';
+  }
+  _setPmFlip('pm-cd-1',v1); _setPmFlip('pm-cd-2',v2); _setPmFlip('pm-cd-3',v3);
+  const setL=(id,t)=>{const e=document.getElementById(id); if(e&&e.textContent!==t)e.textContent=t;};
+  setL('pm-cl-1',l1); setL('pm-cl-2',l2); setL('pm-cl-3',l3);
+}
+
+// ── Salto + resaltado al fixture ──
+function jumpToMatch(mid){
+  const m = CACHE.matches.find(x=>x.id===mid);
+  if (!m) return;
+  selectedTournament = m.tournament || 'Sin Torneo';
+  showTab('partidos');
+  setTimeout(()=>{
+    const el = document.getElementById('match_'+mid);
+    if (!el) return;
+    let n = el.parentElement;
+    while (n) { if (n.tagName==='DETAILS') n.open=true; n=n.parentElement; }
+    el.scrollIntoView({behavior:'smooth',block:'center'});
+    el.classList.remove('pulse-hl'); void el.offsetWidth; el.classList.add('pulse-hl');
+  }, 90);
+}
+
+// ═══ DASHBOARD EN VIVO ═══
+let LD_MID = null, LD_BARMODE = 'pct', LD = null;
+
+function openLiveDash(mid){
+  LD_MID = mid;
+  renderLiveDash();
+  const ov = document.getElementById('liveDash');
+  ov.style.display = 'block';
+  requestAnimationFrame(()=> ov.classList.add('open'));
+  document.body.style.overflow = 'hidden';
+}
+function closeLiveDash(){
+  const ov = document.getElementById('liveDash');
+  ov.classList.remove('open');
+  document.body.style.overflow = '';
+  LD_MID = null;
+  setTimeout(()=>{ if(!ov.classList.contains('open')) ov.style.display='none'; }, 350);
+}
+
+function _projRows(){
+  const {m,preds} = LD;
+  return preds.map(p => {
+    const u = CACHE.users.find(x=>x.id===p.userId);
+    return { userId:p.userId, name:u?u.name:'?', predHome:p.predHome, predAway:p.predAway,
+             pts: calcPoints(p,m,CACHE.preds) || 0, me:p.userId===currentUser.id };
+  }).sort((a,b)=>b.pts-a.pts);
+}
+function _ldChips(arr){
+  return `<div class="ld-chips">${arr.map(p=>{
+    const u=CACHE.users.find(x=>x.id===p.userId); const me=p.userId===currentUser.id;
+    return `<span class="ld-chip${me?' me':''}">${u?u.name:'?'}${me?' (tú)':''}</span>`;
+  }).join('')}</div>`;
+}
+
+function renderLiveDash(){
+  if (LD_MID == null) return;
+  const m = CACHE.matches.find(x=>x.id===LD_MID);
+  if (!m) { closeLiveDash(); return; }
+  const preds = CACHE.preds.filter(p => p.matchId===m.id);
+  const col = matchColors(m);
+  const pot = !!m.potenciado;
+  const pool = getPoolForStage(m.stage) * (pot?2:1);
+  const sh = m.realHome ?? m.liveHome, sa = m.realAway ?? m.liveAway;
+  const mine = CACHE.preds.find(p => p.userId===currentUser.id && p.matchId===m.id);
+  LD = { m, preds, col, pot, pool, sh, sa, mine, hasScore:(sh!=null && sa!=null) };
+
+  document.getElementById('ldTitle').innerHTML = pot ? '⚡ Dashboard · POTENCIADO' : '⚡ Dashboard en vivo';
+  document.getElementById('ldBody').innerHTML = `
+    <div id="ldScore"></div>
+    <div id="ldPot"></div>
+    <div id="ldCallout"></div>
+    <div class="ld-sec">📊 ¿Qué apostó la gente?
+      <span class="ld-pill" id="ldPill"><button class="on" onclick="setLdBarMode('pct')">%</button><button onclick="setLdBarMode('cnt')">N°</button></span>
+    </div>
+    <div class="ld-bar" id="ldBar"></div>
+    <div class="ld-barleg" id="ldBarLeg"></div>
+    <div class="ld-detail" id="ldBarDetail" style="display:none;margin-top:10px"></div>
+    <div class="ld-sec">💰 ¿Cuánto paga cada resultado? <span class="ld-sub" id="ldPoolSub"></span></div>
+    <div class="ld-pay" id="ldPay"></div>
+    <div class="ld-pay-foot">El pozo se reparte entre los que le pegan al resultado · <b style="color:#facc15">marcador exacto = ×2</b></div>
+    <div class="ld-sec">🎯 Marcador exacto <span class="ld-sub">toca un marcador</span></div>
+    <div class="ld-panel">
+      <div class="ld-heatwrap"><div class="ld-ytitle" id="ldYtitle"></div><div class="ld-heat" id="ldHeat"></div></div>
+      <div class="ld-xtitle" id="ldXtitle"></div>
+      <div class="ld-heatleg" id="ldHeatLeg"></div>
+      <div class="ld-detail" id="ldHeatDetail" style="margin-top:14px"></div>
+    </div>
+    <div class="ld-sec">🏆 Quién gana más puntos <span class="ld-sub" id="ldProjSub"></span></div>
+    <div class="ld-proj" id="ldProj"></div>
+    <div class="ld-soul" id="ldSoul"></div>`;
+
+  _ldScore(); _ldPotBanner(); _ldCallout();
+  ldRenderBar(); ldRenderPay(); ldRenderHeat(); ldRenderProj();
+}
+
+function _ldScore(){
+  const {m,sh,sa,col,pot} = LD;
+  const done = getStatus(m)==='done';
+  const badge = done ? '<span class="badge-done">✓ Final</span>' : '<span class="badge-live">🔴 EN VIVO</span>';
+  const sc = document.getElementById('ldScore');
+  sc.className = 'ld-score' + (pot?' ld-pot':'');
+  sc.innerHTML = `
+    <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">${badge}${pot?'<span class="pot-badge">⚡ POTENCIADO ×2</span>':''}</div>
+    <div class="ld-score-row">
+      <div class="ld-st">${flagBig(m.home,48)}<div class="ld-nm" style="color:${col.L}">${m.home}</div></div>
+      <div class="ld-num">${sh??'-'}</div><div class="ld-sep">–</div><div class="ld-num">${sa??'-'}</div>
+      <div class="ld-st">${flagBig(m.away,48)}<div class="ld-nm" style="color:${col.V}">${m.away}</div></div>
+    </div>`;
+}
+function _ldPotBanner(){
+  document.getElementById('ldPot').innerHTML = LD.pot
+    ? `<div class="pot-banner"><div style="font-size:14px;font-weight:900;color:#fbbf24">⚡ PARTIDO POTENCIADO ⚡</div><div style="font-size:12px;color:#cbd5e1;margin-top:3px">Este partido reparte el <b style="color:#fb923c">DOBLE</b> de puntos</div></div>`
+    : '';
+}
+function _ldCallout(){
+  const el = document.getElementById('ldCallout');
+  if (!LD.mine || !LD.hasScore) { el.innerHTML=''; return; }
+  const rows = _projRows();
+  const idx = rows.findIndex(r=>r.userId===currentUser.id);
+  if (idx<0) { el.innerHTML=''; return; }
+  const pts = rows[idx].pts;
+  el.innerHTML = `<div class="ld-callout">Con este marcador, <b>vas ${idx+1}º</b> de ${rows.length} — proyección <b>${pts>0?'+'+_fmtPts(pts):'0'} pts</b> 🔥</div>`;
+}
+
+function ldRenderBar(){
+  const {preds,col,m} = LD;
+  const grp={L:[],E:[],V:[]}; preds.forEach(p=>grp[_outcome(p)].push(p));
+  LD.barGrp = grp;
+  const total = preds.length || 1;
+  const segs = [
+    {k:'L',c:col.L,lbl:'Gana '+m.home,arr:grp.L},
+    {k:'E',c:col.E,lbl:'Empate',arr:grp.E},
+    {k:'V',c:col.V,lbl:'Gana '+m.away,arr:grp.V},
+  ].filter(s=>s.arr.length);
+  if (!preds.length) {
+    document.getElementById('ldBar').innerHTML = '';
+    document.getElementById('ldBarLeg').innerHTML = '<span style="color:#475569">Nadie ha pronosticado aún</span>';
+    return;
+  }
+  document.getElementById('ldBar').innerHTML = segs.map(s=>{
+    const n=s.arr.length, pct=Math.round(n/total*100);
+    return `<div class="ld-seg" style="flex:${n};background:${s.c}" onclick="showLdBar('${s.k}')">${LD_BARMODE==='pct'?pct+'%':n}</div>`;
+  }).join('');
+  document.getElementById('ldBarLeg').innerHTML = segs.map(s=>{
+    const n=s.arr.length, pct=Math.round(n/total*100);
+    return `<span style="color:${s.c}">● ${s.lbl} · ${LD_BARMODE==='pct'?pct+'%':n}</span>`;
+  }).join('');
+}
+function setLdBarMode(mode){
+  LD_BARMODE = mode;
+  document.querySelectorAll('#ldPill button').forEach(b=>b.classList.toggle('on', b.textContent.trim()===(mode==='pct'?'%':'N°')));
+  ldRenderBar();
+}
+function showLdBar(k){
+  const arr = LD.barGrp[k];
+  const titles = {L:'Gana '+LD.m.home, E:'Empate', V:'Gana '+LD.m.away};
+  const d = document.getElementById('ldBarDetail');
+  d.style.display='block';
+  d.innerHTML = `<div class="ld-detail-title">${titles[k]} · ${arr.length}</div>${arr.length?_ldChips(arr):'<div class="ld-empty">Nadie</div>'}`;
+  document.querySelectorAll('#ldBar .ld-seg').forEach(s=>s.classList.toggle('sel', s.getAttribute('onclick').includes(`'${k}'`)));
+}
+
+function ldRenderPay(){
+  const {preds,col,pool,m,pot} = LD;
+  const grp={L:[],E:[],V:[]}; preds.forEach(p=>grp[_outcome(p)].push(p));
+  document.getElementById('ldPoolSub').textContent = `pozo ${pool} pts${pot?' ⚡×2':''}`;
+  const liveOut = LD.hasScore ? (LD.sh>LD.sa?'L':LD.sh===LD.sa?'E':'V') : null;
+  const rows = [
+    {k:'L',c:col.L,lbl:'Gana '+m.home,arr:grp.L},
+    {k:'E',c:col.E,lbl:'Empate',arr:grp.E},
+    {k:'V',c:col.V,lbl:'Gana '+m.away,arr:grp.V},
+  ];
+  const maxPer = Math.max(...rows.map(r=>r.arr.length?pool/r.arr.length:0),1);
+  document.getElementById('ldPay').innerHTML = rows.map(r=>{
+    const n=r.arr.length, per=n?pool/n:0, hot=r.k===liveOut;
+    const amt = n
+      ? `<div class="ld-pay-big" style="color:${r.c}">+${_fmtPts(per)}</div><div class="ld-pay-x2">exacto +${_fmtPts(per*2)}</div>`
+      : `<div class="ld-pay-none">nadie apostó</div>`;
+    return `<div class="ld-pay-row${hot?' hot':''}">
+      <div class="ld-pay-bar" style="background:${r.c};width:${n?per/maxPer*100:0}%"></div>
+      <div class="ld-pay-ic" style="background:${r.c}"></div>
+      <div class="ld-pay-info">
+        <div class="ld-pay-lbl">${r.lbl}${hot?'<span class="ld-hot-tag">VA GANANDO</span>':''}</div>
+        <div class="ld-pay-sub">${n} ${n===1?'apostó':'apostaron'} · pozo ÷ ${n||'—'}</div>
+      </div>
+      <div class="ld-pay-amt">${amt}</div>
+    </div>`;
+  }).join('');
+}
+
+function ldRenderHeat(){
+  const {preds,col,m} = LD;
+  const counts={}; preds.forEach(p=>{ const k=p.predHome+'-'+p.predAway; counts[k]=(counts[k]||0)+1; });
+  const goals = preds.flatMap(p=>[p.predHome,p.predAway]);
+  if (LD.hasScore) goals.push(LD.sh, LD.sa);
+  const maxG = Math.min(6, Math.max(3, ...(goals.length?goals:[0])));
+  const maxC = Math.max(...Object.values(counts), 1);
+  const N = maxG+1;
+  const heat = document.getElementById('ldHeat');
+  heat.style.gridTemplateColumns = `22px repeat(${N},1fr)`;
+  let html='';
+  for (let y=maxG; y>=0; y--){
+    html += `<div class="ld-axis">${y}</div>`;
+    for (let x=0; x<=maxG; x++){
+      const c = counts[y+'-'+x]||0;
+      const t = c?0.2+0.8*(c/maxC):0;
+      const oc = y>x?col.L : y===x?col.E : col.V;
+      const bg = c?_hexA(oc,t):'rgba(255,255,255,.025)';
+      const cls = ['ld-cell']; if(!c) cls.push('empty');
+      if (LD.hasScore && LD.sh===y && LD.sa===x) cls.push('sel');
+      const bd = (LD.mine && LD.mine.predHome===y && LD.mine.predAway===x) ? 'border-color:#38bdf8' : '';
+      html += `<div class="${cls.join(' ')}" style="background:${bg};${bd}" ${c?`onclick="ldShowCell(${y},${x})"`:''}>${c||''}</div>`;
+    }
+  }
+  html += `<div></div>`;
+  for (let x=0;x<=maxG;x++) html += `<div class="ld-axis">${x}</div>`;
+  heat.innerHTML = html;
+  document.getElementById('ldYtitle').textContent = m.home + ' ↑';
+  document.getElementById('ldXtitle').textContent = '← ' + m.away;
+  document.getElementById('ldHeatLeg').innerHTML =
+    `<span><i style="background:${col.L}"></i>Gana ${m.home}</span>`+
+    `<span><i style="background:${col.E}"></i>Empate</span>`+
+    `<span><i style="background:${col.V}"></i>Gana ${m.away}</span>`;
+  // selección por defecto
+  if (LD.hasScore && counts[LD.sh+'-'+LD.sa]) ldShowCell(LD.sh, LD.sa);
+  else {
+    const top = Object.keys(counts).sort((a,b)=>counts[b]-counts[a])[0];
+    if (top) ldShowCell(+top.split('-')[0], +top.split('-')[1]);
+    else document.getElementById('ldHeatDetail').innerHTML = '<div class="ld-empty">Nadie ha pronosticado aún</div>';
+  }
+}
+function ldShowCell(h,a){
+  const arr = LD.preds.filter(p=>p.predHome===h && p.predAway===a);
+  const liveTag = (LD.hasScore && h===LD.sh && a===LD.sa) ? ' <span style="font-size:11px;color:#f87171;font-weight:800">· EN VIVO</span>' : '';
+  document.getElementById('ldHeatDetail').innerHTML =
+    `<div class="ld-detail-title">${LD.m.home} ${h} – ${a} ${LD.m.away}${liveTag}</div>${arr.length?_ldChips(arr):'<div class="ld-empty">Nadie apostó este marcador</div>'}`;
+  document.querySelectorAll('#ldHeat .ld-cell').forEach(c=>{
+    const oc = c.getAttribute('onclick');
+    if (oc) c.classList.toggle('clk', oc===`ldShowCell(${h},${a})`);
+  });
+}
+
+function ldRenderProj(){
+  const proj = document.getElementById('ldProj');
+  const sub = document.getElementById('ldProjSub');
+  const soul = document.getElementById('ldSoul');
+  if (!LD.hasScore) {
+    sub.textContent = '(esperando marcador)';
+    proj.innerHTML = '<div class="ld-empty" style="padding:12px 4px">Aún no hay marcador en vivo cargado</div>';
+  } else {
+    sub.textContent = `proyección al ${LD.sh}–${LD.sa}`;
+    const rows = _projRows().slice(0,8);
+    const max = Math.max(...rows.map(r=>r.pts),1);
+    proj.innerHTML = rows.map((p,i)=>{
+      const exact = p.predHome===LD.sh && p.predAway===LD.sa;
+      const ic = exact?'🥇':p.pts>0?'✅':'❌';
+      const c = exact?'#38bdf8':p.pts>0?'#4ade80':'#64748b';
+      return `<div class="ld-prow">
+        <span class="ld-prank">${i+1}</span><span style="font-size:16px">${ic}</span>
+        <div class="ld-pinfo">
+          <div class="ld-ptop"><span class="ld-pname ${p.me?'me':''}">${p.name}${p.me?' <span style="font-size:10px;color:#38bdf8">(tú)</span>':''}</span><span class="ld-ppred">${p.predHome}–${p.predAway}</span></div>
+          <div class="ld-ptrack"><div class="ld-pfill" style="background:${c}"></div></div>
+        </div>
+        <span class="ld-ppts" style="color:${c}">${p.pts?'+'+_fmtPts(p.pts):'0'}</span>
+      </div>`;
+    }).join('');
+    requestAnimationFrame(()=>{
+      [...proj.querySelectorAll('.ld-pfill')].forEach((f,i)=>{ f.style.width=(rows[i].pts/max*100)+'%'; });
+    });
+  }
+  if (LD.mine) {
+    const twins = LD.preds.filter(p=>p.userId!==currentUser.id && p.predHome===LD.mine.predHome && p.predAway===LD.mine.predAway).length;
+    soul.innerHTML = twins>0 ? `👯 <b>${twins} alma${twins>1?'s':''} gemela${twins>1?'s':''}</b> apostó tu mismo marcador (${LD.mine.predHome}–${LD.mine.predAway})` : '';
+  } else soul.innerHTML = '';
+}
+
 // ═══ FIXTURE ═══
 const STAGE_ORDER = [
   'Grupo A','Grupo B','Grupo C','Grupo D','Grupo E','Grupo F',
@@ -2851,7 +3378,7 @@ function renderMatches() {
     }
 
     html += `
-    <div class="card-match" style="padding:10px 12px${m.potenciado&&isAdm?';border-color:rgba(250,204,21,0.4);box-shadow:0 0 12px rgba(250,204,21,0.15)':''}">
+    <div class="card-match" id="match_${m.id}" style="padding:10px 12px${m.potenciado&&isAdm?';border-color:rgba(250,204,21,0.4);box-shadow:0 0 12px rgba(250,204,21,0.15)':''}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
         <span style="font-size:10px;color:#475569">${normStage(m.stage)}${potenciadoBadge}</span>
         ${badges[status]}
