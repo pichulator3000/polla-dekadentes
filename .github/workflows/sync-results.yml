@@ -3,8 +3,8 @@ name: Sync Mundial 2026 Results
 
 on:
   schedule:
-    # Cada 5 minutos, todo el día
-    - cron: '*/5 * * * *'
+    # Cada 2 minutos, todo el día
+    - cron: '*/2 * * * *'
   workflow_dispatch:
     inputs:
       dry_run:
