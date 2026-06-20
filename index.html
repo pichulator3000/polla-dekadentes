@@ -2693,12 +2693,16 @@ function _ldSwipeInit(){
   const titles = ['🏆 Quién gana más puntos', '📊 Tabla general en vivo'];
   const slides = sw.querySelectorAll('.ld-slide');
   const fitHeight = (i) => { const h = slides[i] && slides[i].offsetHeight; sw.style.height = h ? h+'px' : 'auto'; };
+  let _fhTimer;
   const update = () => {
     const i = Math.round(sw.scrollLeft / sw.clientWidth);
     document.getElementById('ldSlideTitle').textContent = titles[i] || titles[0];
     document.getElementById('ldProjSub').style.display = i===0 ? '' : 'none';
     document.querySelectorAll('#ldSwipeHead .ld-dots i').forEach(d => d.classList.toggle('on', +d.dataset.i===i));
-    fitHeight(i);
+    // Delay fitHeight until snap animation settles — changing height mid-swipe
+    // causes iOS to reset scroll position and break the snap gesture.
+    clearTimeout(_fhTimer);
+    _fhTimer = setTimeout(() => fitHeight(i), 300);
   };
   sw.onscroll = update;
   sw._fit = () => fitHeight(Math.round(sw.scrollLeft / sw.clientWidth) || 0);
