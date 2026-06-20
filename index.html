@@ -621,9 +621,9 @@
     .ld-dots i { width:7px; height:7px; border-radius:50%; background:#334155; transition:all .25s; }
     .ld-dots i.on { background:#38bdf8; width:18px; border-radius:4px; }
     .ld-swipehint { font-size:10px; color:#475569; font-weight:700; }
-    .ld-swipe { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+    .ld-swipe { display:flex; align-items:flex-start; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; transition:height .3s cubic-bezier(.22,1,.36,1); }
     .ld-swipe::-webkit-scrollbar { display:none; }
-    .ld-slide { flex:0 0 100%; min-width:100%; scroll-snap-align:start; box-sizing:border-box; padding:0 1px; }
+    .ld-slide { flex:0 0 100%; min-width:100%; scroll-snap-align:start; box-sizing:border-box; padding:0 1px; align-self:flex-start; }
     .ld-gtable { background:#0c1320; border:1px solid #1e293b; border-radius:16px; overflow:hidden; }
     .ld-gtable table { width:100%; border-collapse:collapse; font-size:13px; }
     .ld-gtable th { padding:9px 8px; color:#64748b; font-size:10px; text-transform:uppercase; font-weight:800; }
@@ -2617,13 +2617,17 @@ function _ldSwipeInit(){
   const sw = document.getElementById('ldSwipe');
   if (!sw) return;
   const titles = ['🏆 Quién gana más puntos', '📊 Tabla general en vivo'];
+  const slides = sw.querySelectorAll('.ld-slide');
+  const fitHeight = (i) => { if (slides[i]) sw.style.height = slides[i].offsetHeight + 'px'; };
   const update = () => {
     const i = Math.round(sw.scrollLeft / sw.clientWidth);
     document.getElementById('ldSlideTitle').textContent = titles[i] || titles[0];
     document.getElementById('ldProjSub').style.display = i===0 ? '' : 'none';
     document.querySelectorAll('#ldSwipeHead .ld-dots i').forEach(d => d.classList.toggle('on', +d.dataset.i===i));
+    fitHeight(i);
   };
   sw.onscroll = update;
+  fitHeight(0);
   document.querySelectorAll('#ldSwipeHead .ld-dots i').forEach(d => d.onclick = () => {
     sw.scrollTo({ left: (+d.dataset.i) * sw.clientWidth, behavior:'smooth' });
   });
