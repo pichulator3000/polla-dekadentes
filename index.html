@@ -542,7 +542,7 @@
     #liveDash { position:fixed; inset:0; z-index:1100; background:#080c16; transform:translateY(100%); transition:transform .35s cubic-bezier(.22,1,.36,1); overflow-y:auto; overscroll-behavior:contain; display:none; }
     #liveDash.open { transform:translateY(0); }
     .ld-inner { max-width:480px; margin:0 auto; padding:14px 16px 48px; }
-    .ld-head { display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; padding:6px 0 12px; background:#080c16; z-index:5; }
+    .ld-head { display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; padding:calc(env(safe-area-inset-top) + 10px) 0 12px; background:#080c16; z-index:5; }
     .ld-close { background:#1e293b; border:none; color:#e8edf5; width:38px; height:38px; border-radius:12px; font-size:18px; cursor:pointer; font-weight:700; }
     .ld-title { font-size:13px; font-weight:900; color:#94a3b8; text-transform:uppercase; letter-spacing:.05em; }
     .ld-score { text-align:center; padding:16px 0 6px; }
@@ -1371,8 +1371,10 @@ function autoJump(el, nextId) {
 }
 
 function calcPoints(pred, match, allPreds) {
-  const rh = match.realHome ?? match.liveHome;
-  const ra = match.realAway ?? match.liveAway;
+  return _pointsAt(pred, match, allPreds, match.realHome ?? match.liveHome, match.realAway ?? match.liveAway);
+}
+// Puntos de una predicción dado un marcador rh-ra arbitrario (para proyección en vivo)
+function _pointsAt(pred, match, allPreds, rh, ra) {
   if (rh == null || ra == null) return null;
   const realO = Math.sign(rh - ra);
   const predO = Math.sign(pred.predHome - pred.predAway);
@@ -2321,6 +2323,29 @@ function flagBig(team,size){ const u=flagUrl(team); return u?`<img src="${u}" st
 const _fmtPts = v => Math.round(v*100)/100;
 const _outcome = p => p.predHome>p.predAway ? 'L' : p.predHome===p.predAway ? 'E' : 'V';
 
+// ── Aweonaos: quienes olvidaron pronosticar ──
+function _tienePred(uid, mid){
+  return CACHE.preds.some(p => p.userId===uid && p.matchId===mid && p.predHome!=null);
+}
+function _matchElegible(m){
+  return m.home!=='Por definir' && m.away!=='Por definir'
+      && !isTournamentHidden(m.tournament||'Sin Torneo');
+}
+function aweonaosDeMatch(m){
+  if (getStatus(m)==='open' || !_matchElegible(m)) return [];
+  return CACHE.users.filter(u => !u.isAdmin && !_tienePred(u.id, m.id));
+}
+function aweonaoStats(scope){
+  const cerrados = CACHE.matches.filter(m =>
+    _matchElegible(m) && getStatus(m)!=='open' &&
+    (scope==='__all__' || (m.tournament||'Sin Torneo')===scope));
+  const jugadores = CACHE.users.filter(u => !u.isAdmin);
+  return jugadores.map(u => ({
+    id: u.id, name: u.name,
+    olvidos: cerrados.filter(m => !_tienePred(u.id, m.id)).length
+  })).sort((a,b) => b.olvidos - a.olvidos || a.name.localeCompare(b.name));
+}
+
 // ── Home strip: en vivo (arriba) + próximo partido ──
 function renderHomeMatchStrip(){
   const el = document.getElementById('homeMatchStrip');
@@ -2369,7 +2394,8 @@ function _nextCardHtml(m){
 }
 
 function _liveCardHtml(m){
-  const sh = m.realHome ?? m.liveHome, sa = m.realAway ?? m.liveAway;
+  // Partido en vivo: si no hay marcador cargado, va 0–0
+  const sh = m.realHome ?? m.liveHome ?? 0, sa = m.realAway ?? m.liveAway ?? 0;
   const pot = !!m.potenciado;
   const col = matchColors(m);
   return `<div class="pm-card pm-live${pot?' pm-pot':''}" onclick="openLiveDash('${m.id}')">
@@ -2379,7 +2405,7 @@ function _liveCardHtml(m){
     </div>
     <div class="pm-livescore">
       <div class="pm-lt"><div class="pm-fl">${flagBig(m.home,34)}</div><div class="pm-nm" style="color:${col.L}">${m.home}</div></div>
-      <div class="pm-lnum">${sh??'-'}</div><div class="pm-lsep">–</div><div class="pm-lnum">${sa??'-'}</div>
+      <div class="pm-lnum">${sh}</div><div class="pm-lsep">–</div><div class="pm-lnum">${sa}</div>
       <div class="pm-lt"><div class="pm-fl">${flagBig(m.away,34)}</div><div class="pm-nm" style="color:${col.V}">${m.away}</div></div>
     </div>
     <div class="pm-cta">👆 Toca para ver el dashboard en vivo</div>
@@ -2446,7 +2472,7 @@ function _projRows(){
   return preds.map(p => {
     const u = CACHE.users.find(x=>x.id===p.userId);
     return { userId:p.userId, name:u?u.name:'?', predHome:p.predHome, predAway:p.predAway,
-             pts: calcPoints(p,m,CACHE.preds) || 0, me:p.userId===currentUser.id };
+             pts: _pointsAt(p,m,CACHE.preds,LD.sh,LD.sa) || 0, me:p.userId===currentUser.id };
   }).sort((a,b)=>b.pts-a.pts);
 }
 function _ldChips(arr){
@@ -2464,7 +2490,10 @@ function renderLiveDash(){
   const col = matchColors(m);
   const pot = !!m.potenciado;
   const pool = getPoolForStage(m.stage) * (pot?2:1);
-  const sh = m.realHome ?? m.liveHome, sa = m.realAway ?? m.liveAway;
+  // Marcador efectivo: si el partido ya empezó y no hay marcador cargado, va 0–0
+  const started = getStatus(m) !== 'open';
+  const sh = m.realHome ?? m.liveHome ?? (started ? 0 : null);
+  const sa = m.realAway ?? m.liveAway ?? (started ? 0 : null);
   const mine = CACHE.preds.find(p => p.userId===currentUser.id && p.matchId===m.id);
   LD = { m, preds, col, pot, pool, sh, sa, mine, hasScore:(sh!=null && sa!=null) };
 
@@ -2491,10 +2520,24 @@ function renderLiveDash(){
     </div>
     <div class="ld-sec">🏆 Quién gana más puntos <span class="ld-sub" id="ldProjSub"></span></div>
     <div class="ld-proj" id="ldProj"></div>
-    <div class="ld-soul" id="ldSoul"></div>`;
+    <div class="ld-soul" id="ldSoul"></div>
+    <div class="ld-sec">🧠 Aweonaos <span class="ld-sub">no pronosticaron este partido</span></div>
+    <div id="ldAweonaos"></div>`;
 
   _ldScore(); _ldPotBanner(); _ldCallout();
-  ldRenderBar(); ldRenderPay(); ldRenderHeat(); ldRenderProj();
+  ldRenderBar(); ldRenderPay(); ldRenderHeat(); ldRenderProj(); _ldAweonaos();
+}
+
+function _ldAweonaos(){
+  const aw = aweonaosDeMatch(LD.m);
+  const el = document.getElementById('ldAweonaos');
+  if (!el) return;
+  el.innerHTML = aw.length
+    ? `<div class="ld-chips">${aw.map(u=>{
+        const me = u.id===currentUser.id;
+        return `<span class="ld-chip${me?' me':''}">${u.name}${me?' (tú)':''}</span>`;
+      }).join('')}</div>`
+    : `<div class="ld-empty" style="padding:8px 4px">✅ No hubieron aweonaos este partido, todos pusieron sus pronósticos</div>`;
 }
 
 function _ldScore(){
@@ -2611,7 +2654,6 @@ function ldRenderHeat(){
       const oc = y>x?col.L : y===x?col.E : col.V;
       const bg = c?_hexA(oc,t):'rgba(255,255,255,.025)';
       const cls = ['ld-cell']; if(!c) cls.push('empty');
-      if (LD.hasScore && LD.sh===y && LD.sa===x) cls.push('sel');
       const bd = (LD.mine && LD.mine.predHome===y && LD.mine.predAway===x) ? 'border-color:#38bdf8' : '';
       html += `<div class="${cls.join(' ')}" style="background:${bg};${bd}" ${c?`onclick="ldShowCell(${y},${x})"`:''}>${c||''}</div>`;
     }
@@ -2625,22 +2667,22 @@ function ldRenderHeat(){
     `<span><i style="background:${col.L}"></i>Gana ${m.home}</span>`+
     `<span><i style="background:${col.E}"></i>Empate</span>`+
     `<span><i style="background:${col.V}"></i>Gana ${m.away}</span>`;
-  // selección por defecto
-  if (LD.hasScore && counts[LD.sh+'-'+LD.sa]) ldShowCell(LD.sh, LD.sa);
+  // detalle por defecto (sin marcar borde: la selección visual es solo por click)
+  if (LD.hasScore && counts[LD.sh+'-'+LD.sa]) ldShowCell(LD.sh, LD.sa, false);
   else {
     const top = Object.keys(counts).sort((a,b)=>counts[b]-counts[a])[0];
-    if (top) ldShowCell(+top.split('-')[0], +top.split('-')[1]);
+    if (top) ldShowCell(+top.split('-')[0], +top.split('-')[1], false);
     else document.getElementById('ldHeatDetail').innerHTML = '<div class="ld-empty">Nadie ha pronosticado aún</div>';
   }
 }
-function ldShowCell(h,a){
+function ldShowCell(h,a,isClick=true){
   const arr = LD.preds.filter(p=>p.predHome===h && p.predAway===a);
   const liveTag = (LD.hasScore && h===LD.sh && a===LD.sa) ? ' <span style="font-size:11px;color:#f87171;font-weight:800">· EN VIVO</span>' : '';
   document.getElementById('ldHeatDetail').innerHTML =
     `<div class="ld-detail-title">${LD.m.home} ${h} – ${a} ${LD.m.away}${liveTag}</div>${arr.length?_ldChips(arr):'<div class="ld-empty">Nadie apostó este marcador</div>'}`;
   document.querySelectorAll('#ldHeat .ld-cell').forEach(c=>{
     const oc = c.getAttribute('onclick');
-    if (oc) c.classList.toggle('clk', oc===`ldShowCell(${h},${a})`);
+    c.classList.toggle('sel', isClick && !!oc && oc===`ldShowCell(${h},${a})`);
   });
 }
 
@@ -3329,6 +3371,15 @@ function renderMatches() {
       }
     }
 
+    // Aweonaos del partido (solo si cerró)
+    let aweonaoHtml = '';
+    if (status !== 'open') {
+      const aw = aweonaosDeMatch(m);
+      aweonaoHtml = aw.length
+        ? `<div style="font-size:11px;color:#64748b;margin-top:6px;text-align:center">🧠 <b style="color:#f87171">Aweonaos:</b> ${aw.map(u=>u.name).join(', ')}</div>`
+        : `<div style="font-size:11px;color:#4ade80;margin-top:6px;text-align:center">✅ No hubieron aweonaos este partido, todos pusieron sus pronósticos</div>`;
+    }
+
     const savedHtml = isAdm ? ''
       : (!locked && pred
         ? `<div style="text-align:center;font-size:10px;color:#4ade80;margin-top:2px">✓ Guardado</div>`
@@ -3401,6 +3452,7 @@ function renderMatches() {
         <div style="flex:1;text-align:left;font-weight:800;font-size:13px;line-height:1.2">${m.away}${flagImg(m.away,true)}</div>
       </div>
       ${playerPredsPanel}
+      ${aweonaoHtml}
       ${potenciadoToggle}
     </div>`;
     });
@@ -3578,6 +3630,27 @@ function renderRanking() {
 
   if (!scores.length) html += `<tr><td colspan="${showPodioCol?7:6}" style="text-align:center;padding:32px;color:#475569">Sin participantes aún</td></tr>`;
   html += `</tbody></table></div>`;
+
+  // ── Los más aweonaos ──
+  const aw = aweonaoStats(selectedRankTournament).filter(a => a.olvidos > 0);
+  html += `<div style="margin-top:18px">
+    <h3 style="font-weight:900;font-size:15px;margin:0 0 8px;color:#e8edf5">🧠 Los más aweonaos</h3>`;
+  if (!aw.length) {
+    html += `<div class="card" style="padding:14px;text-align:center;font-size:12px;color:#4ade80">✅ Nadie ha olvidado pronosticar… por ahora</div>`;
+  } else {
+    html += `<div class="card" style="overflow:hidden;padding:0"><table style="width:100%;border-collapse:collapse;font-size:13px"><tbody>`;
+    aw.forEach((a,i) => {
+      const bg = i % 2 === 0 ? '#0f172a' : '#111827';
+      html += `<tr style="background:${bg}">
+        <td style="padding:9px 12px;width:36px;font-weight:900;color:#64748b">${i===0?'🤡':(i+1)}</td>
+        <td style="padding:9px 8px;font-weight:700;color:#e8edf5">${a.name}</td>
+        <td style="padding:9px 12px;text-align:right;font-weight:900;color:#f87171">${a.olvidos} <span style="font-size:10px;color:#64748b;font-weight:600">olvido${a.olvidos>1?'s':''}</span></td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+  html += `</div>`;
+
   document.getElementById('rankingTable').innerHTML = html;
 }
 
