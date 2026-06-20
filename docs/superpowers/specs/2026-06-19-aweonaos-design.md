@@ -30,12 +30,11 @@ Helpers nuevos (sin estado, derivan todo de `CACHE`):
   - Si el partido es TBD u oculto → retorna `[]`.
   - Si no, retorna los jugadores no-admin sin pronóstico válido para `m`.
 
-- `aweonaoStats(scope)` → `Array<{ id, name, olvidos, cerrados }>`
+- `aweonaoStats(scope)` → `Array<{ id, name, olvidos }>`
   - `scope` = filtro de torneo del ranking (`selectedRankTournament`: `'__all__'`
     o un torneo puntual), reutilizando la misma lógica de filtrado que `renderRanking`.
   - Considera solo partidos **cerrados, no-TBD, no-ocultos** dentro del scope.
-  - Por cada jugador no-admin: `olvidos` = cuántos de esos partidos no pronosticó;
-    `cerrados` = total de partidos cerrados en scope (para poder mostrar %).
+  - Por cada jugador no-admin: `olvidos` = cuántos de esos partidos no pronosticó.
   - Orden: `olvidos` desc, luego nombre asc.
 
 Estos helpers se ubican junto a los demás helpers de partidos/predicciones en
@@ -69,7 +68,7 @@ En `renderRanking`, tras renderizar la tabla principal, agregar una **sección a
 debajo**: `🧠 Los más aweonaos`.
 
 - Mini-tabla ordenada por `olvidos` desc (solo jugadores con `olvidos >= 1`).
-- Columnas: posición, nombre, `olvidos` (y opcionalmente `olvidos/cerrados` como %).
+- Columnas: posición, nombre, `olvidos` (conteo, sin porcentaje).
 - El primero del listado lleva un emoji de "aweonao mayor": 🤡.
 - Si nadie tiene olvidos: `✅ Nadie ha olvidado pronosticar… por ahora`.
 - Respeta el filtro de torneo activo del ranking (`selectedRankTournament`).
