@@ -2568,8 +2568,10 @@ function ldRenderGeneral(){
     up.forEach(p => {
       const m = matches.find(x => x.id===p.matchId);
       if (!m) return;
-      const rh = useLive ? (m.realHome ?? m.liveHome) : m.realHome;
-      const ra = useLive ? (m.realAway ?? m.liveAway) : m.realAway;
+      let rh, ra;
+      if (!useLive) { rh = m.realHome; ra = m.realAway; }            // "antes": solo finalizados
+      else if (m.id === LD.m.id) { rh = LD.sh; ra = LD.sa; }         // este partido: marcador del dashboard
+      else { rh = m.realHome ?? m.liveHome; ra = m.realAway ?? m.liveAway; }
       if (rh == null || ra == null) return;
       pts += _pointsAt(p, m, CACHE.preds, rh, ra) || 0;
       if (p.predHome===rh && p.predAway===ra) exact++;
