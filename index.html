@@ -2667,22 +2667,22 @@ function ldRenderHeat(){
     `<span><i style="background:${col.L}"></i>Gana ${m.home}</span>`+
     `<span><i style="background:${col.E}"></i>Empate</span>`+
     `<span><i style="background:${col.V}"></i>Gana ${m.away}</span>`;
-  // selección por defecto
-  if (LD.hasScore && counts[LD.sh+'-'+LD.sa]) ldShowCell(LD.sh, LD.sa);
+  // detalle por defecto (sin marcar borde: la selección visual es solo por click)
+  if (LD.hasScore && counts[LD.sh+'-'+LD.sa]) ldShowCell(LD.sh, LD.sa, false);
   else {
     const top = Object.keys(counts).sort((a,b)=>counts[b]-counts[a])[0];
-    if (top) ldShowCell(+top.split('-')[0], +top.split('-')[1]);
+    if (top) ldShowCell(+top.split('-')[0], +top.split('-')[1], false);
     else document.getElementById('ldHeatDetail').innerHTML = '<div class="ld-empty">Nadie ha pronosticado aún</div>';
   }
 }
-function ldShowCell(h,a){
+function ldShowCell(h,a,isClick=true){
   const arr = LD.preds.filter(p=>p.predHome===h && p.predAway===a);
   const liveTag = (LD.hasScore && h===LD.sh && a===LD.sa) ? ' <span style="font-size:11px;color:#f87171;font-weight:800">· EN VIVO</span>' : '';
   document.getElementById('ldHeatDetail').innerHTML =
     `<div class="ld-detail-title">${LD.m.home} ${h} – ${a} ${LD.m.away}${liveTag}</div>${arr.length?_ldChips(arr):'<div class="ld-empty">Nadie apostó este marcador</div>'}`;
   document.querySelectorAll('#ldHeat .ld-cell').forEach(c=>{
     const oc = c.getAttribute('onclick');
-    c.classList.toggle('sel', !!oc && oc===`ldShowCell(${h},${a})`);
+    c.classList.toggle('sel', isClick && !!oc && oc===`ldShowCell(${h},${a})`);
   });
 }
 
