@@ -1399,11 +1399,17 @@ function toast(msg, type = 'ok') {
 
 function getStatus(m) {
   const now = new Date(), start = new Date(m.datetime);
-  const end = new Date(start.getTime() + 105 * 60000);
   if (m.realHome != null && m.realAway != null) return 'done';
-  if (now >= start && now <= end) return 'live';
-  if (now >= start) return 'locked';
-  return 'open';
+  if (now < start) return 'open';
+  // Partido ya empezó y no hay resultado final → 'live' o 'locked'.
+  // El sync escribe liveHome/liveAway mientras ESPN reporte el partido en juego;
+  // esa señal manda. Sin feed, usamos una ventana amplia (150') que cubre
+  // 90' + descuentos + entretiempo. Con feed extendemos a 240' para alargue +
+  // penales, con tope duro para no quedar 'en vivo' colgado si el FINAL nunca llega.
+  const mins = (now - start) / 60000;
+  const liveFeed = m.liveHome != null || m.liveAway != null;
+  if (mins <= 150 || (liveFeed && mins <= 240)) return 'live';
+  return 'locked';
 }
 
 function autoJump(el, nextId) {
