@@ -5,41 +5,34 @@ export function isGroupStage(stage) {
   return typeof stage === 'string' && stage.startsWith('Grupo');
 }
 
-// Quién pasó realmente y cómo. method: '90' (regulación), '120' (alargue), 'pen'.
+// Quién pasó realmente (string) o null. Gana local/visita por diferencia a los 90';
+// si hubo empate a 90', usa m.advances.
 export function matchAdvanceOutcome(m) {
-  if (!m || m.realHome == null || m.realAway == null) return { advancer: null, method: null };
-  let advancer = null;
-  if (m.realHome > m.realAway) advancer = m.home;
-  else if (m.realAway > m.realHome) advancer = m.away;
-  else if (m.advances === m.home || m.advances === m.away) advancer = m.advances;
-  if (advancer == null) return { advancer: null, method: null };
-  let method = '90';
-  if (m.penHome != null) method = 'pen';
-  else if (m.score120Home != null) method = '120';
-  return { advancer, method };
+  if (!m || m.realHome == null || m.realAway == null) return null;
+  if (m.realHome > m.realAway) return m.home;
+  if (m.realAway > m.realHome) return m.away;
+  if (m.advances === m.home || m.advances === m.away) return m.advances;
+  return null;
 }
 
-// Qué equipo/método apostó el jugador. Ganador => método '90' implícito.
+// Qué equipo apostó el jugador que pasa (string) o null. Ganador => ese equipo;
+// empate => pred.predAdvances.
 export function playerAdvanceGuess(pred, m) {
-  if (!pred || !m) return { team: null, method: null };
-  if (pred.predHome > pred.predAway) return { team: m.home, method: '90' };
-  if (pred.predAway > pred.predHome) return { team: m.away, method: '90' };
-  return { team: pred.predAdvances ?? null, method: pred.predMethod ?? null };
+  if (!pred || !m) return null;
+  if (pred.predHome > pred.predAway) return m.home;
+  if (pred.predAway > pred.predHome) return m.away;
+  return pred.predAdvances ?? null;
 }
 
-// Puntos del pozo de avance para una predicción. null si no aplica/sin resultado.
+// Puntos del pozo de avance para una predicción. null si no aplica/sin resultado;
+// 0 si no acierta; si acierta, pool repartido entre los N acertadores.
 export function advancePoints({ pred, match, allPreds, pool }) {
   if (!match || isGroupStage(match.stage)) return 0;
-  const { advancer, method } = matchAdvanceOutcome(match);
+  const advancer = matchAdvanceOutcome(match);
   if (advancer == null) return null;
-  const guess = playerAdvanceGuess(pred, match);
-  if (guess.team !== advancer) return 0;
-  const winners = (allPreds || []).filter(p => {
-    if (p.matchId !== match.id) return false;
-    return playerAdvanceGuess(p, match).team === advancer;
-  });
-  const n = winners.length || 1;
-  const base = pool / n;
-  const got = guess.method === method ? base * 1.5 : base;
-  return Math.round(got * 100) / 100;
+  if (playerAdvanceGuess(pred, match) !== advancer) return 0;
+  const n = (allPreds || []).filter(
+    p => p.matchId === match.id && playerAdvanceGuess(p, match) === advancer
+  ).length || 1;
+  return Math.round((pool / n) * 100) / 100;
 }
