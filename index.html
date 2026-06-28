@@ -2980,10 +2980,14 @@ function getAdvancePool() {
   return (v != null && !isNaN(Number(v))) ? Number(v) : ADVANCE_POOL_DEFAULT;
 }
 // Pozo "quién pasa" (eliminatorias). Independiente del pozo de resultado.
+// Normalizamos el stage antes de pasarlo al módulo para que su detección de
+// grupos use el mismo criterio que el resto de la app (normStage), evitando
+// que un fase con texto libre (ej. "Grupo C · Miami") se trate como KO.
 function calcAdvancePoints(pred, match, allPreds) {
   if (!window.__scoring) return null;
+  const m = match ? { ...match, stage: normStage(match.stage) } : match;
   return window.__scoring.advancePoints({
-    pred, match, allPreds: allPreds || CACHE.preds, pool: getAdvancePool()
+    pred, match: m, allPreds: allPreds || CACHE.preds, pool: getAdvancePool()
   });
 }
 // Total de puntos de una predicción = pozo resultado (90') + pozo quién pasa.
