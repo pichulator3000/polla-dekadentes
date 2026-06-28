@@ -3478,6 +3478,13 @@ function renderMatches() {
         const col = isExact ? '#38bdf8' : p > 0 ? '#4ade80' : '#64748b';
         const provisional = status === 'live' ? ' (prov.)' : '';
         ptsHtml = `<div style="text-align:center;margin-top:6px;font-size:18px;font-weight:900;color:${col}">${isExact?'🥇':p>0?'✅':'❌'} ${p.toFixed(2)} pts${provisional}</div>`;
+        if (status === 'done') {
+          const ap = calcAdvancePoints(pred, m, preds);
+          const apLine = (ap && ap > 0)
+            ? `<div style="font-size:10px;color:#4ade80;text-align:center;margin-top:2px">+${ap.toFixed(2)} pts · quién pasa</div>`
+            : '';
+          ptsHtml += apLine;
+        }
       }
     }
 
