@@ -1090,6 +1090,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script type="module">
+  import { advancePoints, matchAdvanceOutcome, playerAdvanceGuess } from './scripts/scoring.mjs';
+  window.__scoring = { advancePoints, matchAdvanceOutcome, playerAdvanceGuess };
+</script>
 
 <script>
 // ═══════════════════════════════════════════════════════════════
@@ -2968,6 +2972,23 @@ function getPoolForStage(rawStage) {
   }
   if (STAGE_POOLS_DEFAULT[stage] != null) return STAGE_POOLS_DEFAULT[stage];
   return STAGE_POOL_FALLBACK;
+}
+
+const ADVANCE_POOL_DEFAULT = 20;
+function getAdvancePool() {
+  const v = CACHE.settings && CACHE.settings.advancePool;
+  return (v != null && !isNaN(Number(v))) ? Number(v) : ADVANCE_POOL_DEFAULT;
+}
+// Pozo "quién pasa" (eliminatorias). Independiente del pozo de resultado.
+function calcAdvancePoints(pred, match, allPreds) {
+  if (!window.__scoring) return null;
+  return window.__scoring.advancePoints({
+    pred, match, allPreds: allPreds || CACHE.preds, pool: getAdvancePool()
+  });
+}
+// Total de puntos de una predicción = pozo resultado (90') + pozo quién pasa.
+function totalPoints(pred, match, allPreds) {
+  return calcPoints(pred, match, allPreds) + (calcAdvancePoints(pred, match, allPreds) || 0);
 }
 
 // En fase final un partido puede definirse en alargue/penales, pero la polla SOLO
