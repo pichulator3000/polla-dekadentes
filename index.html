@@ -1090,6 +1090,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script type="module">
+  import { advancePoints, matchAdvanceOutcome, playerAdvanceGuess } from './scripts/scoring.mjs';
+  window.__scoring = { advancePoints, matchAdvanceOutcome, playerAdvanceGuess };
+</script>
 
 <script>
 // ═══════════════════════════════════════════════════════════════
@@ -1778,7 +1782,7 @@ function renderHomeStats() {
   const myDone  = myPreds.filter(p => doneOrLive.find(m => m.id === p.matchId));
   const myPts   = myDone.reduce((s, p) => {
     const m = doneOrLive.find(x => x.id === p.matchId);
-    return s + (m ? calcPoints(p, m, preds) : 0);
+    return s + (m ? totalPoints(p, m, preds) : 0);
   }, 0);
   const avg = myDone.length ? (myPts / myDone.length).toFixed(2) : '0.00';
   const exact = myDone.filter(p => {
@@ -1810,7 +1814,7 @@ function renderHomeStats() {
     const uDone = uPreds.filter(p => doneOrLive.find(m => m.id === p.matchId));
     const uPts = uDone.reduce((s, p) => {
       const m = doneOrLive.find(x => x.id === p.matchId);
-      return s + (m ? calcPoints(p, m, preds) : 0);
+      return s + (m ? totalPoints(p, m, preds) : 0);
     }, 0);
     return { name: u.name, pts: uPts, id: u.id };
   }).sort((a, b) => b.pts - a.pts);
@@ -1825,7 +1829,7 @@ function renderHomeStats() {
   });
   for (const p of myDoneSorted) {
     const m = doneOrLive.find(x => x.id === p.matchId);
-    const pts = m ? calcPoints(p, m, preds) : 0;
+    const pts = m ? totalPoints(p, m, preds) : 0;
     if (pts > 0) streak++;
     else break;
   }
@@ -2001,7 +2005,7 @@ function renderStatsChart() {
         let cumul = 0;
         const data = done.map(m => {
           const pred = preds.find(p => p.userId === u.id && p.matchId === m.id);
-          cumul += pred ? calcPoints(pred, m, preds) : 0;
+          cumul += pred ? totalPoints(pred, m, preds) : 0;
           return cumul;
         });
         const isMe = u.id === uid;
@@ -2970,6 +2974,27 @@ function getPoolForStage(rawStage) {
   return STAGE_POOL_FALLBACK;
 }
 
+const ADVANCE_POOL_DEFAULT = 20;
+function getAdvancePool() {
+  const v = CACHE.settings && CACHE.settings.advancePool;
+  return (v != null && !isNaN(Number(v))) ? Number(v) : ADVANCE_POOL_DEFAULT;
+}
+// Pozo "quién pasa" (eliminatorias). Independiente del pozo de resultado.
+// Normalizamos el stage antes de pasarlo al módulo para que su detección de
+// grupos use el mismo criterio que el resto de la app (normStage), evitando
+// que un fase con texto libre (ej. "Grupo C · Miami") se trate como KO.
+function calcAdvancePoints(pred, match, allPreds) {
+  if (!window.__scoring) return null;
+  const m = match ? { ...match, stage: normStage(match.stage) } : match;
+  return window.__scoring.advancePoints({
+    pred, match: m, allPreds: allPreds || CACHE.preds, pool: getAdvancePool()
+  });
+}
+// Total de puntos de una predicción = pozo resultado (90') + pozo quién pasa.
+function totalPoints(pred, match, allPreds) {
+  return calcPoints(pred, match, allPreds) + (calcAdvancePoints(pred, match, allPreds) || 0);
+}
+
 // En fase final un partido puede definirse en alargue/penales, pero la polla SOLO
 // puntúa el 90' (m.realHome/m.realAway). Acá mostramos lo secundario: marcador de
 // 120', penales y quién avanza. Devuelve '' si no aplica (grupos o KO sin alargue).
@@ -3092,6 +3117,13 @@ async function resetStagePool(stage) {
   if (!confirm(`Restaurar pozo de "${stage}" al default?`)) return;
   await RT.ref('pf/settings/stagePoints/' + stage).remove();
   toast(`${stage} restaurado al default ↩️`, 'ok');
+}
+
+async function saveAdvancePool() {
+  const v = Number(document.getElementById('advancePoolInput').value);
+  if (isNaN(v) || v < 0) { toast('Valor inválido', 'err'); return; }
+  await RT.ref('pf/settings/advancePool').set(v);
+  toast('Pozo "quién pasa" guardado ✅', 'ok');
 }
 
 // ══ SAVE: Puntos del podio (champion/runner/scorer)
@@ -3248,6 +3280,15 @@ function renderReglasPozos() {
   });
   html += '</tbody></table>';
   html += '<p style="font-size:10px;color:#475569;margin-top:6px">✨ = personalizado por admin</p>';
+  html += `<div style="margin-top:14px;background:#1e293b;border-radius:10px;padding:12px">
+    <div style="font-weight:800;color:#facc15;margin-bottom:6px">🎟️ Pozo "quién pasa" (solo eliminatorias)</div>
+    <div style="font-size:12px;color:#cbd5e1;line-height:1.5">
+      Además del pozo por el resultado a los 90', cada partido de fase final reparte
+      <b>${getAdvancePool()} puntos</b> a partes iguales entre todos los que aciertan
+      <b>qué equipo avanza</b>. Si predices un ganador, ese equipo es tu apuesta;
+      si predices empate, eliges <b>qué equipo</b> pasa.
+    </div>
+  </div>`;
   el.innerHTML = html;
   renderReglasPodio();
 }
@@ -3321,7 +3362,16 @@ function buildAdminPozos() {
       </div>`;
     });
   }
-  html += `</div></details></div>`;
+  html += `</div>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid #334155">
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:6px">🎟️ Pozo "quién pasa" (eliminatorias)</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="advancePoolInput" type="number" value="${getAdvancePool()}"
+          style="width:80px;padding:6px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#f1f5f9">
+        <button onclick="saveAdvancePool()" style="padding:6px 10px;border-radius:6px;background:#7c3aed;color:#fff;border:none;font-weight:700">Guardar</button>
+      </div>
+      <div style="font-size:10px;color:#64748b;margin-top:4px">Se reparte a partes iguales entre quienes aciertan quién avanza.</div>
+    </div></details></div>`;
   return html;
 }
 let selectedTournament = null;
@@ -3449,7 +3499,7 @@ function renderMatches() {
     // Puntos: mostrar en done y en live (provisional)
     let ptsHtml = '';
     if (!isAdm && pred && (status === 'done' || status === 'live')) {
-      const p = calcPoints(pred, m, preds);
+      const p = totalPoints(pred, m, preds);
       if (p !== null) {
         const rh = m.realHome ?? m.liveHome;
         const ra = m.realAway ?? m.liveAway;
@@ -3457,6 +3507,13 @@ function renderMatches() {
         const col = isExact ? '#38bdf8' : p > 0 ? '#4ade80' : '#64748b';
         const provisional = status === 'live' ? ' (prov.)' : '';
         ptsHtml = `<div style="text-align:center;margin-top:6px;font-size:18px;font-weight:900;color:${col}">${isExact?'🥇':p>0?'✅':'❌'} ${p.toFixed(2)} pts${provisional}</div>`;
+        if (status === 'done') {
+          const ap = calcAdvancePoints(pred, m, preds);
+          const apLine = (ap && ap > 0)
+            ? `<div style="font-size:10px;color:#4ade80;text-align:center;margin-top:2px">+${ap.toFixed(2)} pts · quién pasa</div>`
+            : '';
+          ptsHtml += apLine;
+        }
       }
     }
 
@@ -3497,6 +3554,18 @@ function renderMatches() {
            </div>
          </div>`;
     } else {
+      const isKO = !normStage(m.stage).startsWith('Grupo');
+      const isDrawPred = pred && pred.predHome != null && pred.predHome === pred.predAway;
+      const advUI = (isKO) ? `
+  <div id="advBox_${m.id}" style="display:${isDrawPred ? 'block' : 'none'};margin-top:8px;background:#0f172a;border-radius:8px;padding:8px">
+    <div style="font-size:10px;color:#94a3b8;text-align:center;margin-bottom:6px">Empate: ¿quién pasa?</div>
+    <div style="display:flex;gap:6px;justify-content:center">
+      <button type="button" onclick="setAdvPred('${m.id}','${m.home.replace(/'/g,"\\'")}')"
+        style="flex:1;padding:6px;border-radius:6px;border:1px solid #334155;background:${pred?.predAdvances===m.home?'#1d4ed8':'#1e293b'};color:#f1f5f9;font-size:11px;font-weight:700">${m.home}</button>
+      <button type="button" onclick="setAdvPred('${m.id}','${m.away.replace(/'/g,"\\'")}')"
+        style="flex:1;padding:6px;border-radius:6px;border:1px solid #334155;background:${pred?.predAdvances===m.away?'#1d4ed8':'#1e293b'};color:#f1f5f9;font-size:11px;font-weight:700">${m.away}</button>
+    </div>
+  </div>` : '';
       scoreHtml = `<div style="display:flex;align-items:center;gap:8px;justify-content:center;margin:8px 0">
            <input type="number" inputmode="numeric" min="0" max="20" id="ph_${m.id}"
              class="score-input" value="${pred?.predHome??''}" placeholder="-"
@@ -3505,7 +3574,7 @@ function renderMatches() {
            <input type="number" inputmode="numeric" min="0" max="20" id="pa_${m.id}"
              class="score-input" value="${pred?.predAway??''}" placeholder="-"
              oninput="autoJump(this,null)" onchange="savePred('${m.id}')"/>
-         </div>`;
+         </div>${advUI}`;
     }
 
     // ══ ADMIN: prediction participation + predictions panel ══
@@ -3552,7 +3621,7 @@ function renderMatches() {
           let ptsText = `<span style="color:#334155">\u2014</span>`;
           let predColor = '#94a3b8';
           if (p && hasDone) {
-            const pts = calcPoints(p, m, preds);
+            const pts = totalPoints(p, m, preds);
             const isExact = p.predHome===m.realHome && p.predAway===m.realAway;
             predColor = isExact ? '#38bdf8' : pts > 0 ? '#4ade80' : '#f87171';
             ptsText = `<span style="color:${predColor};font-weight:900">${pts.toFixed(2)}</span>`;
@@ -3622,7 +3691,7 @@ function renderMatches() {
           let ptsText = '';
           let predColor = '#94a3b8';
           if (p && hasDone) {
-            const pts = calcPoints(p, m, preds);
+            const pts = totalPoints(p, m, preds);
             const isExact = p.predHome===m.realHome && p.predAway===m.realAway;
             predColor = isExact ? '#38bdf8' : pts > 0 ? '#4ade80' : '#f87171';
             ptsText = `<td style="padding:5px 4px;text-align:center"><span style="color:${predColor};font-weight:900">${pts.toFixed(2)}</span></td>`;
@@ -3822,8 +3891,28 @@ async function savePred(matchId) {
   if (h<0||a<0||h>20||a>20) return toast('Resultado inválido', 'err');
   const match = CACHE.matches.find(m => m.id===matchId);
   if (!match || getStatus(match) !== 'open') return toast('Partido ya cerrado 🔒', 'err');
-  await DB.savePred({ userId:currentUser.id, matchId, predHome:h, predAway:a });
+  let existingPred = CACHE.preds.find(p => p.userId === currentUser.id && p.matchId === matchId);
+  const predObj = existingPred
+    ? { ...existingPred, predHome: h, predAway: a }
+    : { userId: currentUser.id, matchId, predHome: h, predAway: a };
+  if (predObj.predHome !== predObj.predAway) { predObj.predAdvances = null; }
+  await DB.savePred(predObj);
+  const box = document.getElementById('advBox_' + matchId);
+  if (box) box.style.display = (predObj.predHome === predObj.predAway && !normStage(match.stage).startsWith('Grupo')) ? 'block' : 'none';
   toast('✓ Predicción guardada');
+  renderMatches();
+}
+
+// Guarda el equipo del pozo "quién pasa" en la predicción del jugador.
+async function setAdvPred(matchId, team) {
+  const uid = currentUser?.id;
+  if (!uid) return;
+  const m = CACHE.matches.find(x => x.id === matchId);
+  if (!m) return;
+  let pred = CACHE.preds.find(p => p.userId === uid && p.matchId === matchId);
+  if (!pred) { pred = { userId: uid, matchId, predHome: 0, predAway: 0 }; }
+  pred = { ...pred, predAdvances: team };
+  await DB.savePred(pred);
   renderMatches();
 }
 
@@ -3852,7 +3941,7 @@ function renderRanking() {
       const ra = m ? (m.realAway ?? m.liveAway) : null;
       if (!m || rh == null) return;
       played++;
-      const pt = calcPoints(p,m,preds);
+      const pt = totalPoints(p,m,preds);
       pts += pt;
       if (p.predHome===rh && p.predAway===ra) { exact++; correct++; }
       else if (Math.sign(p.predHome-p.predAway)===Math.sign(rh-ra)) correct++;
@@ -3966,7 +4055,7 @@ function renderStats() {
     const sorted = [...done].sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
     sorted.forEach(m=>{
       const p=up.find(x=>x.matchId===m.id); if(!p)return; pj++;
-      const pt=calcPoints(p,m,preds);
+      const pt=totalPoints(p,m,preds);
       pts+=pt;
       const ie=p.predHome===m.realHome&&p.predAway===m.realAway;
       const io=Math.sign(p.predHome-p.predAway)===Math.sign(m.realHome-m.realAway);
@@ -4208,7 +4297,7 @@ function renderStats() {
       weekMatches.forEach(m => {
         const p = preds.find(pr => pr.userId === u.id && pr.matchId === m.id);
         if (p) {
-          const pt = calcPoints(p, m, preds);
+          const pt = totalPoints(p, m, preds);
           weekPts += pt;
         }
       });
@@ -4304,7 +4393,7 @@ function renderResultados() {
   // Total pts
   const totalPts = done.reduce((acc, m) => {
     const p = userPreds.find(x => x.matchId === m.id);
-    return acc + (p ? calcPoints(p, m, preds) : 0);
+    return acc + (p ? totalPoints(p, m, preds) : 0);
   }, 0);
 
   let html = `
@@ -4328,7 +4417,7 @@ function renderResultados() {
   matches.forEach((m, i) => {
     const p       = userPreds.find(x => x.matchId === m.id);
     const isDone  = m.realHome != null;
-    const pts     = (p && isDone) ? calcPoints(p, m, preds) : null;
+    const pts     = (p && isDone) ? totalPoints(p, m, preds) : null;
     const isExact = pts !== null && p.predHome===m.realHome && p.predAway===m.realAway;
     const isOk    = pts !== null && !isExact && pts > 0;
     const bg      = i % 2 === 0 ? '#1e293b' : '#182030';
@@ -4761,7 +4850,7 @@ function buildAdminGestion() {
   users.forEach(u => {
     const up    = preds.filter(p=>p.userId===u.id);
     const done2 = CACHE.matches.filter(m=>m.realHome!=null);
-    const pts   = up.reduce((acc,p)=>{const m=done2.find(x=>x.id===p.matchId);return acc+(m?calcPoints(p,m,preds):0);},0);
+    const pts   = up.reduce((acc,p)=>{const m=done2.find(x=>x.id===p.matchId);return acc+(m?totalPoints(p,m,preds):0);},0);
     html += `<div style="background:#0f172a;border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between">
       <div><div style="font-weight:700;font-size:13px">${u.name}</div><div style="font-size:11px;color:#64748b">@${u.code} · ${up.length} pred. · <span style="color:#38bdf8">${pts.toFixed(2)} pts</span></div></div>
       <button class="btn-danger" onclick="delUser('${u.id}')" style="padding:6px 10px">✕</button>

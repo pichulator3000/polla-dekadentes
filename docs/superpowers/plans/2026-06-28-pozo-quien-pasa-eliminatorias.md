@@ -14,9 +14,10 @@
 - Pozo `advancePool`: setting `pf/settings/advancePool`, default **20**.
 - Métodos posibles: `'90'`, `'120'`, `'pen'`.
 - Quién pasó realmente: gana local/visita si hay diferencia a los 90' (`realHome`/`realAway`); si empate a 90', `m.advances`.
-- Cómo pasó realmente: `'pen'` si `penHome != null`; si no `'120'` si `score120Home != null`; si no `'90'`.
-- Reparto: `base = advancePool / N` (N = acertadores de quién pasa), `×1.5` si además acierta método. Redondeo `Math.round(x*100)/100`.
-- Campos de predicción nuevos (`predAdvances`, `predMethod`) **solo** presentes cuando el marcador predicho es empate; se limpian al cambiar a no-empate.
+- Reparto: `advancePool / N` (N = acertadores de quién pasa), a partes iguales. Redondeo `Math.round(x*100)/100`. **No hay método ni ×1.5.**
+- Campo de predicción nuevo (`predAdvances`) **solo** presente cuando el marcador predicho es empate; se limpia al cambiar a no-empate.
+
+> **NOTA (cambio de requisito aplicado):** Tasks 1–3 ya implementados y commiteados. El método (90'/120'/penales) y el ×1.5 fueron **eliminados** del alcance; `scripts/scoring.mjs` ya está simplificado (commit `e6f32d0`): `matchAdvanceOutcome(m)` devuelve `string|null`, `playerAdvanceGuess(pred,m)` devuelve `string|null`, `advancePoints` reparte `pool/N` sin bonus. Las Tasks 4–6 abajo están corregidas; ignora cualquier mención residual a método/×1.5.
 
 ---
 
@@ -299,45 +300,35 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ---
 
-### Task 4: UI de predicción — inputs "quién pasa / cómo" al predecir empate (KO)
+### Task 4: UI de predicción — selector "quién pasa" al predecir empate (KO)
 
 **Files:**
 - Modify: `index.html` (render de inputs del jugador en `renderMatches`, ~líneas 1717+; función de guardado de predicción que usa `RT.savePred`, ~línea 1184)
 
 **Interfaces:**
 - Consumes: `RT.savePred` (existente), `getStatus`, `normStage`.
-- Produces: handler `saveAdvancePred(matchId)` y render condicional de los selectores.
+- Produces: handler `setAdvPred(matchId, team)` y render condicional del selector de equipo.
 
 - [ ] **Step 1: Localizar el render de inputs del jugador y el guardado**
 
 Run: `grep -n "score-input\|savePred\|onchange=\"savePred\|function savePred\|renderMatches" index.html`
 Leer el bloque donde se generan los inputs de marcador del jugador (partido `open`) dentro de `renderMatches` (~1717+) y la función que guarda la predicción del jugador (la que llama `RT.savePred`).
 
-- [ ] **Step 2: Render condicional de los selectores (solo KO + empate)**
+- [ ] **Step 2: Render condicional del selector (solo KO + empate)**
 
-En el bloque de inputs del jugador para partidos `open`, después de los inputs de marcador, agregar (solo cuando `!isGroupStage(normStage(m.stage))`; usar `window.__scoring` no es necesario, basta `!normStage(m.stage).startsWith('Grupo')`):
+En el bloque de inputs del jugador para partidos `open`, después de los inputs de marcador, agregar (solo en KO: `!normStage(m.stage).startsWith('Grupo')`):
 
 ```js
 const isKO = !normStage(m.stage).startsWith('Grupo');
 const isDrawPred = pred && pred.predHome != null && pred.predHome === pred.predAway;
 const advUI = (isKO) ? `
   <div id="advBox_${m.id}" style="display:${isDrawPred ? 'block' : 'none'};margin-top:8px;background:#0f172a;border-radius:8px;padding:8px">
-    <div style="font-size:10px;color:#94a3b8;text-align:center;margin-bottom:6px">Empate: ¿quién pasa y cómo?</div>
-    <div style="display:flex;gap:6px;justify-content:center;margin-bottom:6px">
-      <button type="button" onclick="setAdvPred('${m.id}','team','${m.home.replace(/'/g,"\\'")}')"
-        class="adv-btn" data-adv-team="${m.id}" data-val="${m.home.replace(/'/g,"&#39;")}"
-        style="flex:1;padding:6px;border-radius:6px;border:1px solid #334155;background:${pred?.predAdvances===m.home?'#1d4ed8':'#1e293b'};color:#f1f5f9;font-size:11px;font-weight:700">${m.home}</button>
-      <button type="button" onclick="setAdvPred('${m.id}','team','${m.away.replace(/'/g,"\\'")}')"
-        class="adv-btn" data-adv-team="${m.id}" data-val="${m.away.replace(/'/g,"&#39;")}"
-        style="flex:1;padding:6px;border-radius:6px;border:1px solid #334155;background:${pred?.predAdvances===m.away?'#1d4ed8':'#1e293b'};color:#f1f5f9;font-size:11px;font-weight:700">${m.away}</button>
-    </div>
+    <div style="font-size:10px;color:#94a3b8;text-align:center;margin-bottom:6px">Empate: ¿quién pasa?</div>
     <div style="display:flex;gap:6px;justify-content:center">
-      <button type="button" onclick="setAdvPred('${m.id}','method','120')"
-        data-adv-method="${m.id}" data-val="120"
-        style="flex:1;padding:6px;border-radius:6px;border:1px solid #334155;background:${pred?.predMethod==='120'?'#7c3aed':'#1e293b'};color:#f1f5f9;font-size:11px;font-weight:700">Alargue 120'</button>
-      <button type="button" onclick="setAdvPred('${m.id}','method','pen')"
-        data-adv-method="${m.id}" data-val="pen"
-        style="flex:1;padding:6px;border-radius:6px;border:1px solid #334155;background:${pred?.predMethod==='pen'?'#7c3aed':'#1e293b'};color:#f1f5f9;font-size:11px;font-weight:700">Penales</button>
+      <button type="button" onclick="setAdvPred('${m.id}','${m.home.replace(/'/g,"\\'")}')"
+        style="flex:1;padding:6px;border-radius:6px;border:1px solid #334155;background:${pred?.predAdvances===m.home?'#1d4ed8':'#1e293b'};color:#f1f5f9;font-size:11px;font-weight:700">${m.home}</button>
+      <button type="button" onclick="setAdvPred('${m.id}','${m.away.replace(/'/g,"\\'")}')"
+        style="flex:1;padding:6px;border-radius:6px;border:1px solid #334155;background:${pred?.predAdvances===m.away?'#1d4ed8':'#1e293b'};color:#f1f5f9;font-size:11px;font-weight:700">${m.away}</button>
     </div>
   </div>` : '';
 ```
@@ -346,26 +337,25 @@ Insertar `${advUI}` en el template HTML justo debajo de los inputs de marcador d
 
 - [ ] **Step 3: Handlers de guardado y toggle**
 
-Agregar funciones globales (junto a la función que guarda la predicción del jugador):
+Agregar función global (junto a la que guarda la predicción del jugador):
 
 ```js
-// Guarda equipo/método del pozo "quién pasa" en la predicción del jugador.
-async function setAdvPred(matchId, field, value) {
+// Guarda el equipo del pozo "quién pasa" en la predicción del jugador.
+async function setAdvPred(matchId, team) {
   const uid = SESSION.userId;
   const m = CACHE.matches.find(x => x.id === matchId);
   if (!m) return;
   let pred = CACHE.preds.find(p => p.userId === uid && p.matchId === matchId);
   if (!pred) { pred = { userId: uid, matchId, predHome: 0, predAway: 0 }; }
-  if (field === 'team') pred.predAdvances = value;
-  if (field === 'method') pred.predMethod = value;
+  pred.predAdvances = team;
   await RT.savePred(pred);
 }
 ```
 
-En la función que guarda el **marcador** del jugador (la del `onchange` de los `score-input`), tras setear `predHome/predAway`: si el marcador **no** es empate, limpiar los campos de avance antes de guardar:
+En la función que guarda el **marcador** del jugador (la del `onchange` de los `score-input`), tras setear `predHome/predAway`: si el marcador **no** es empate, limpiar `predAdvances` antes de guardar:
 
 ```js
-  if (pred.predHome !== pred.predAway) { pred.predAdvances = null; pred.predMethod = null; }
+  if (pred.predHome !== pred.predAway) { pred.predAdvances = null; }
 ```
 
 Y tras guardar el marcador, mostrar/ocultar el box sin re-render completo:
@@ -375,18 +365,18 @@ Y tras guardar el marcador, mostrar/ocultar el box sin re-render completo:
   if (box) box.style.display = (pred.predHome === pred.predAway && !normStage(m.stage).startsWith('Grupo')) ? 'block' : 'none';
 ```
 
-(Nota: `RT.savePred` hace `.set` del objeto completo; al asignar `null` a `predAdvances`/`predMethod`, Firebase los elimina del nodo. Verificar que el objeto que se pasa a `savePred` incluye todos los campos esperados.)
+(Nota: `RT.savePred` hace `.set` del objeto completo; al asignar `null` a `predAdvances`, Firebase lo elimina del nodo.)
 
 - [ ] **Step 4: Verificar en browser**
 
 Run: app en `http://localhost:8000/index.html`, login como jugador (no admin), un partido KO `open`.
-Expected: al escribir un empate (ej. 1-1) aparece el box; elegir equipo y método los resalta; al cambiar a 2-1 el box desaparece y los campos se limpian (revisar en Firebase/consola). Recargar mantiene la selección.
+Expected: al escribir un empate (ej. 1-1) aparece el selector de equipo; elegir uno lo resalta; al cambiar a 2-1 el box desaparece y `predAdvances` se limpia (revisar en Firebase/consola). Recargar mantiene la selección.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add index.html
-git commit -m "feat(predicción): inputs quién pasa/cómo al predecir empate en eliminatorias
+git commit -m "feat(predicción): selector quién pasa al predecir empate en eliminatorias
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
@@ -412,12 +402,9 @@ En ese bloque, para partidos KO con resultado, calcular y mostrar (solo si `ap >
 
 ```js
 const ap = calcAdvancePoints(pred, m, preds);
-const apLine = (ap && ap > 0) ? (() => {
-  const out = window.__scoring.matchAdvanceOutcome(m);
-  const g = window.__scoring.playerAdvanceGuess(pred, m);
-  const bonus = (g.method === out.method) ? ' ×1.5' : '';
-  return `<div style="font-size:10px;color:#4ade80;text-align:center;margin-top:2px">+${ap.toFixed(2)} pts · quién pasa${bonus}</div>`;
-})() : '';
+const apLine = (ap && ap > 0)
+  ? `<div style="font-size:10px;color:#4ade80;text-align:center;margin-top:2px">+${ap.toFixed(2)} pts · quién pasa</div>`
+  : '';
 ```
 
 Insertar `${apLine}` junto al puntaje del resultado en el template.
@@ -425,7 +412,7 @@ Insertar `${apLine}` junto al puntaje del resultado en el template.
 - [ ] **Step 3: Verificar en browser**
 
 Run: app en `http://localhost:8000/index.html`, jugador con predicción que acierta quién pasa en un KO finalizado.
-Expected: aparece "+X.XX pts · quién pasa" (con "×1.5" si acertó el método); en partidos de grupo no aparece.
+Expected: aparece "+X.XX pts · quién pasa"; en partidos de grupo no aparece.
 
 - [ ] **Step 4: Commit**
 
@@ -463,7 +450,7 @@ En `buildAdminPozos`, agregar (al final del panel) un input para el pozo de avan
         style="width:80px;padding:6px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#f1f5f9">
       <button onclick="saveAdvancePool()" style="padding:6px 10px;border-radius:6px;background:#7c3aed;color:#fff;border:none;font-weight:700">Guardar</button>
     </div>
-    <div style="font-size:10px;color:#64748b;margin-top:4px">Se reparte entre quienes aciertan quién avanza; ×1.5 si aciertan cómo (90'/120'/penales).</div>
+    <div style="font-size:10px;color:#64748b;margin-top:4px">Se reparte a partes iguales entre quienes aciertan quién avanza.</div>
   </div>`;
 ```
 
@@ -489,10 +476,9 @@ En `renderReglasPozos` (o el contenedor de la pestaña Reglas), agregar un bloqu
     <div style="font-weight:800;color:#facc15;margin-bottom:6px">🎟️ Pozo "quién pasa" (solo eliminatorias)</div>
     <div style="font-size:12px;color:#cbd5e1;line-height:1.5">
       Además del pozo por el resultado a los 90', cada partido de fase final reparte
-      <b>${getAdvancePool()} puntos</b> entre todos los que aciertan <b>qué equipo avanza</b>.
-      Si predices un ganador, estás diciendo que pasa <b>en los 90'</b>; si predices empate,
-      eliges <b>qué equipo</b> pasa y <b>cómo</b> (alargue 120' o penales).
-      Tu parte se multiplica por <b>×1.5</b> si además aciertas <b>cómo</b> avanzó.
+      <b>${getAdvancePool()} puntos</b> a partes iguales entre todos los que aciertan
+      <b>qué equipo avanza</b>. Si predices un ganador, ese equipo es tu apuesta;
+      si predices empate, eliges <b>qué equipo</b> pasa.
     </div>
   </div>`;
 ```
@@ -516,5 +502,5 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ## Notas de verificación final
 
 - `npm test` verde (incluye `scoring.test.mjs` y `sync_results.test.mjs`).
-- Probar manualmente el flujo completo: predecir empate + quién/cómo → cargar resultado KO (con `advances`/`pen`/`120`) → ver puntos en ranking, home, resultado del partido.
+- Probar manualmente el flujo completo: predecir empate + quién pasa → cargar resultado KO (con `advances`) → ver puntos en ranking, home, resultado del partido.
 - Confirmar que grupos no se ven afectados.

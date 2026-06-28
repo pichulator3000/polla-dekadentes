@@ -7,35 +7,27 @@
 
 Hoy cada partido reparte un **pozo por fase** entre quienes aciertan el signo del
 resultado a los 90' (local/empate/visita); el marcador exacto duplica la parte. En
-eliminatorias eso deja fuera la pregunta natural de "¿quién pasa a la siguiente fase
-y cómo?".
+eliminatorias eso deja fuera la pregunta natural de "¿quién pasa a la siguiente fase?".
 
 Se agrega una **segunda forma de repartir puntos**, independiente y sumada a la
-existente: un pozo de **20 puntos por partido de fase final** que se reparte entre
-**todos** los que aciertan qué equipo avanza, con un **×1.5** para quienes además
-aciertan **cómo** avanza.
+existente: un pozo de **20 puntos por partido de fase final** que se reparte a partes
+iguales entre **todos** los que aciertan qué equipo avanza.
 
-Clave: la predicción del resultado ya implica una predicción de "quién pasa y cómo".
+Clave: la predicción del resultado ya implica una predicción de "quién pasa".
 
-- Quien predice un **ganador** está diciendo implícitamente: ese equipo pasa **en
-  los 90'**.
-- Quien predice **empate** debe elegir explícitamente el equipo que avanza y el
-  método (**alargue 120'** o **penales**).
+- Quien predice un **ganador** está diciendo implícitamente que ese equipo pasa.
+- Quien predice **empate** elige explícitamente el equipo que avanza.
 
-Hay tres métodos posibles: `'90'` (implícito del ganador-predictor), `'120'` y
-`'pen'` (explícitos del empate-predictor). El ×1.5 aplica a todos por igual cuando su
-método (implícito o explícito) coincide con cómo se definió el partido.
+**No** se pregunta ni se puntúa el **método** (90'/120'/penales): no hay ×1.5.
 
 ### Ejemplos
 
-- Predijo Brasil 2-1 → "Brasil pasa en 90'". Brasil gana en 90' → acierta quién **y**
-  cómo → ×1.5.
-- Predijo Brasil 2-1, pero fue 1-1 y Brasil ganó en penales → acierta quién pasa
-  (×1 base), falla el método (era `pen`, no `90`).
-- Predijo 1-1 + "Brasil / penales" y Brasil pasó en penales → ×1.5.
+- Predijo Brasil 2-1 → "pasa Brasil". Brasil avanza (como sea) → acierta quién pasa.
+- Predijo 1-1 + "pasa Brasil" y Brasil avanza → acierta quién pasa.
+- Predijo Chile 2-1 pero pasó Brasil → no acierta, 0.
 
-Fuera de alcance: cambiar el pozo de resultado (90') existente. Grupos no participan
-de este pozo.
+Fuera de alcance: cambiar el pozo de resultado (90') existente; predecir o puntuar el
+método. Grupos no participan de este pozo.
 
 ## Contexto ya implementado (dependencias)
 
@@ -49,17 +41,16 @@ de este pozo.
 
 ## Modelo de datos
 
-**Predicción** (`pf/preds/{userId}__{matchId}`). Campos nuevos, **opcionales**, solo
-presentes cuando el jugador predice **empate** en un partido de **fase final**:
+**Predicción** (`pf/preds/{userId}__{matchId}`). Campo nuevo, **opcional**, solo
+presente cuando el jugador predice **empate** en un partido de **fase final**:
 
 | Campo | Valor |
 |-------|-------|
 | `predAdvances` | nombre del equipo que el jugador cree que avanza (`m.home` o `m.away`) |
-| `predMethod` | `'120'` o `'pen'` |
 
-El ganador-predictor no llena estos campos: su "quién pasa" es el equipo que puso
-ganador y su método es `'90'` implícito. Si el jugador cambia un marcador de empate a
-no-empate, estos campos se limpian.
+El ganador-predictor no llena este campo: su "quién pasa" es el equipo que puso
+ganador. Si el jugador cambia un marcador de empate a no-empate, `predAdvances` se
+limpia. No existe campo de método.
 
 **Partido**: sin campos nuevos (usa `advances`, `score120*`, `penHome/penAway`).
 
@@ -81,20 +72,17 @@ pozo de 20 para esa predicción, **independiente** del pozo de resultado.
 
 Pasos:
 
-1. **Quién pasó (`actualAdvancer`)**: reusar la lógica de `outcome(m)`:
+1. **Quién pasó (`actualAdvancer`)**: `matchAdvanceOutcome(m)`:
    - `realHome > realAway` → `m.home`
    - `realAway > realHome` → `m.away`
-   - empate a 90' → `m.advances` (puede ser `m.home`/`m.away`); si no hay → `null`.
-2. **Cómo pasó (`actualMethod`)**: `'pen'` si `penHome != null`; si no `'120'` si
-   `score120Home != null`; si no `'90'`.
-3. **Guess del jugador**:
-   - `predHome > predAway` → equipo `m.home`, método `'90'`
-   - `predAway > predHome` → equipo `m.away`, método `'90'`
-   - empate (`predHome === predAway`) → equipo `pred.predAdvances`, método `pred.predMethod`
-4. **Acertadores** = predicciones cuyo equipo `=== actualAdvancer`. `N` = cantidad.
-   Si el jugador no es acertador → `0`. `base = advancePool / N`.
-5. **×1.5** si además el método del jugador `=== actualMethod`; si no, `base`.
-6. Redondeo a 2 decimales (`Math.round(x*100)/100`), igual que el pozo de resultado.
+   - empate a 90' → `m.advances` (si es `m.home`/`m.away`); si no hay → `null`.
+2. **Guess del jugador** (`playerAdvanceGuess`):
+   - `predHome > predAway` → `m.home`
+   - `predAway > predHome` → `m.away`
+   - empate (`predHome === predAway`) → `pred.predAdvances`
+3. **Acertadores** = predicciones cuyo equipo `=== actualAdvancer`. `N` = cantidad.
+   Si el jugador no es acertador → `0`. Si acierta → `advancePool / N`.
+4. Redondeo a 2 decimales (`Math.round(x*100)/100`). No hay multiplicador.
 
 `N` se obtiene filtrando las predicciones del partido (orden de ~30 por partido, sin
 necesidad de memoización dedicada). `advancePool` se lee de settings (default 20).
@@ -117,36 +105,31 @@ decidir total vs. resultado según lo que muestre cada uno.
 ## UI
 
 **Predicción (fixture, partido de fase final abierto)**: al ingresar un marcador de
-**empate**, aparecen debajo del marcador:
-- Selector de equipo que avanza: 2 botones (local / visita).
-- Selector de método: 2 botones (Alargue 120' / Penales).
-- Se guardan con `onchange` como el resto de la predicción. Al cambiar a marcador
-  no-empate, se ocultan y se limpian `predAdvances`/`predMethod`.
+**empate**, aparece debajo del marcador un selector de equipo que avanza: 2 botones
+(local / visita). Se guarda como el resto de la predicción. Al cambiar a marcador
+no-empate, se oculta y se limpia `predAdvances`. **No hay selector de método.**
 
 **Resultado (fixture, partido de fase final finalizado)**: en la zona de puntos del
-jugador, además de los puntos del resultado, una línea `+X pts · quién pasa`, con
-indicación de ×1.5 cuando corresponda.
+jugador, además de los puntos del resultado, una línea `+X pts · quién pasa`.
 
-**Reglas**: agregar la explicación del pozo de 20 y del ×1.5 (con los tres métodos).
+**Reglas**: agregar la explicación del pozo de 20 (sin método/×1.5).
 
 **Admin**: input para editar `advancePool` junto a los pozos por fase.
 
 ## Testing
 
-- Unit (node:test) para `calcAdvancePoints` como función pura:
-  - Ganador en 90' acertado (quién + cómo) → `base*1.5`.
-  - Ganador-predictor correcto pero partido a penales → solo quién (`base`).
-  - Empate-predictor con equipo correcto y método correcto → `base*1.5`.
-  - Empate-predictor con equipo correcto, método incorrecto → `base`.
-  - Reparto entre `N` acertadores (verifica `20/N`).
-  - Partido de grupo → `0`.
-  - Partido sin resultado → `null`.
-- Manual: predecir empate en un KO, verificar inputs (equipo + método), cambiar a
-  no-empate (se limpian), y verificar el cálculo del total con datos de ejemplo.
+- Unit (node:test) para las funciones puras de `scripts/scoring.mjs`:
+  - `matchAdvanceOutcome`: ganador 90', empate con `advances`, empate sin `advances`,
+    sin resultado.
+  - `playerAdvanceGuess`: ganador, empate con `predAdvances`, empate sin `predAdvances`.
+  - `advancePoints`: reparto `20/N`, acierta/no acierta, grupo → `0`, sin resultado →
+    `null`.
+- Manual: predecir empate en un KO, verificar el selector de equipo, cambiar a
+  no-empate (se limpia), y verificar el cálculo del total con datos de ejemplo.
 
 ## Riesgos
 
 - **Doble fuente de "quién pasa"** (cálculo a 90' vs. `advances`): se mitiga reusando
   exactamente la lógica `outcome(m)` ya usada para las llaves.
-- **Empate-predictor sin método/equipo cargado** (datos viejos o input incompleto):
-  guess con `predAdvances`/`predMethod` `undefined` → no acierta → `0`. Sin error.
+- **Empate-predictor sin equipo cargado** (datos viejos o input incompleto): guess con
+  `predAdvances` `undefined` → no acierta → `0`. Sin error.
