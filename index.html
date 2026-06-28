@@ -1214,6 +1214,7 @@ function initFirebase() {
   });
   RT.ref('pf/matches').on('value', snap => {
     CACHE.matches = snap.val() ? Object.values(snap.val()) : [];
+    resolveBracketDisplay();
     LOADED.matches = true;
     onAllLoaded();
     if (dbReady) debouncedRefresh();
@@ -2984,6 +2985,41 @@ function koResultExtra(m) {
     ? `<div style="display:flex;align-items:center;justify-content:center;gap:5px;font-size:10px;font-weight:800;color:#4ade80;background:rgba(22,163,74,.10);border:1px solid rgba(22,163,74,.30);border-radius:8px;padding:4px 6px;margin-top:4px">✓ Avanza ${m.advances}</div>`
     : '';
   return tvLine + advBadge;
+}
+
+// Resolución de llaves EN EL CLIENTE (solo para mostrar): apenas se define quién
+// pasa en un partido, su bandera/país aparece en la fase siguiente al instante,
+// resolviendo cada lado por separado aunque el rival siga sin definirse. El sync
+// de CI igual persiste esto en la base; acá es para que se vea "altiro" sin esperar.
+// Mismo criterio que computeBracketUpdates/matchOutcome del sync.
+function resolveBracketDisplay() {
+  const matches = CACHE.matches || [];
+  const byCode = {};
+  for (const m of matches) if (m.code) byCode[m.code] = m;
+  const outcome = (m) => {
+    if (!m || m.realHome == null || m.realAway == null) return { winner: null, loser: null };
+    if (m.realHome > m.realAway) return { winner: m.home, loser: m.away };
+    if (m.realAway > m.realHome) return { winner: m.away, loser: m.home };
+    if (m.advances === m.home) return { winner: m.home, loser: m.away };
+    if (m.advances === m.away) return { winner: m.away, loser: m.home };
+    return { winner: null, loser: null };
+  };
+  const feeder = (spec) => {
+    const lose = spec.startsWith('L_');
+    const code = lose ? spec.slice(2) : spec;
+    const o = outcome(byCode[code]);
+    return (lose ? o.loser : o.winner) || ((lose ? 'Perdedor ' : 'Ganador ') + code);
+  };
+  let changed = true, guard = 0;
+  while (changed && guard++ < 12) {
+    changed = false;
+    for (const m of matches) {
+      if (!m.feedHome && !m.feedAway) continue;
+      const h = m.feedHome ? feeder(m.feedHome) : m.home;
+      const a = m.feedAway ? feeder(m.feedAway) : m.away;
+      if (h !== m.home || a !== m.away) { m.home = h; m.away = a; changed = true; }
+    }
+  }
 }
 
 // ═══ PODIO POINTS ═══
