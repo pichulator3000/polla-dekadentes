@@ -3518,6 +3518,18 @@ function renderMatches() {
            </div>
          </div>`;
     } else {
+      const isKO = !normStage(m.stage).startsWith('Grupo');
+      const isDrawPred = pred && pred.predHome != null && pred.predHome === pred.predAway;
+      const advUI = (isKO) ? `
+  <div id="advBox_${m.id}" style="display:${isDrawPred ? 'block' : 'none'};margin-top:8px;background:#0f172a;border-radius:8px;padding:8px">
+    <div style="font-size:10px;color:#94a3b8;text-align:center;margin-bottom:6px">Empate: ¿quién pasa?</div>
+    <div style="display:flex;gap:6px;justify-content:center">
+      <button type="button" onclick="setAdvPred('${m.id}','${m.home.replace(/'/g,"\\'")}')"
+        style="flex:1;padding:6px;border-radius:6px;border:1px solid #334155;background:${pred?.predAdvances===m.home?'#1d4ed8':'#1e293b'};color:#f1f5f9;font-size:11px;font-weight:700">${m.home}</button>
+      <button type="button" onclick="setAdvPred('${m.id}','${m.away.replace(/'/g,"\\'")}')"
+        style="flex:1;padding:6px;border-radius:6px;border:1px solid #334155;background:${pred?.predAdvances===m.away?'#1d4ed8':'#1e293b'};color:#f1f5f9;font-size:11px;font-weight:700">${m.away}</button>
+    </div>
+  </div>` : '';
       scoreHtml = `<div style="display:flex;align-items:center;gap:8px;justify-content:center;margin:8px 0">
            <input type="number" inputmode="numeric" min="0" max="20" id="ph_${m.id}"
              class="score-input" value="${pred?.predHome??''}" placeholder="-"
@@ -3526,7 +3538,7 @@ function renderMatches() {
            <input type="number" inputmode="numeric" min="0" max="20" id="pa_${m.id}"
              class="score-input" value="${pred?.predAway??''}" placeholder="-"
              oninput="autoJump(this,null)" onchange="savePred('${m.id}')"/>
-         </div>`;
+         </div>${advUI}`;
     }
 
     // ══ ADMIN: prediction participation + predictions panel ══
@@ -3843,8 +3855,28 @@ async function savePred(matchId) {
   if (h<0||a<0||h>20||a>20) return toast('Resultado inválido', 'err');
   const match = CACHE.matches.find(m => m.id===matchId);
   if (!match || getStatus(match) !== 'open') return toast('Partido ya cerrado 🔒', 'err');
-  await DB.savePred({ userId:currentUser.id, matchId, predHome:h, predAway:a });
+  let existingPred = CACHE.preds.find(p => p.userId === currentUser.id && p.matchId === matchId);
+  const predObj = existingPred
+    ? { ...existingPred, predHome: h, predAway: a }
+    : { userId: currentUser.id, matchId, predHome: h, predAway: a };
+  if (predObj.predHome !== predObj.predAway) { predObj.predAdvances = null; }
+  await DB.savePred(predObj);
+  const box = document.getElementById('advBox_' + matchId);
+  if (box) box.style.display = (predObj.predHome === predObj.predAway && !normStage(match.stage).startsWith('Grupo')) ? 'block' : 'none';
   toast('✓ Predicción guardada');
+  renderMatches();
+}
+
+// Guarda el equipo del pozo "quién pasa" en la predicción del jugador.
+async function setAdvPred(matchId, team) {
+  const uid = currentUser?.id;
+  if (!uid) return;
+  const m = CACHE.matches.find(x => x.id === matchId);
+  if (!m) return;
+  let pred = CACHE.preds.find(p => p.userId === uid && p.matchId === matchId);
+  if (!pred) { pred = { userId: uid, matchId, predHome: 0, predAway: 0 }; }
+  pred = { ...pred, predAdvances: team };
+  await DB.savePred(pred);
   renderMatches();
 }
 
