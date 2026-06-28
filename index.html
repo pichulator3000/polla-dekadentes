@@ -1782,7 +1782,7 @@ function renderHomeStats() {
   const myDone  = myPreds.filter(p => doneOrLive.find(m => m.id === p.matchId));
   const myPts   = myDone.reduce((s, p) => {
     const m = doneOrLive.find(x => x.id === p.matchId);
-    return s + (m ? calcPoints(p, m, preds) : 0);
+    return s + (m ? totalPoints(p, m, preds) : 0);
   }, 0);
   const avg = myDone.length ? (myPts / myDone.length).toFixed(2) : '0.00';
   const exact = myDone.filter(p => {
@@ -1814,7 +1814,7 @@ function renderHomeStats() {
     const uDone = uPreds.filter(p => doneOrLive.find(m => m.id === p.matchId));
     const uPts = uDone.reduce((s, p) => {
       const m = doneOrLive.find(x => x.id === p.matchId);
-      return s + (m ? calcPoints(p, m, preds) : 0);
+      return s + (m ? totalPoints(p, m, preds) : 0);
     }, 0);
     return { name: u.name, pts: uPts, id: u.id };
   }).sort((a, b) => b.pts - a.pts);
@@ -1829,7 +1829,7 @@ function renderHomeStats() {
   });
   for (const p of myDoneSorted) {
     const m = doneOrLive.find(x => x.id === p.matchId);
-    const pts = m ? calcPoints(p, m, preds) : 0;
+    const pts = m ? totalPoints(p, m, preds) : 0;
     if (pts > 0) streak++;
     else break;
   }
@@ -2005,7 +2005,7 @@ function renderStatsChart() {
         let cumul = 0;
         const data = done.map(m => {
           const pred = preds.find(p => p.userId === u.id && p.matchId === m.id);
-          cumul += pred ? calcPoints(pred, m, preds) : 0;
+          cumul += pred ? totalPoints(pred, m, preds) : 0;
           return cumul;
         });
         const isMe = u.id === uid;
@@ -3470,7 +3470,7 @@ function renderMatches() {
     // Puntos: mostrar en done y en live (provisional)
     let ptsHtml = '';
     if (!isAdm && pred && (status === 'done' || status === 'live')) {
-      const p = calcPoints(pred, m, preds);
+      const p = totalPoints(pred, m, preds);
       if (p !== null) {
         const rh = m.realHome ?? m.liveHome;
         const ra = m.realAway ?? m.liveAway;
@@ -3573,7 +3573,7 @@ function renderMatches() {
           let ptsText = `<span style="color:#334155">\u2014</span>`;
           let predColor = '#94a3b8';
           if (p && hasDone) {
-            const pts = calcPoints(p, m, preds);
+            const pts = totalPoints(p, m, preds);
             const isExact = p.predHome===m.realHome && p.predAway===m.realAway;
             predColor = isExact ? '#38bdf8' : pts > 0 ? '#4ade80' : '#f87171';
             ptsText = `<span style="color:${predColor};font-weight:900">${pts.toFixed(2)}</span>`;
@@ -3643,7 +3643,7 @@ function renderMatches() {
           let ptsText = '';
           let predColor = '#94a3b8';
           if (p && hasDone) {
-            const pts = calcPoints(p, m, preds);
+            const pts = totalPoints(p, m, preds);
             const isExact = p.predHome===m.realHome && p.predAway===m.realAway;
             predColor = isExact ? '#38bdf8' : pts > 0 ? '#4ade80' : '#f87171';
             ptsText = `<td style="padding:5px 4px;text-align:center"><span style="color:${predColor};font-weight:900">${pts.toFixed(2)}</span></td>`;
@@ -3873,7 +3873,7 @@ function renderRanking() {
       const ra = m ? (m.realAway ?? m.liveAway) : null;
       if (!m || rh == null) return;
       played++;
-      const pt = calcPoints(p,m,preds);
+      const pt = totalPoints(p,m,preds);
       pts += pt;
       if (p.predHome===rh && p.predAway===ra) { exact++; correct++; }
       else if (Math.sign(p.predHome-p.predAway)===Math.sign(rh-ra)) correct++;
@@ -3987,7 +3987,7 @@ function renderStats() {
     const sorted = [...done].sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
     sorted.forEach(m=>{
       const p=up.find(x=>x.matchId===m.id); if(!p)return; pj++;
-      const pt=calcPoints(p,m,preds);
+      const pt=totalPoints(p,m,preds);
       pts+=pt;
       const ie=p.predHome===m.realHome&&p.predAway===m.realAway;
       const io=Math.sign(p.predHome-p.predAway)===Math.sign(m.realHome-m.realAway);
@@ -4229,7 +4229,7 @@ function renderStats() {
       weekMatches.forEach(m => {
         const p = preds.find(pr => pr.userId === u.id && pr.matchId === m.id);
         if (p) {
-          const pt = calcPoints(p, m, preds);
+          const pt = totalPoints(p, m, preds);
           weekPts += pt;
         }
       });
@@ -4325,7 +4325,7 @@ function renderResultados() {
   // Total pts
   const totalPts = done.reduce((acc, m) => {
     const p = userPreds.find(x => x.matchId === m.id);
-    return acc + (p ? calcPoints(p, m, preds) : 0);
+    return acc + (p ? totalPoints(p, m, preds) : 0);
   }, 0);
 
   let html = `
@@ -4349,7 +4349,7 @@ function renderResultados() {
   matches.forEach((m, i) => {
     const p       = userPreds.find(x => x.matchId === m.id);
     const isDone  = m.realHome != null;
-    const pts     = (p && isDone) ? calcPoints(p, m, preds) : null;
+    const pts     = (p && isDone) ? totalPoints(p, m, preds) : null;
     const isExact = pts !== null && p.predHome===m.realHome && p.predAway===m.realAway;
     const isOk    = pts !== null && !isExact && pts > 0;
     const bg      = i % 2 === 0 ? '#1e293b' : '#182030';
@@ -4782,7 +4782,7 @@ function buildAdminGestion() {
   users.forEach(u => {
     const up    = preds.filter(p=>p.userId===u.id);
     const done2 = CACHE.matches.filter(m=>m.realHome!=null);
-    const pts   = up.reduce((acc,p)=>{const m=done2.find(x=>x.id===p.matchId);return acc+(m?calcPoints(p,m,preds):0);},0);
+    const pts   = up.reduce((acc,p)=>{const m=done2.find(x=>x.id===p.matchId);return acc+(m?totalPoints(p,m,preds):0);},0);
     html += `<div style="background:#0f172a;border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between">
       <div><div style="font-weight:700;font-size:13px">${u.name}</div><div style="font-size:11px;color:#64748b">@${u.code} · ${up.length} pred. · <span style="color:#38bdf8">${pts.toFixed(2)} pts</span></div></div>
       <button class="btn-danger" onclick="delUser('${u.id}')" style="padding:6px 10px">✕</button>
