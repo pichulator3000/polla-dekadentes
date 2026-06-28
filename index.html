@@ -3115,6 +3115,13 @@ async function resetStagePool(stage) {
   toast(`${stage} restaurado al default ↩️`, 'ok');
 }
 
+async function saveAdvancePool() {
+  const v = Number(document.getElementById('advancePoolInput').value);
+  if (isNaN(v) || v < 0) { toast('Valor inválido', 'err'); return; }
+  await RT.ref('pf/settings/advancePool').set(v);
+  toast('Pozo "quién pasa" guardado ✅', 'ok');
+}
+
 // ══ SAVE: Puntos del podio (champion/runner/scorer)
 async function savePodioPointsAll() {
   const c = Number(document.getElementById('podPts_champion').value);
@@ -3269,6 +3276,15 @@ function renderReglasPozos() {
   });
   html += '</tbody></table>';
   html += '<p style="font-size:10px;color:#475569;margin-top:6px">✨ = personalizado por admin</p>';
+  html += `<div style="margin-top:14px;background:#1e293b;border-radius:10px;padding:12px">
+    <div style="font-weight:800;color:#facc15;margin-bottom:6px">🎟️ Pozo "quién pasa" (solo eliminatorias)</div>
+    <div style="font-size:12px;color:#cbd5e1;line-height:1.5">
+      Además del pozo por el resultado a los 90', cada partido de fase final reparte
+      <b>${getAdvancePool()} puntos</b> a partes iguales entre todos los que aciertan
+      <b>qué equipo avanza</b>. Si predices un ganador, ese equipo es tu apuesta;
+      si predices empate, eliges <b>qué equipo</b> pasa.
+    </div>
+  </div>`;
   el.innerHTML = html;
   renderReglasPodio();
 }
@@ -3342,7 +3358,16 @@ function buildAdminPozos() {
       </div>`;
     });
   }
-  html += `</div></details></div>`;
+  html += `</div>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid #334155">
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:6px">🎟️ Pozo "quién pasa" (eliminatorias)</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="advancePoolInput" type="number" value="${getAdvancePool()}"
+          style="width:80px;padding:6px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:#f1f5f9">
+        <button onclick="saveAdvancePool()" style="padding:6px 10px;border-radius:6px;background:#7c3aed;color:#fff;border:none;font-weight:700">Guardar</button>
+      </div>
+      <div style="font-size:10px;color:#64748b;margin-top:4px">Se reparte a partes iguales entre quienes aciertan quién avanza.</div>
+    </div></details></div>`;
   return html;
 }
 let selectedTournament = null;
