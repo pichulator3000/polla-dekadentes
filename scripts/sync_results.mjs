@@ -10,6 +10,7 @@
 //   FIREBASE_DATABASE_URL     — e.g. https://myproject-default-rtdb.firebaseio.com
 
 const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
+const ESPN_SUMMARY = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary';
 
 // ─── Team name aliases: English (ESPN) → Spanish (Firebase) ────────────────────
 
@@ -146,6 +147,155 @@ export function findFirebaseMatchLegacy(apiMatch, firebaseMatches) {
 // Alias so existing tests can import it (same logic, different name for semantic clarity)
 export const findFirebaseMatchForLive = findFirebaseMatchLegacy;
 
+// ─── Bracket propagation (llaves que se arman solas) ──────────────────────────
+//
+// Cada partido de fase final lleva un `code` único (16A…16P, 8A…8H, 4A…4D,
+// 2A/2B, 3P, F1) y, salvo los 16avos, dos "feeders" que apuntan al code del que
+// sale cada equipo:
+//   feedHome/feedAway = "8A"   → ganador del partido 8A
+//   feedHome/feedAway = "L_2A" → perdedor del partido 2A   (para el 3er puesto)
+// Mientras el feeder no esté decidido se muestra "Ganador 8A" / "Perdedor 2A".
+
+/**
+ * Winner / loser of a knockout match, or nulls if still undecided.
+ * Empates (penales) se resuelven con el campo `advances` (nombre del que avanza,
+ * que el sync toma del flag `winner` de ESPN).
+ */
+export function matchOutcome(m) {
+  if (!m || m.realHome == null || m.realAway == null) return { winner: null, loser: null };
+  if (m.realHome > m.realAway) return { winner: m.home, loser: m.away };
+  if (m.realAway > m.realHome) return { winner: m.away, loser: m.home };
+  if (m.advances === m.home) return { winner: m.home, loser: m.away };
+  if (m.advances === m.away) return { winner: m.away, loser: m.home };
+  return { winner: null, loser: null };
+}
+
+// Resolve a feeder spec ("8A" winner, "L_2A" loser) to a team name, or a
+// placeholder ("Ganador 8A" / "Perdedor 2A") while the feeder is undecided.
+function resolveFeeder(spec, byCode) {
+  const isLoser = spec.startsWith('L_');
+  const code = isLoser ? spec.slice(2) : spec;
+  const out = matchOutcome(byCode[code]);
+  const name = isLoser ? out.loser : out.winner;
+  return name ?? ((isLoser ? 'Perdedor ' : 'Ganador ') + code);
+}
+
+/**
+ * Given every match, compute the home/away each bracket slot SHOULD show.
+ * Returns { [matchId]: { home, away } } only for slots whose names changed.
+ * Cascades 16avos → octavos → … → final in a single call (mutates the in-memory
+ * match objects so later rounds see freshly-resolved teams).
+ */
+export function computeBracketUpdates(matches) {
+  const byCode = {};
+  for (const m of matches) if (m.code) byCode[m.code] = m;
+  const updates = {};
+  let changed = true, guard = 0;
+  while (changed && guard++ < 12) {
+    changed = false;
+    for (const m of matches) {
+      if (!m.feedHome && !m.feedAway) continue;
+      const home = m.feedHome ? resolveFeeder(m.feedHome, byCode) : m.home;
+      const away = m.feedAway ? resolveFeeder(m.feedAway, byCode) : m.away;
+      if (home !== m.home || away !== m.away) {
+        m.home = home; m.away = away;
+        updates[m.id] = { home, away };
+        changed = true;
+      }
+    }
+  }
+  return updates;
+}
+
+// ─── Marcador por fases (90' / alargue / penales) ────────────────────────────
+//
+// La polla SOLO puntúa el resultado a los 90'. ESPN entrega el marcador agregado
+// (incluye alargue) en el scoreboard, pero el endpoint `summary` da el desglose por
+// período en linescores: [1ºT, 2ºT, (ET1, ET2, (penales))]. De ahí sacamos:
+//   90'  = ls[0] + ls[1]
+//   120' = suma de los 4 primeros (si fue a alargue)
+//   pen  = ls[4] (si fue a penales)
+
+/**
+ * Convierte los linescores de ESPN (ya orientados a home/away de Firebase) en
+ * marcadores por fase. `homeLs`/`awayLs` son arrays de `{displayValue}`.
+ * Devuelve { reg90:[h,a], score120:[h,a]|null, pen:[h,a]|null } o null si los datos
+ * son insuficientes/ inválidos.
+ */
+export function parsePeriods(homeLs, awayLs) {
+  const toNums = (arr) => (arr || []).map((x) => parseInt(x?.displayValue ?? x));
+  const h = toNums(homeLs);
+  const a = toNums(awayLs);
+  if (h.length < 2 || a.length < 2 || h.some(Number.isNaN) || a.some(Number.isNaN)) return null;
+  const reg90 = [h[0] + h[1], a[0] + a[1]];
+  let score120 = null;
+  let pen = null;
+  if (h.length >= 4 && a.length >= 4) {
+    score120 = [h[0] + h[1] + h[2] + h[3], a[0] + a[1] + a[2] + a[3]];
+  }
+  if (h.length >= 5 && a.length >= 5) {
+    pen = [h[4], a[4]];
+  }
+  return { reg90, score120, pen };
+}
+
+/**
+ * Calcula los campos a escribir para un partido FINAL respetando la regla "puntúa
+ * el 90'".
+ *  - Grupos: `realHome/realAway` = score del scoreboard (ya es 90').
+ *  - Fase final con desglose: `realHome/realAway` = 90', y `score120*`/`pen*` si los
+ *    hubo; `advances` = quién clasifica.
+ *  - Fase final sin desglose confiable (`periods` null): NO se escribe el score (no se
+ *    inventa un 90' incorrecto); solo se registra `advances` para armar la llave.
+ * No incluye claves con valor undefined.
+ */
+export function resolveFinalUpdate({ stage, scoreHome, scoreAway, periods, winnerName }) {
+  const isKnockout = !/^Grupo/i.test(stage || '');
+  const upd = { liveHome: null, liveAway: null };
+  if (!isKnockout) {
+    upd.realHome = parseInt(scoreHome);
+    upd.realAway = parseInt(scoreAway);
+    return upd;
+  }
+  if (!periods) {
+    if (winnerName) upd.advances = winnerName;
+    return upd;
+  }
+  upd.realHome = periods.reg90[0];
+  upd.realAway = periods.reg90[1];
+  if (periods.score120) {
+    upd.score120Home = periods.score120[0];
+    upd.score120Away = periods.score120[1];
+  }
+  if (periods.pen) {
+    upd.penHome = periods.pen[0];
+    upd.penAway = periods.pen[1];
+  }
+  if (winnerName) upd.advances = winnerName;
+  return upd;
+}
+
+/**
+ * Pide el `summary` de un evento de ESPN y devuelve el desglose por fase
+ * (parsePeriods) orientado al home/away del partido de Firebase. null si falla.
+ */
+async function fetchPeriodsForMatch(fbMatch, espnEventId) {
+  try {
+    const res = await fetch(`${ESPN_SUMMARY}?event=${espnEventId}`, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const comps = data?.header?.competitions?.[0]?.competitors ?? [];
+    if (comps.length < 2) return null;
+    const byTeam = {};
+    for (const c of comps) {
+      byTeam[normCompare(normalizeTeam(c.team?.displayName ?? ''))] = c.linescores;
+    }
+    return parsePeriods(byTeam[normCompare(fbMatch.home)], byTeam[normCompare(fbMatch.away)]);
+  } catch {
+    return null;
+  }
+}
+
 // ─── Main runner ───────────────────────────────────────────────────────────────
 
 if (process.argv[1] === new URL(import.meta.url).pathname) {
@@ -199,6 +349,22 @@ async function run() {
     clearedStale++;
   }
 
+  // ─── Armar las llaves: propagar ganadores/perdedores por el bracket ──────────
+  // Cada partido de fase final apunta (via feedHome/feedAway + code) al que sale
+  // su rival. Acá resolvemos los nombres reales en cascada y los persistimos para
+  // que octavos→final se vayan completando solos a medida que entran resultados.
+  const bracketUpdates = computeBracketUpdates(mundialMatches);
+  let bracketResolved = 0;
+  for (const [id, upd] of Object.entries(bracketUpdates)) {
+    if (DRY_RUN) {
+      console.log(`[dry-run BRACKET] ${id} → ${upd.home} vs ${upd.away}`);
+      continue;
+    }
+    await db.ref(`pf/matches/${id}`).update(upd);
+    console.log(`BRACKET ${id} → ${upd.home} vs ${upd.away}`);
+    bracketResolved++;
+  }
+
   // Fetch ESPN scoreboard
   const res = await fetch(ESPN_BASE, { headers: { 'User-Agent': 'Mozilla/5.0' } });
   if (!res.ok) { console.error(`ESPN fetch error: ${res.status}`); process.exit(1); }
@@ -233,18 +399,34 @@ async function run() {
       fbMatch, normalizeTeam(homeTeam), normalizeTeam(awayTeam), homeScore, awayScore,
     );
 
-    if (status === 'STATUS_FINAL' || status === 'STATUS_FULL_TIME') {
+    if (status === 'STATUS_FINAL' || status === 'STATUS_FULL_TIME' || status === 'STATUS_FINAL_PEN') {
+      // La polla solo puntúa el 90'. Para fase final pedimos el desglose por período
+      // (summary → linescores) y derivamos 90'/120'/penales; el `winner` de ESPN dice
+      // quién clasifica (sirve para armar la llave aunque haya alargue o penales).
+      const isKnockout = !/^Grupo/i.test(fbMatch.stage || '');
+      const winnerComp = comp.competitors?.find(c => c.winner === true);
+      const winnerName = winnerComp?.team?.displayName ? normalizeTeam(winnerComp.team.displayName) : null;
+      const periods = isKnockout ? await fetchPeriodsForMatch(fbMatch, event.id) : null;
+
+      const finalUpdate = resolveFinalUpdate({
+        stage: fbMatch.stage,
+        scoreHome: fbHomeScore,
+        scoreAway: fbAwayScore,
+        periods,
+        winnerName,
+      });
+
+      const desc = 'realHome' in finalUpdate
+        ? `${fbMatch.home} ${finalUpdate.realHome}-${finalUpdate.realAway} ${fbMatch.away} (90')`
+          + (finalUpdate.score120Home != null ? ` · 120' ${finalUpdate.score120Home}-${finalUpdate.score120Away}` : '')
+          + (finalUpdate.penHome != null ? ` · pen ${finalUpdate.penHome}-${finalUpdate.penAway}` : '')
+        : `${fbMatch.home} vs ${fbMatch.away} (sin desglose 90' — pendiente)`;
       if (DRY_RUN) {
-        console.log(`[dry-run FINAL] ${fbMatch.home} ${fbHomeScore}-${fbAwayScore} ${fbMatch.away}`);
+        console.log(`[dry-run FINAL] ${desc}${finalUpdate.advances ? ` · avanza ${finalUpdate.advances}` : ''}`);
         continue;
       }
-      await db.ref(`pf/matches/${fbMatch.id}`).update({
-        realHome: parseInt(fbHomeScore),
-        realAway: parseInt(fbAwayScore),
-        liveHome: null,
-        liveAway: null,
-      });
-      console.log(`FINAL ${fbMatch.home} ${fbHomeScore}-${fbAwayScore} ${fbMatch.away}`);
+      await db.ref(`pf/matches/${fbMatch.id}`).update(finalUpdate);
+      console.log(`FINAL ${desc}${finalUpdate.advances ? ` · avanza ${finalUpdate.advances}` : ''}`);
       updatedFinal++;
     } else if (status === 'STATUS_IN_PLAY' || status === 'STATUS_FIRST_HALF' || status === 'STATUS_SECOND_HALF' || status === 'STATUS_HALFTIME' || status === 'STATUS_DELAYED') {
       if (DRY_RUN) {
@@ -260,6 +442,6 @@ async function run() {
     }
   }
 
-  console.log(`\nResumen: ${updatedFinal} finales, ${updatedLive} en vivo actualizados, ${clearedStale} live colgados limpiados`);
+  console.log(`\nResumen: ${updatedFinal} finales, ${updatedLive} en vivo actualizados, ${clearedStale} live colgados limpiados, ${bracketResolved} llaves resueltas`);
   process.exit(0);
 }
