@@ -678,6 +678,52 @@
     .ld-gtable td { padding:10px 8px; }
     .ld-grow.me { background:#0c3a52; }
     .ld-gpts { font-weight:900; font-variant-numeric:tabular-nums; }
+
+    /* ── Alerta Anti-Trampa IA (tarjeta roja) ── */
+    .cheat { position:relative; background:linear-gradient(150deg,#e2241a,#a8120c); color:#fff;
+      border-radius:14px; padding:18px 18px 16px; overflow:hidden; margin-bottom:14px;
+      box-shadow:0 18px 40px rgba(226,36,26,.32);
+      animation:cheatEnter .55s cubic-bezier(.2,.9,.3,1.3) both; }
+    @keyframes cheatEnter { from{opacity:0; transform:translateY(18px) scale(.96);} }
+    .cheat::after { content:""; position:absolute; top:-60px; right:-60px; width:180px; height:180px;
+      background:radial-gradient(circle,rgba(255,255,255,.16),transparent 70%); pointer-events:none; }
+    .cheat .c-whistle { font-size:10px; letter-spacing:.16em; text-transform:uppercase; font-weight:800;
+      opacity:.9; display:flex; align-items:center; gap:8px; }
+    .cheat .c-whistle .c-pill { background:rgba(0,0,0,.28); padding:2px 8px; border-radius:20px; font-size:9px; letter-spacing:.1em; }
+    .cheat .c-live { width:7px; height:7px; border-radius:50%; background:#fff;
+      box-shadow:0 0 8px #fff; animation:cheatBlink 1s infinite; }
+    @keyframes cheatBlink { 50%{opacity:.25;} }
+    .cheat h2 { font-size:22px; font-weight:900; margin:11px 0 6px; line-height:1.02; letter-spacing:-.01em; position:relative; z-index:2; }
+    .cheat .c-deck { font-size:12.5px; opacity:.95; line-height:1.45; margin:0; max-width:38ch; position:relative; z-index:2; }
+    .cheat .c-serious { font-size:12px; line-height:1.45; margin:11px 0 0; max-width:42ch;
+      background:rgba(0,0,0,.22); border-left:3px solid rgba(255,255,255,.65);
+      padding:9px 12px; border-radius:0 8px 8px 0; position:relative; z-index:2; }
+    .cheat .c-serious b { font-weight:800; }
+    .cheat .c-var { margin-top:14px; position:relative; z-index:2; }
+    .cheat .c-vh { display:flex; justify-content:space-between; align-items:center;
+      font-size:10px; font-weight:700; letter-spacing:.05em; margin-bottom:6px; }
+    .cheat .c-tag { display:inline-flex; align-items:center; gap:6px; opacity:.95; }
+    .cheat .c-pct { font-family:ui-monospace,monospace; font-size:12px; font-weight:800; }
+    .cheat .c-track { height:8px; background:rgba(0,0,0,.3); border-radius:20px; overflow:hidden; position:relative; }
+    .cheat .c-track i { display:block; height:100%; width:0;
+      background:linear-gradient(90deg,#ffd24d,#fff); border-radius:20px;
+      animation:cheatFill 1.8s .4s cubic-bezier(.3,.8,.2,1) forwards; }
+    @keyframes cheatFill { to{ width:96%; } }
+    .cheat .c-scan { position:absolute; top:0; bottom:0; width:60px;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);
+      animation:cheatScan 1.6s linear 3; }
+    @keyframes cheatScan { from{left:-60px;} to{left:100%;} }
+    .cheat .c-foot { margin-top:14px; font-size:10.5px; opacity:.82; line-height:1.45;
+      border-top:1px solid rgba(255,255,255,.22); padding-top:10px; position:relative; z-index:2; }
+    .cheat .c-card { position:absolute; bottom:-26px; right:12px; width:78px; height:100px;
+      background:linear-gradient(160deg,#d8201a,#9c0f0a); border:2px solid rgba(255,255,255,.4);
+      border-radius:8px; transform:rotate(14deg); box-shadow:0 10px 24px rgba(0,0,0,.45);
+      animation:cheatBeat 2.4s ease-in-out infinite; z-index:1; }
+    @keyframes cheatBeat { 0%,100%{transform:rotate(14deg) scale(1);} 50%{transform:rotate(14deg) scale(1.05);} }
+    @media (prefers-reduced-motion: reduce){
+      .cheat, .cheat *{ animation:none !important; }
+      .cheat .c-track i{ width:96%; }
+    }
   </style>
 </head>
 <body>
@@ -793,6 +839,9 @@
         <div style="margin-bottom:16px;text-align:center"><img src="panini.png" alt="Polla Dekadentes" width="120" height="120" style="border-radius:14px;display:inline-block;"></div>
         <p id="homeGreet" style="color:#64748b;font-size:14px;margin:0"></p>
       </div>
+
+      <!-- Alerta Anti-Trampa IA (solo jugadores marcados) -->
+      <div id="homeCheatAlert"></div>
 
       <!-- Próximo partido / En vivo -->
       <div id="homeMatchStrip" style="display:none"></div>
@@ -1640,6 +1689,45 @@ function showHome() {
   renderHomeMatchStrip();
   renderPotenciado();
   renderUpcoming();
+  renderCheatAlert();
+}
+
+// Jugadores marcados por uso excesivo de IA (match por substring del nombre, case-insensitive)
+const CHEAT_FLAGGED = ['saval'];
+function renderCheatAlert() {
+  const el = document.getElementById('homeCheatAlert');
+  if (!el) return;
+  const name = (currentUser?.name || '').trim().toLowerCase();
+  if (!CHEAT_FLAGGED.some(f => name.includes(f))) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div class="cheat">
+      <div class="c-whistle"><span class="c-live"></span> Pitazo del árbitro <span class="c-pill">FALTA TÉCNICA</span></div>
+      <h2>Tarjeta roja por IA</h2>
+      <p class="c-deck">El VAR revisó tus predicciones y algo no le cuadró.</p>
+      <p class="c-serious">El Comité de Integridad ha registrado uso excesivo de inteligencia artificial en tus pronósticos. <b>Tu caso quedó en revisión y bajo evaluación de las sanciones que correspondan.</b></p>
+      <div class="c-var">
+        <div class="c-vh">
+          <span class="c-tag">📺 Revisión del VAR · IA detectada</span>
+          <span class="c-pct" id="cheatPct">0%</span>
+        </div>
+        <div class="c-track"><span class="c-scan"></span><i></i></div>
+      </div>
+      <div class="c-foot">¿Crees que es un error? Responde antes del próximo partido.</div>
+      <div class="c-card"></div>
+    </div>`;
+  // contador animado sincronizado con la barra
+  const pct = document.getElementById('cheatPct');
+  if (!pct) return;
+  const target = 96;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { pct.textContent = target + '%'; return; }
+  let start = null;
+  function step(ts){
+    if (!start) start = ts;
+    const t = Math.min((ts - start) / 1800, 1);
+    pct.textContent = Math.round((1 - Math.pow(1 - t, 3)) * target) + '%';
+    if (t < 1) requestAnimationFrame(step);
+  }
+  setTimeout(() => requestAnimationFrame(step), 400);
 }
 
 function showTab(tab) {
@@ -2452,6 +2540,55 @@ function aweonaosDeMatch(m){
   if (getStatus(m)==='open' || !_matchElegible(m)) return [];
   return CACHE.users.filter(u => !u.isAdmin && !_tienePred(u.id, m.id));
 }
+// Pool de banners burlescos (se elige uno determinístico por partido+usuario)
+const PAYASO_FRASES = [
+  { t1:'¡Eres un aweonao!',                 t2:'Se te olvidó poner el resultado, payaso culiao 🤡' },
+  { t1:'¡Despierta, tonto culiao!',         t2:'Te quedaste pegao y no pusiste nada, aweonao 🤡' },
+  { t1:'¡Honk honk, llegó el payaso!',      t2:'Otro partido sin pronóstico, saco wea 🤡' },
+  { t1:'¡Puntos regalados, aweonao!',       t2:'Por tonto culiao no pusiste resultado, payaso 🤡' },
+  { t1:'¿Y tu pronóstico? Saco wea?',       t2:'No pusiste nada de nada, payaso culiao 🤡' },
+  { t1:'¡Aweonao oficial del torneo!',      t2:'Se jugó el partido y tú ni apareciste, saco wea 🤡' },
+  { t1:'¡Te dormiste de nuevo, tonto culiao!', t2:'Cero pronóstico, cero puntos, aweonao 🤡' },
+  { t1:'¡Falta el payaso… ah, eras tú!',    t2:'No pusiste resultado, saco wea 🤡' },
+  { t1:'¡Qué aweonao más grande, oh!',      t2:'Hasta el VAR se rió de que no pronosticaste, aweonao 🤡' },
+  { t1:'¡Saco wea, despierta!',          t2:'El partido pasó y tú durmiendo, payaso culiao 🤡' },
+  { t1:'¡Tonto culiao, otra vez!',          t2:'No pronosticaste ni en pelea, aweonao 🤡' },
+  { t1:'¡Anota po, payaso culiao!',         t2:'Te ganó la flojera, saco wea aweonao 🤡' },
+  { t1:'¡Premio al más aweonao!',           t2:'No pusiste resultado, tonto culiao 🤡' },
+  { t1:'¡Hasta cuándo, weón!',              t2:'Otra vez sin pronóstico, payaso culiao saco wea 🤡' },
+  { t1:'¡Casi más aweonao que Mery!',       t2:'Y eso ya es decir mucho, payaso culiao 🤡' },
+  { t1:'¡Vas a alcanzar al Polo!',          t2:'El trono del más aweonao te queda cerca, saco wea 🤡' },
+  { t1:'¡Mery te manda saludos!',           t2:'Del club de los que no pronostican, aweonao culiao 🤡' },
+  { t1:'¡El Polo está orgulloso de ti!',    t2:'Otro aweonao que se olvidó, bienvenido al club 🤡' },
+];
+function _payasoHash(seed){
+  let h = 0;
+  const s = String(seed || '');
+  for (let i = 0; i < s.length; i++){ h = (h * 31 + s.charCodeAt(i)) | 0; }
+  return Math.abs(h);
+}
+// Frases dinámicas que nombran al top-3 de aweonaos del ranking (excluye al propio jugador)
+function _payasoFrasesDinamicas(uid){
+  const top = aweonaoStats('__all__').filter(a => a.olvidos > 0 && a.id !== uid);
+  if (!top.length) return [];
+  const out = [];
+  const n1 = top[0];
+  out.push({ t1:`¡Vas camino a alcanzar a ${n1.name}!`,        t2:`El aweonao mayor lleva ${n1.olvidos} olvidos… y ahí vas tú, payaso culiao 🤡` });
+  out.push({ t1:`¡Casi tan aweonao como ${n1.name}!`,          t2:`Te falta poquito pa’ ser el rey de los aweonaos, saco wea 🤡` });
+  if (top[1]) out.push({ t1:`¡${top[1].name} te hace un puesto en el podio!`, t2:`Top de los aweonaos y tú escalando, tonto culiao 🤡` });
+  if (top[2]) out.push({ t1:`¡Pasaste a ${top[2].name} en aweonao!`,         t2:`Bronce de los aweonaos asegurado, payaso culiao 🤡` });
+  return out;
+}
+function payasoBannerHtml(m){
+  const uid = currentUser?.id || '';
+  const pool = PAYASO_FRASES.concat(_payasoFrasesDinamicas(uid));
+  const f = pool[_payasoHash(`${m?.id || ''}_${uid}`) % pool.length];
+  return `<div class="payaso-banner" role="alert">
+    <span class="payaso-emoji">🤡</span>
+    <div class="payaso-t1">${f.t1}</div>
+    <div class="payaso-t2">${f.t2}</div>
+  </div>`;
+}
 function aweonaoStats(scope){
   const cerrados = CACHE.matches.filter(m =>
     _matchElegible(m) && getStatus(m)!=='open' &&
@@ -2802,11 +2939,7 @@ function _ldMine(){
   if (!mine){
     const soyAweonao = !currentUser?.isAdmin && aweonaosDeMatch(m).some(u => u.id === currentUser.id);
     el.innerHTML = soyAweonao
-      ? `<div class="payaso-banner" role="alert">
-          <span class="payaso-emoji">🤡</span>
-          <div class="payaso-t1">¡Eres un aweonao!</div>
-          <div class="payaso-t2">Se te olvidó poner el resultado, payaso culiao 🤡</div>
-        </div>`
+      ? payasoBannerHtml(m)
       : `<div class="ld-mine ld-mine-empty">😴 No pronosticaste este partido</div>`;
     return;
   }
@@ -3781,11 +3914,7 @@ function renderMatches() {
     if (status !== 'open') {
       const aw = aweonaosDeMatch(m);
       if (!isAdm && aw.some(u => u.id === uid)) {
-        payasoHtml = `<div class="payaso-banner" role="alert">
-          <span class="payaso-emoji">🤡</span>
-          <div class="payaso-t1">¡Eres un aweonao!</div>
-          <div class="payaso-t2">Se te olvidó poner el resultado, payaso culiao 🤡</div>
-        </div>`;
+        payasoHtml = payasoBannerHtml(m);
       }
       aweonaoHtml = aw.length
         ? `<div style="font-size:11px;color:#64748b;margin-top:6px;text-align:center">🧠 <b style="color:#f87171">Aweonaos:</b> ${aw.map(u=>u.name).join(', ')}</div>`
