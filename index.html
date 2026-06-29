@@ -1458,9 +1458,12 @@ function _pointsAt(pred, match, allPreds, rh, ra) {
   if (!correctN) return 0;
   let pool = getPoolForStage(match.stage);
   if (match.potenciado) pool *= 2;
-  const base  = pool / correctN;
+  // La parte a repartir (pozo ÷ acertadores) se redondea SIEMPRE a 2 decimales.
+  // El exacto es el doble de ESA parte ya redondeada, para que coincida con lo
+  // mostrado (parte ×2) y no se reaproxime sobre un valor de más decimales.
+  const base  = Math.round((pool / correctN) * 100) / 100;
   const exact = pred.predHome === rh && pred.predAway === ra;
-  return Math.round((exact ? base * 2 : base) * 100) / 100;
+  return exact ? Math.round(base * 2 * 100) / 100 : base;
 }
 
 function fmtDate(iso) {
@@ -2320,13 +2323,28 @@ function renderUpcoming() {
            </div>`;
       const scoreSection = `<div style="width:92px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${scoreInputHtml}</div>`;
 
-      html += `<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-top:1px solid rgba(56,189,248,0.06)">
-        <span style="font-size:11px;font-weight:800;color:#38bdf8;min-width:40px;font-weight:600">${t}</span>
-        <div style="flex:1;min-width:0">
-          <span style="font-size:12px;font-weight:700;color:#e8edf5">${flagImg(m.home)}${m.home} <span style="color:#4a5f78;font-weight:400">vs</span> ${m.away}${flagImg(m.away)}</span>
+      // Selector "quién pasa" (eliminatorias): aparece al predecir empate.
+      const isKO = !normStage(m.stage).startsWith('Grupo');
+      const isDrawPred = pred && pred.predHome != null && pred.predHome === pred.predAway;
+      const advUI = (!isAdm && !locked && isKO) ? `
+        <div id="uadvBox_${m.id}" style="display:${isDrawPred ? 'flex' : 'none'};gap:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap;margin-top:4px">
+          <span style="font-size:10px;color:#94a3b8">Empate, ¿quién pasa?</span>
+          <button type="button" onclick="setAdvPred('${m.id}','${m.home.replace(/'/g,"\\'")}')"
+            style="padding:4px 8px;border-radius:6px;border:1px solid #334155;background:${pred?.predAdvances===m.home?'#1d4ed8':'#1e293b'};color:#f1f5f9;font-size:10px;font-weight:700">${m.home}</button>
+          <button type="button" onclick="setAdvPred('${m.id}','${m.away.replace(/'/g,"\\'")}')"
+            style="padding:4px 8px;border-radius:6px;border:1px solid #334155;background:${pred?.predAdvances===m.away?'#1d4ed8':'#1e293b'};color:#f1f5f9;font-size:10px;font-weight:700">${m.away}</button>
+        </div>` : '';
+
+      html += `<div style="padding:6px 0;border-top:1px solid rgba(56,189,248,0.06)">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;font-weight:800;color:#38bdf8;min-width:40px;font-weight:600">${t}</span>
+          <div style="flex:1;min-width:0">
+            <span style="font-size:12px;font-weight:700;color:#e8edf5">${flagImg(m.home)}${m.home} <span style="color:#4a5f78;font-weight:400">vs</span> ${m.away}${flagImg(m.away)}</span>
+          </div>
+          ${scoreSection}
+          ${until ? `<span style="font-size:9px;color:#22d3ee;white-space:nowrap;font-weight:600">${until}</span>` : ''}
         </div>
-        ${scoreSection}
-        ${until ? `<span style="font-size:9px;color:#22d3ee;white-space:nowrap;font-weight:600">${until}</span>` : ''}
+        ${advUI}
       </div>`;
     });
     html += `</div>`;
@@ -2366,7 +2384,11 @@ async function saveUpcomingPred(matchId) {
   if (h<0||a<0||h>20||a>20) return toast('Resultado inv\u00e1lido', 'err');
   const match = CACHE.matches.find(m => m.id===matchId);
   if (!match || getStatus(match) !== 'open') return toast('Partido ya cerrado \ud83d\udd12', 'err');
-  await DB.savePred({ userId:currentUser.id, matchId, predHome:h, predAway:a });
+  // Preservar predAdvances del pozo "qui\u00e9n pasa"; limpiar si ya no es empate.
+  const existing = CACHE.preds.find(p => p.userId===currentUser.id && p.matchId===matchId) || {};
+  const predObj = { ...existing, userId:currentUser.id, matchId, predHome:h, predAway:a };
+  if (predObj.predHome !== predObj.predAway) predObj.predAdvances = null;
+  await DB.savePred(predObj);
   toast('\u2713 Predicci\u00f3n guardada');
   renderUpcoming();
 }
@@ -2841,7 +2863,7 @@ function ldRenderPay(){
   ];
   const maxPer = Math.max(...rows.map(r=>r.arr.length?pool/r.arr.length:0),1);
   document.getElementById('ldPay').innerHTML = rows.map(r=>{
-    const n=r.arr.length, per=n?pool/n:0, hot=r.k===liveOut;
+    const n=r.arr.length, per=n?Math.round(pool/n*100)/100:0, hot=r.k===liveOut;
     const amt = n
       ? `<div class="ld-pay-big" style="color:${r.c}">+${_fmtPts(per)}</div><div class="ld-pay-x2">exacto +${_fmtPts(per*2)}</div>`
       : `<div class="ld-pay-none">nadie apostó</div>`;
@@ -3913,7 +3935,9 @@ async function setAdvPred(matchId, team) {
   if (!pred) { pred = { userId: uid, matchId, predHome: 0, predAway: 0 }; }
   pred = { ...pred, predAdvances: team };
   await DB.savePred(pred);
+  // Refrescar la vista activa (fixture y/o home) para resaltar la selección.
   renderMatches();
+  if (typeof renderUpcoming === 'function') renderUpcoming();
 }
 
 // ═══ RANKING ═══
