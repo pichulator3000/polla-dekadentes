@@ -3040,12 +3040,19 @@ function _ldMine(){
     else if (pts>0){ stat = `✅ Resultado · +${_fmtPts(pts)} pts`; cls = 'ok'; }
     else { stat = `❌ Sin puntos por ahora`; cls = 'bad'; }
   }
+  let advLine = '';
+  if (_ldAdvanceOn(m) && mine.predHome === mine.predAway && mine.predAdvances){
+    const liveAdv = hasScore ? _liveAdvancer(m, sh, sa) : null;
+    const mark = liveAdv == null ? '' : (liveAdv === mine.predAdvances ? ' ✅' : ' ❌');
+    advLine = `<div class="ld-mine-adv" style="font-size:11px;color:#facc15;margin-top:6px">🎟️ Apostaste que pasa <b>${mine.predAdvances}</b>${mark}</div>`;
+  }
   el.innerHTML = `<div class="ld-mine ${cls}">
     <div class="ld-mine-head">
       <span class="ld-mine-lbl">Tu pronóstico</span>
       ${stat?`<span class="ld-mine-stat">${stat}</span>`:''}
     </div>
     <div class="ld-mine-sc">${flagBig(m.home,22)} <b>${mine.predHome}</b> <span class="ld-mine-dash">–</span> <b>${mine.predAway}</b> ${flagBig(m.away,22)}</div>
+    ${advLine}
   </div>`;
 }
 function _ldPotBanner(){
