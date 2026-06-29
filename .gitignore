@@ -16,3 +16,5 @@ index.html.bak
 
 # Node
 node_modules/
+
+.superpowers/
