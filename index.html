@@ -2627,23 +2627,23 @@ function aweonaosDeMatch(m){
 // Pool de banners burlescos (se elige uno determinístico por partido+usuario)
 const PAYASO_FRASES = [
   { t1:'¡Eres un aweonao!',                 t2:'Se te olvidó poner el resultado, payaso culiao 🤡' },
-  { t1:'¡Despierta, tonto culiao!',         t2:'Te quedaste pegao y no pusiste nada, aweonao 🤡' },
+  { t1:'¡Despierta, tonto culiao!',         t2:'Te quedaste pegao y no pusiste nada, aweonao 😂' },
   { t1:'¡Honk honk, llegó el payaso!',      t2:'Otro partido sin pronóstico, saco wea 🤡' },
-  { t1:'¡Puntos regalados, aweonao!',       t2:'Por tonto culiao no pusiste resultado, payaso 🤡' },
+  { t1:'¡Puntos regalados, aweonao!',       t2:'Por tonto culiao no pusiste resultado, payaso 😂' },
   { t1:'¿Y tu pronóstico? Saco wea?',       t2:'No pusiste nada de nada, payaso culiao 🤡' },
-  { t1:'¡Aweonao oficial del torneo!',      t2:'Se jugó el partido y tú ni apareciste, saco wea 🤡' },
+  { t1:'¡Aweonao oficial del torneo!',      t2:'Se jugó el partido y tú ni apareciste, saco wea 😂' },
   { t1:'¡Te dormiste de nuevo, tonto culiao!', t2:'Cero pronóstico, cero puntos, aweonao 🤡' },
-  { t1:'¡Falta el payaso… ah, eras tú!',    t2:'No pusiste resultado, saco wea 🤡' },
-  { t1:'¡Qué aweonao más grande, oh!',      t2:'Hasta el VAR se rió de que no pronosticaste, aweonao 🤡' },
+  { t1:'¡Falta el payaso… ah, eras tú!',    t2:'No pusiste resultado, saco wea 😂' },
+  { t1:'¡Qué aweonao más grande, oh!',      t2:'Hasta el VAR se rió de que no pronosticaste, aweonao 😂' },
   { t1:'¡Saco wea, despierta!',          t2:'El partido pasó y tú durmiendo, payaso culiao 🤡' },
-  { t1:'¡Tonto culiao, otra vez!',          t2:'No pronosticaste ni en pelea, aweonao 🤡' },
+  { t1:'¡Tonto culiao, otra vez!',          t2:'No pronosticaste ni en pelea, aweonao 😂' },
   { t1:'¡Anota po, payaso culiao!',         t2:'Te ganó la flojera, saco wea aweonao 🤡' },
-  { t1:'¡Premio al más aweonao!',           t2:'No pusiste resultado, tonto culiao 🤡' },
+  { t1:'¡Premio al más aweonao!',           t2:'No pusiste resultado, tonto culiao 😂' },
   { t1:'¡Hasta cuándo, weón!',              t2:'Otra vez sin pronóstico, payaso culiao saco wea 🤡' },
-  { t1:'¡Casi más aweonao que Mery!',       t2:'Y eso ya es decir mucho, payaso culiao 🤡' },
+  { t1:'¡Casi más aweonao que Mery!',       t2:'Y eso ya es decir mucho, payaso culiao 😂' },
   { t1:'¡Vas a alcanzar al Polo!',          t2:'El trono del más aweonao te queda cerca, saco wea 🤡' },
-  { t1:'¡Mery te manda saludos!',           t2:'Del club de los que no pronostican, aweonao culiao 🤡' },
-  { t1:'¡El Polo está orgulloso de ti!',    t2:'Otro aweonao que se olvidó, bienvenido al club 🤡' },
+  { t1:'¡Mery te manda saludos!',           t2:'Del club de los que no pronostican, aweonao culiao 😂' },
+  { t1:'¡El Polo está orgulloso de ti!',    t2:'Otro aweonao que se olvidó, bienvenido al club 😂' },
 ];
 function _payasoHash(seed){
   let h = 0;
@@ -2658,16 +2658,19 @@ function _payasoFrasesDinamicas(uid){
   const out = [];
   const n1 = top[0];
   out.push({ t1:`¡${n1.name} tiembla en su trono!`,            t2:`Lleva ${n1.olvidos} olvidos de aweonao y tú pisándole los talones, payaso culiao 🤡` });
-  out.push({ t1:`¡Casi tan aweonao como ${n1.name}!`,          t2:`Te falta poquito pa’ ser el rey de los aweonaos, saco wea 🤡` });
-  if (top[1]) out.push({ t1:`¡${top[1].name} te hace un puesto en el podio!`, t2:`Top de los aweonaos y tú escalando, tonto culiao 🤡` });
+  out.push({ t1:`¡Casi tan aweonao como ${n1.name}!`,          t2:`Te falta poquito pa’ ser el rey de los aweonaos, saco wea 😂` });
+  if (top[1]) out.push({ t1:`¡${top[1].name} te hace un puesto en el podio!`, t2:`Top de los aweonaos y tú escalando, tonto culiao 😂` });
   if (top[2]) out.push({ t1:`¡Pasaste a ${top[2].name} en aweonao!`,         t2:`Bronce de los aweonaos asegurado, payaso culiao 🤡` });
   return out;
 }
+const PAYASO_SKINS = ['pb-circo','pb-carnaval','pb-hazard','pb-sello','pb-glitch','pb-neon'];
 function payasoBannerHtml(m){
   const uid = currentUser?.id || '';
+  const seed = `${m?.id || ''}_${uid}`;
   const pool = PAYASO_FRASES.concat(_payasoFrasesDinamicas(uid));
-  const f = pool[_payasoHash(`${m?.id || ''}_${uid}`) % pool.length];
-  return `<div class="payaso-banner" role="alert">
+  const f = pool[_payasoHash(seed) % pool.length];
+  const skin = PAYASO_SKINS[_payasoHash('skin_'+seed) % PAYASO_SKINS.length];
+  return `<div class="payaso-banner ${skin}" role="alert">
     <span class="payaso-emoji">🤡</span>
     <div class="payaso-t1">${f.t1}</div>
     <div class="payaso-t2">${f.t2}</div>
