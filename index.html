@@ -794,8 +794,14 @@
       text-align:center; margin-bottom:8px; font-weight:800;
     }
     .bkcells { display:flex; flex-direction:column; justify-content:space-around; flex:1; gap:14px; }
-    .bkspacer { flex:0 0 0; }
-    .bkconn { width:22px; flex:0 0 22px; }
+    .bkconn {
+  width:22px; flex:0 0 22px; align-self:stretch;
+  position:relative;
+}
+.bkconn::before {
+  content:''; position:absolute; top:50%; left:0; right:0;
+  border-top:2px solid #334155;
+}
     .bkcell {
       background:#0f172a; border:1px solid #1e293b; border-radius:8px;
       overflow:hidden; align-self:center; width:150px;
@@ -3487,9 +3493,7 @@ function renderBracket(matches) {
   }[stage] || stage);
 
   const colHtml = columns.map((c, ci) => {
-    const cells = c.matches.map(renderBracketCell).join(
-      '<div class="bkspacer"></div>'
-    );
+    const cells = c.matches.map(renderBracketCell).join('');
     const conn = ci < columns.length - 1 ? '<div class="bkconn"></div>' : '';
     return `<div class="bkcol">
       <div class="bklabel">${labelOf(c.stage)}</div>
