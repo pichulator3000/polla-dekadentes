@@ -3481,10 +3481,14 @@ const BK_LABEL = {
   'Ronda de 32': 'R32', 'Octavos': '8vos', 'Cuartos de Final': '4tos',
   'Semifinal': 'Semis', 'Final': 'Final'
 };
-const BK_ZOOM = { MIN: 0.45, MAX: 1.85 };
+const BK_ZOOM = { MIN: 0.45, DESKTOP_DEFAULT: 0.65, MAX: 1.85 };
+
+function isBracketMobile() {
+  return window.matchMedia && window.matchMedia('(max-width: 600px)').matches;
+}
 
 function defaultBracketZoom() {
-  return window.matchMedia && window.matchMedia('(max-width: 600px)').matches ? BK_ZOOM.MIN : 1;
+  return isBracketMobile() ? BK_ZOOM.MIN : BK_ZOOM.DESKTOP_DEFAULT;
 }
 
 let bracketZoom = defaultBracketZoom();
@@ -3588,12 +3592,19 @@ function changeBracketZoom(delta) {
   setBracketZoom(bracketZoom + delta);
 }
 
+function centerBracketScroll(scroll) {
+  scroll.scrollLeft = Math.max(0, (scroll.scrollWidth - scroll.clientWidth) / 2);
+}
+
 function initBracketZoom() {
   const shell = document.querySelector('[data-bk-shell]');
   if (!shell) return;
   const scroll = shell.querySelector('[data-bk-scroll]');
   if (!scroll) return;
   applyBracketZoom();
+  if (!isBracketMobile() && Math.abs(bracketZoom - BK_ZOOM.DESKTOP_DEFAULT) < 0.005) {
+    requestAnimationFrame(() => centerBracketScroll(scroll));
+  }
 
   let pinch = null;
   const pinchPoint = (e) => {
