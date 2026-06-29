@@ -970,6 +970,7 @@
       </div>
       <div id="fixtureHint" class="card" style="padding:10px 12px;margin-bottom:10px;font-size:11px;color:#64748b;line-height:1.8"></div>
       <div id="tournamentPills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
+      <div id="fixtureViewPills" style="display:none;gap:6px;margin-bottom:10px"></div>
       <div id="matchList" style="display:flex;flex-direction:column;gap:10px"></div>
     </div>
 
@@ -1214,6 +1215,8 @@
 <script type="module">
   import { advancePoints, matchAdvanceOutcome, playerAdvanceGuess } from './scripts/scoring.mjs';
   window.__scoring = { advancePoints, matchAdvanceOutcome, playerAdvanceGuess };
+  import { buildBracketTree, KO_STAGES } from './scripts/bracket.mjs';
+  window.__bracket = { buildBracketTree, KO_STAGES };
 </script>
 
 <script>
@@ -3725,6 +3728,38 @@ function buildAdminPozos() {
   return html;
 }
 let selectedTournament = null;
+let fixtureView = 'list'; // 'list' | 'bracket'
+
+function setFixtureView(v) {
+  fixtureView = v;
+  renderMatches();
+}
+
+// ¿El torneo tiene al menos un partido de fase final?
+function tournamentHasKO(matches) {
+  return matches.some(m => {
+    const s = normStage(m.stage);
+    return (window.__bracket.KO_STAGES.includes(s) || s === 'Tercer Puesto');
+  });
+}
+
+function renderFixtureViewPills(hasKO) {
+  const el = document.getElementById('fixtureViewPills');
+  if (!hasKO) { el.style.display = 'none'; return; }
+  const mk = (v, label) => {
+    const active = fixtureView === v;
+    const bg  = active ? '#0053e2' : '#1e293b';
+    const col = active ? '#fff'    : '#94a3b8';
+    const brd = active ? '#0053e2' : '#334155';
+    return `<button onclick="setFixtureView('${v}')"
+      style="padding:6px 14px;font-size:12px;font-weight:700;border-radius:20px;
+      background:${bg};color:${col};border:1px solid ${brd};cursor:pointer;
+      transition:all .15s">${label}</button>`;
+  };
+  el.innerHTML = mk('list', '📋 Lista') + mk('bracket', '🏆 Llaves');
+  el.style.display = 'flex';
+}
+
 let selectedRankTournament = '__all__';
 let selectedStatsTournament = '__all__';
 
