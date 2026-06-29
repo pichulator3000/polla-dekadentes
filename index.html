@@ -780,6 +780,42 @@
       .cheat, .cheat *{ animation:none !important; }
       .cheat .c-track i{ width:96%; }
     }
+
+    /* ── Bracket tree ── */
+    .bkwrap { width:100%; }
+    .bktree {
+      display:flex; align-items:stretch; min-width:max-content;
+      overflow-x:auto; touch-action:pan-x pan-y pinch-zoom;
+      padding:8px 4px; gap:0;
+    }
+    .bkcol { display:flex; flex-direction:column; min-width:160px; }
+    .bklabel {
+      font-size:10px; color:#475569; text-transform:uppercase; letter-spacing:1px;
+      text-align:center; margin-bottom:8px; font-weight:800;
+    }
+    .bkcells { display:flex; flex-direction:column; justify-content:space-around; flex:1; gap:14px; }
+    .bkspacer { flex:0 0 0; }
+    .bkconn { width:22px; flex:0 0 22px; }
+    .bkcell {
+      background:#0f172a; border:1px solid #1e293b; border-radius:8px;
+      overflow:hidden; align-self:center; width:150px;
+    }
+    .bkr { display:flex; align-items:center; gap:4px; padding:5px 7px; font-size:12px; color:#e2e8f0; }
+    .bkr + .bkr { border-top:1px solid #1e293b; }
+    .bkr.win { background:rgba(22,163,74,.12); color:#fff; font-weight:800; }
+    .bkr.lose { color:#64748b; }
+    .bkr.lose img { filter:grayscale(.6); opacity:.7; }
+    .bkfl { display:inline-flex; align-items:center; }
+    .bkfl img { margin:0 !important; }
+    .bknm { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .bksc { font-weight:900; font-variant-numeric:tabular-nums; }
+    .bkchk { color:#4ade80; font-size:10px; }
+    .bkmeta { font-size:9px; color:#64748b; text-align:center; padding:3px; border-top:1px solid #1e293b; }
+    .bk3p {
+      margin-top:14px; padding-top:12px; border-top:1px dashed #1e293b;
+      display:flex; flex-direction:column; align-items:center; gap:6px;
+    }
+    .bk3plabel { font-size:11px; color:#94a3b8; font-weight:800; }
   </style>
 </head>
 <body>
@@ -3400,6 +3436,80 @@ function resolveBracketDisplay() {
   }
 }
 
+// Una celda del bracket: dos filas (bandera+país+marcador 90'), ganador en verde
+// con ✓, perdedor atenuado, pie con penales/120' o estado "Por jugarse".
+function renderBracketCell(m) {
+  const winner = window.__scoring.matchAdvanceOutcome
+    ? window.__scoring.matchAdvanceOutcome(m) : null;
+  const played = m.realHome != null && m.realAway != null;
+
+  const sideRow = (team, score, isWin) => {
+    const cls = isWin ? 'bkr win' : (winner ? 'bkr lose' : 'bkr');
+    const chk = isWin ? '<span class="bkchk">✓</span>' : '';
+    const sc  = played ? `<span class="bksc">${score}</span>`
+                       : `<span class="bksc" style="color:#475569">—</span>`;
+    // flagImg() devuelve '' si el equipo no tiene bandera (ej. placeholder
+    // "Ganador R1"); en ese caso no se muestra imagen, solo el nombre.
+    return `<div class="${cls}"><span class="bkfl">${flagImg(team) || ''}</span>
+      <span class="bknm">${team || '—'}</span>${chk}${sc}</div>`;
+  };
+
+  let foot = '';
+  if (played && koWentBeyond90(m)) {
+    foot = `<div class="bkmeta">${koResultExtra(m).replace(/<[^>]+>/g, '')}</div>`;
+  } else if (!played) {
+    foot = `<div class="bkmeta" style="color:#fbbf24">Por jugarse</div>`;
+  }
+
+  return `<div class="bkcell">
+    ${sideRow(m.home, m.realHome, winner != null && winner === m.home)}
+    ${sideRow(m.away, m.realAway, winner != null && winner === m.away)}
+    ${foot}
+  </div>`;
+}
+
+// Árbol completo: columnas por ronda con conectores, scroll horizontal + zoom.
+// Tercer puesto colgado al final, cerca de la Final.
+function renderBracket(matches) {
+  // Normalizar stage (mismo criterio que el resto de la app) y resolver lados.
+  resolveBracketDisplay();
+  const norm = matches.map(m => ({ ...m, stage: normStage(m.stage) }));
+  const { columns, thirdPlace } = window.__bracket.buildBracketTree(norm);
+
+  if (!columns.length) {
+    return `<div style="text-align:center;color:#64748b;padding:24px">
+      Aún no hay partidos de fase final.</div>`;
+  }
+
+  const labelOf = (stage) => ({
+    'Ronda de 32': 'R32', 'Octavos': '8vos', 'Cuartos de Final': '4tos',
+    'Semifinal': 'Semis', 'Final': 'Final'
+  }[stage] || stage);
+
+  const colHtml = columns.map((c, ci) => {
+    const cells = c.matches.map(renderBracketCell).join(
+      '<div class="bkspacer"></div>'
+    );
+    const conn = ci < columns.length - 1 ? '<div class="bkconn"></div>' : '';
+    return `<div class="bkcol">
+      <div class="bklabel">${labelOf(c.stage)}</div>
+      <div class="bkcells">${cells}</div>
+    </div>${conn}`;
+  }).join('');
+
+  const tpHtml = thirdPlace ? `
+    <div class="bk3p">
+      <div class="bk3plabel">🥉 Tercer Puesto</div>
+      ${renderBracketCell(thirdPlace)}
+    </div>` : '';
+
+  return `
+    <div class="bkwrap">
+      <div class="bktree">${colHtml}</div>
+      ${tpHtml}
+    </div>`;
+}
+
 // ═══ PODIO POINTS ═══
 // Puntos FIJOS (no se reparten) por acertar campeon, subcampeon, goleador
 const PODIO_POINTS_DEFAULT = { champion: 100, runner: 50, scorer: 50 };
@@ -3847,6 +3957,17 @@ function renderMatches() {
 
   // ── Filter by selected tournament ──
   const matches = allMatches.filter(m => (m.tournament || 'Sin Torneo') === selectedTournament);
+
+  // ── Switch Lista / Llaves ──
+  const hasKO = tournamentHasKO(matches);
+  if (!hasKO && fixtureView === 'bracket') fixtureView = 'list';
+  renderFixtureViewPills(hasKO);
+
+  if (fixtureView === 'bracket' && hasKO) {
+    const listEl = document.getElementById('matchList');
+    listEl.innerHTML = renderBracket(matches);
+    return;
+  }
 
   // Agrupar por fase normalizada
   const groups = {};
