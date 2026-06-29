@@ -693,6 +693,10 @@
     .ld-chip { background:#1e293b; color:#cbd5e1; font-size:12px; font-weight:700; padding:5px 12px; border-radius:20px; }
     .ld-chip.me { background:#0c3a52; color:#7dd3fc; box-shadow:inset 0 0 0 1px #38bdf8; }
     .ld-empty { font-size:12px; color:#475569; font-style:italic; }
+    .ld-adv-split { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .ld-adv-col { background:#0c1320; border:1px solid #1e293b; border-radius:12px; padding:10px; min-width:0; }
+    .ld-adv-col-head { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12px; font-weight:900; margin-bottom:9px; }
+    .ld-adv-col-head span { color:#64748b; font-size:11px; font-weight:800; }
     /* proyección */
     .ld-proj { background:#0c1320; border:1px solid #1e293b; border-radius:16px; padding:6px 14px; }
     .ld-prow { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid #141c2b; }
@@ -3203,12 +3207,32 @@ function setLdBarMode(mode){
   document.querySelectorAll('#ldPill button, #ldAdvPill button').forEach(b=>b.classList.toggle('on', b.textContent.trim()===(mode==='pct'?'%':'N°')));
   ldRenderBar(); ldRenderHeat(); ldRenderAdvance();
 }
+function _ldTieAdvanceDetail(arr){
+  const {m,col} = LD;
+  const byHome = arr.filter(p => p.predAdvances === m.home);
+  const byAway = arr.filter(p => p.predAdvances === m.away);
+  const missing = arr.filter(p => p.predAdvances !== m.home && p.predAdvances !== m.away);
+  const colHtml = (team, color, players) => `
+    <div class="ld-adv-col" style="border-color:${color}">
+      <div class="ld-adv-col-head" style="color:${color}">Pasa ${team}<span>${players.length}</span></div>
+      ${players.length?_ldChips(players):'<div class="ld-empty">Nadie</div>'}
+    </div>`;
+  return `
+    <div class="ld-adv-split">
+      ${colHtml(m.home, col.L, byHome)}
+      ${colHtml(m.away, col.V, byAway)}
+    </div>
+    ${missing.length?`<div style="margin-top:10px"><div class="ld-detail-title" style="font-size:12px;margin-bottom:7px;color:#64748b">Sin elegir quién pasa · ${missing.length}</div>${_ldChips(missing)}</div>`:''}`;
+}
 function showLdBar(k){
   const arr = LD.barGrp[k];
   const titles = {L:'Gana '+LD.m.home, E:'Empate', V:'Gana '+LD.m.away};
   const d = document.getElementById('ldBarDetail');
   d.style.display='block';
-  d.innerHTML = `<div class="ld-detail-title">${titles[k]} · ${arr.length}</div>${arr.length?_ldChips(arr):'<div class="ld-empty">Nadie</div>'}`;
+  const body = (k==='E' && _ldAdvanceOn(LD.m))
+    ? _ldTieAdvanceDetail(arr)
+    : (arr.length?_ldChips(arr):'<div class="ld-empty">Nadie</div>');
+  d.innerHTML = `<div class="ld-detail-title">${titles[k]} · ${arr.length}</div>${body}`;
   document.querySelectorAll('#ldBar .ld-seg').forEach(s=>s.classList.toggle('sel', s.getAttribute('onclick').includes(`'${k}'`)));
 }
 
