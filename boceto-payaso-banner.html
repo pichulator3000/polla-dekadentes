@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bocetos — Banner Payaso</title>
+<style>
+  :root { --bg:#080c16; --card:#0f172a; --line:#1e293b; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:#e8edf5;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    padding:28px 16px 60px; }
+  .wrap { max-width:460px; margin:0 auto; }
+  h1 { font-size:18px; font-weight:900; margin:0 0 4px; }
+  .sub { font-size:12px; color:#64748b; margin:0 0 26px; }
+  .lbl { font-size:11px; font-weight:800; color:#94a3b8; text-transform:uppercase;
+    letter-spacing:.06em; margin:26px 0 8px; }
+  .card-match { background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:10px 12px; }
+  .mhead { display:flex; justify-content:space-between; font-size:10px; color:#475569; margin-bottom:6px; }
+  .mteams { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:800; }
+  .mteams .t { flex:1; }
+  .mteams .t.r { text-align:right; }
+  .mscore { font-size:11px; color:#64748b; text-align:center; }
+
+  /* ════════ VARIANTE 1 — Circo rojo (la integrada) ════════ */
+  .payaso-banner { position:relative; margin:12px 0 4px; padding:13px 14px 13px 62px; border-radius:14px; overflow:hidden;
+    background:repeating-linear-gradient(45deg,#dc2626 0 22px,#b91c1c 22px 44px);
+    border:3px dashed #fde047; box-shadow:0 0 0 3px #dc2626, 0 8px 26px rgba(220,38,38,.45);
+    animation:payasoWobble 1.7s ease-in-out infinite; transform-origin:center; }
+  .payaso-banner::before { content:""; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.22) 50%,transparent 62%);
+    background-size:240% 100%; animation:payasoSheen 2.4s linear infinite; }
+  .payaso-emoji { position:absolute; left:12px; top:50%; margin-top:-20px; font-size:40px; line-height:1;
+    filter:drop-shadow(0 3px 5px rgba(0,0,0,.55)); animation:payasoBounce .85s ease-in-out infinite; }
+  .payaso-t1 { position:relative; font-size:18px; font-weight:900; color:#fff; text-transform:uppercase; letter-spacing:.01em;
+    line-height:1.05; text-shadow:2px 2px 0 #7f1d1d, -1px -1px 0 rgba(0,0,0,.25); }
+  .payaso-t2 { position:relative; font-size:12.5px; font-weight:800; margin-top:4px; color:#fde047;
+    line-height:1.2; text-shadow:1px 1px 0 #7f1d1d; }
+  @keyframes payasoWobble { 0%,100%{transform:rotate(-1.3deg)} 50%{transform:rotate(1.3deg)} }
+  @keyframes payasoBounce { 0%,100%{transform:translateY(0) rotate(-9deg)} 50%{transform:translateY(-7px) rotate(9deg)} }
+  @keyframes payasoSheen { to { background-position:-200% 0; } }
+
+  /* ════════ VARIANTE 2 — Carnaval multicolor ════════ */
+  .payaso2 { position:relative; margin:12px 0 4px; padding:16px 14px 14px; border-radius:16px; overflow:hidden; text-align:center;
+    background:#1a0b2e; border:3px solid transparent;
+    background-image:linear-gradient(#1a0b2e,#1a0b2e),repeating-linear-gradient(90deg,#f43f5e 0 14px,#f59e0b 14px 28px,#22c55e 28px 42px,#3b82f6 42px 56px);
+    background-origin:border-box; background-clip:padding-box,border-box;
+    box-shadow:0 10px 30px rgba(124,58,237,.4); }
+  .payaso2 .nose { font-size:46px; line-height:1; display:inline-block; animation:noseSpin 2.6s linear infinite;
+    filter:drop-shadow(0 0 10px rgba(244,63,94,.6)); }
+  .payaso2 .t1 { font-size:19px; font-weight:900; color:#fff; margin-top:4px; text-transform:uppercase; letter-spacing:.02em;
+    background:linear-gradient(90deg,#f43f5e,#f59e0b,#22c55e,#3b82f6); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .payaso2 .t2 { font-size:12.5px; font-weight:800; color:#fbcfe8; margin-top:5px; }
+  @keyframes noseSpin { 0%,70%{transform:rotate(0)} 85%{transform:rotate(-18deg)} 100%{transform:rotate(0)} }
+
+  /* ════════ VARIANTE 3 — Cinta de advertencia "honk" ════════ */
+  .payaso3 { position:relative; margin:12px 0 4px; border-radius:12px; overflow:hidden;
+    border:2px solid #facc15; background:#0c0a09; box-shadow:0 8px 24px rgba(250,204,21,.18); }
+  .payaso3 .tape { display:flex; align-items:center; gap:8px; padding:6px 12px; font-size:11px; font-weight:900;
+    text-transform:uppercase; letter-spacing:.18em; color:#0c0a09;
+    background:repeating-linear-gradient(45deg,#facc15 0 16px,#0c0a09 16px 18px,#facc15 18px 34px); }
+  .payaso3 .tape span { background:#facc15; padding:0 4px; }
+  .payaso3 .body { display:flex; align-items:center; gap:12px; padding:13px 14px; }
+  .payaso3 .big { font-size:38px; line-height:1; animation:honk 1s ease-in-out infinite; }
+  .payaso3 .t1 { font-size:17px; font-weight:900; color:#facc15; line-height:1.1; }
+  .payaso3 .t2 { font-size:12px; font-weight:700; color:#a8a29e; margin-top:3px; }
+  @keyframes honk { 0%,100%{transform:scale(1)} 45%{transform:scale(1.22)} 60%{transform:scale(.95)} }
+
+  @media (prefers-reduced-motion: reduce) {
+    .payaso-banner,.payaso-banner::before,.payaso-emoji,.payaso2 .nose,.payaso3 .big { animation:none !important; }
+  }
+  .note { font-size:11px; color:#475569; margin:6px 2px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Banner del aweonao 🤡</h1>
+  <p class="sub">Aparece dentro de la tarjeta del partido cuando TÚ olvidaste poner el resultado y el partido ya cerró.</p>
+
+  <div class="lbl">Variante 1 · Circo rojo  <em style="color:#4ade80;text-transform:none;letter-spacing:0">← integrada en la app · frases aleatorias</em></div>
+  <div class="card-match">
+    <div class="mhead"><span>Grupo C · Mundial 2026</span><span>🔒 Cerrado</span></div>
+    <div class="mteams"><div class="t r">🇧🇷 Brasil</div><div style="color:#64748b">🔒</div><div class="t">Croacia 🇭🇷</div></div>
+    <div class="mscore" style="margin-top:4px">Resultado: <b>2-1</b></div>
+    <div id="payasoDemo" class="payaso-banner">
+      <span class="payaso-emoji">🤡</span>
+      <div class="payaso-t1">¡Eres un aweonao!</div>
+      <div class="payaso-t2">Se te olvidó poner el resultado, payaso culiao 🤡</div>
+    </div>
+  </div>
+  <button onclick="rolaFrase()" style="margin-top:8px;background:#7c3aed;border:none;border-radius:8px;padding:8px 16px;color:#fff;font-size:12px;font-weight:800;cursor:pointer">🎲 Otra frase</button>
+  <p class="note" id="fraseNote">Frase 1 de 10 · Se balancea (wobble) + payaso rebotando + brillo deslizante.</p>
+
+  <script>
+    const FRASES = [
+      { t1:'¡Eres un aweonao!',                 t2:'Se te olvidó poner el resultado, payaso culiao 🤡' },
+      { t1:'¡Despierta, tonto culiao!',         t2:'Te quedaste pegao y no pusiste nada, aweonao 🤡' },
+      { t1:'¡Honk honk, llegó el payaso!',      t2:'Otro partido sin pronóstico, saco wea 🤡' },
+      { t1:'¡Puntos regalados, aweonao!',       t2:'Por tonto culiao no pusiste resultado, payaso 🤡' },
+      { t1:'¿Y tu pronóstico? Saco wea?',       t2:'No pusiste nada de nada, payaso culiao 🤡' },
+      { t1:'¡Aweonao oficial del torneo!',      t2:'Se jugó el partido y tú ni apareciste, saco wea 🤡' },
+      { t1:'¡Te dormiste de nuevo, tonto culiao!', t2:'Cero pronóstico, cero puntos, aweonao 🤡' },
+      { t1:'¡Falta el payaso… ah, eras tú!',    t2:'No pusiste resultado, saco wea 🤡' },
+      { t1:'¡Qué aweonao más grande, oh!',      t2:'Hasta el VAR se rió de que no pronosticaste, aweonao 🤡' },
+      { t1:'¡Saco wea, despierta!',             t2:'El partido pasó y tú durmiendo, payaso culiao 🤡' },
+      { t1:'¡Tonto culiao, otra vez!',          t2:'No pronosticaste ni en pelea, aweonao 🤡' },
+      { t1:'¡Anota po, payaso culiao!',         t2:'Te ganó la flojera, saco wea aweonao 🤡' },
+      { t1:'¡Premio al más aweonao!',           t2:'No pusiste resultado, tonto culiao 🤡' },
+      { t1:'¡Hasta cuándo, weón!',              t2:'Otra vez sin pronóstico, payaso culiao saco wea 🤡' },
+      { t1:'¡Casi más aweonao que Mery!',       t2:'Y eso ya es decir mucho, payaso culiao 🤡' },
+      { t1:'¡Vas a alcanzar al Polo!',          t2:'El trono del más aweonao te queda cerca, saco wea 🤡' },
+      { t1:'¡Mery te manda saludos!',           t2:'Del club de los que no pronostican, aweonao culiao 🤡' },
+      { t1:'¡El Polo está orgulloso de ti!',    t2:'Otro aweonao que se olvidó, bienvenido al club 🤡' },
+      // ── Dinámicas (en la app se generan con los nombres reales del top-3 de aweonaos) ──
+      { t1:'¡Mery tiembla en su trono!',        t2:'Lleva 7 olvidos de aweonao y tú pisándole los talones, payaso culiao 🤡' },
+      { t1:'¡Pasaste al Polo en aweonao!',      t2:'Bronce de los aweonaos asegurado, payaso culiao 🤡' },
+    ];
+    let _i = 0;
+    function rolaFrase(){
+      _i = (_i + 1) % FRASES.length;
+      const f = FRASES[_i];
+      document.querySelector('#payasoDemo .payaso-t1').textContent = f.t1;
+      document.querySelector('#payasoDemo .payaso-t2').textContent = f.t2;
+      document.getElementById('fraseNote').textContent = `Frase ${_i+1} de ${FRASES.length} · burlesco nivel: máximo`;
+    }
+  </script>
+
+  <div class="lbl">Variante 2 · Carnaval multicolor</div>
+  <div class="card-match">
+    <div class="mhead"><span>Grupo C · Mundial 2026</span><span>🔒 Cerrado</span></div>
+    <div class="mteams"><div class="t r">🇧🇷 Brasil</div><div style="color:#64748b">🔒</div><div class="t">Croacia 🇭🇷</div></div>
+    <div class="payaso2">
+      <div class="nose">🤡</div>
+      <div class="t1">¡Eres un aweonao!</div>
+      <div class="t2">Se te olvidó poner el resultado, payaso culiao</div>
+    </div>
+  </div>
+  <p class="note">Borde arcoíris de carnaval + texto con degradado + nariz que gira.</p>
+
+  <div class="lbl">Variante 3 · Cinta de advertencia</div>
+  <div class="card-match">
+    <div class="mhead"><span>Grupo C · Mundial 2026</span><span>🔒 Cerrado</span></div>
+    <div class="mteams"><div class="t r">🇧🇷 Brasil</div><div style="color:#64748b">🔒</div><div class="t">Croacia 🇭🇷</div></div>
+    <div class="payaso3">
+      <div class="tape"><span>⚠ Honk honk ⚠</span></div>
+      <div class="body">
+        <div class="big">🤡</div>
+        <div>
+          <div class="t1">¡Eres un aweonao!</div>
+          <div class="t2">Se te olvidó poner el resultado, payaso culiao</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="note">Más sobria: cinta amarilla/negra estilo advertencia + payaso “bocina”.</p>
+</div>
+</body>
+</html>
