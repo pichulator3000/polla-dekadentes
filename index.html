@@ -970,7 +970,7 @@
       </div>
       <div id="fixtureHint" class="card" style="padding:10px 12px;margin-bottom:10px;font-size:11px;color:#64748b;line-height:1.8"></div>
       <div id="tournamentPills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
-      <div id="fixtureViewPills" style="display:none;gap:6px;margin-bottom:10px"></div>
+      <div id="fixtureViewPills" style="display:none;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
       <div id="matchList" style="display:flex;flex-direction:column;gap:10px"></div>
     </div>
 
@@ -1214,8 +1214,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script type="module">
   import { advancePoints, matchAdvanceOutcome, playerAdvanceGuess } from './scripts/scoring.mjs';
-  window.__scoring = { advancePoints, matchAdvanceOutcome, playerAdvanceGuess };
   import { buildBracketTree, KO_STAGES } from './scripts/bracket.mjs';
+  window.__scoring = { advancePoints, matchAdvanceOutcome, playerAdvanceGuess };
   window.__bracket = { buildBracketTree, KO_STAGES };
 </script>
 
@@ -3739,7 +3739,7 @@ function setFixtureView(v) {
 function tournamentHasKO(matches) {
   return matches.some(m => {
     const s = normStage(m.stage);
-    return (window.__bracket.KO_STAGES.includes(s) || s === 'Tercer Puesto');
+    return (window.__bracket.KO_STAGES.includes(s) || s === 'Tercer Puesto'); // Tercer Puesto va aparte (no está en KO_STAGES, se rinde como thirdPlace)
   });
 }
 
