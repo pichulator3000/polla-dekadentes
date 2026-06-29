@@ -552,26 +552,82 @@
     @keyframes shimmer { to { left:120%; } }
 
     /* payaso banner — para el aweonao que olvidó pronosticar (tono burlesco) */
-    .payaso-banner { position:relative; margin:12px 0 4px; padding:13px 14px 13px 62px; border-radius:14px; overflow:hidden;
-      background:repeating-linear-gradient(45deg,#dc2626 0 22px,#b91c1c 22px 44px);
+    /* ── base layout (común a todos los skins) ── */
+    .payaso-banner { position:relative; margin:12px 0 4px; padding:13px 14px 13px 62px; border-radius:14px; overflow:hidden; transform-origin:center; }
+    .payaso-emoji { position:absolute; left:12px; top:50%; margin-top:-20px; font-size:40px; line-height:1; z-index:1;
+      filter:drop-shadow(0 3px 5px rgba(0,0,0,.55)); }
+    .payaso-t1 { position:relative; font-size:18px; font-weight:900; color:#fff; letter-spacing:.01em; line-height:1.05; }
+    .payaso-t2 { position:relative; font-size:12.5px; font-weight:800; margin-top:4px; color:#cbd5e1; line-height:1.2; }
+
+    /* ── skin 1 · Circo rojo ── */
+    .pb-circo { background:repeating-linear-gradient(45deg,#dc2626 0 22px,#b91c1c 22px 44px);
       border:3px dashed #fde047; box-shadow:0 0 0 3px #dc2626, 0 8px 26px rgba(220,38,38,.45);
-      animation:payasoWobble 1.7s ease-in-out infinite; transform-origin:center; }
-    .payaso-banner::before { content:""; position:absolute; inset:0; pointer-events:none;
+      animation:payasoWobble 1.7s ease-in-out infinite; }
+    .pb-circo::before { content:""; position:absolute; inset:0; pointer-events:none;
       background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.22) 50%,transparent 62%);
       background-size:240% 100%; animation:payasoSheen 2.4s linear infinite; }
-    .payaso-emoji { position:absolute; left:12px; top:50%; margin-top:-20px; font-size:40px; line-height:1;
-      filter:drop-shadow(0 3px 5px rgba(0,0,0,.55)); animation:payasoBounce .85s ease-in-out infinite; }
-    .payaso-t1 { position:relative; font-size:18px; font-weight:900; color:#fff; text-transform:uppercase; letter-spacing:.01em;
-      line-height:1.05; text-shadow:2px 2px 0 #7f1d1d, -1px -1px 0 rgba(0,0,0,.25); }
-    .payaso-t2 { position:relative; font-size:12.5px; font-weight:800; margin-top:4px; color:#fde047;
-      line-height:1.2; text-shadow:1px 1px 0 #7f1d1d; }
+    .pb-circo .payaso-emoji { animation:payasoBounce .85s ease-in-out infinite; }
+    .pb-circo .payaso-t1 { text-transform:uppercase; text-shadow:2px 2px 0 #7f1d1d, -1px -1px 0 rgba(0,0,0,.25); }
+    .pb-circo .payaso-t2 { color:#fde047; text-shadow:1px 1px 0 #7f1d1d; }
+
+    /* ── skin 2 · Carnaval multicolor ── */
+    .pb-carnaval { border:3px solid transparent;
+      background:linear-gradient(#12081f,#12081f) padding-box,
+        repeating-linear-gradient(90deg,#f43f5e 0 14px,#f59e0b 14px 28px,#22c55e 28px 42px,#3b82f6 42px 56px) border-box;
+      box-shadow:0 10px 30px rgba(124,58,237,.4); }
+    .pb-carnaval .payaso-emoji { animation:noseSpin 2.8s ease-in-out infinite; }
+    .pb-carnaval .payaso-t1 { text-transform:uppercase;
+      background:linear-gradient(90deg,#f43f5e,#f59e0b,#22c55e,#3b82f6); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+    .pb-carnaval .payaso-t2 { color:#fbcfe8; }
+
+    /* ── skin 3 · Cinta de peligro ── */
+    .pb-hazard { background:#0c0a09; border:2px solid #facc15; box-shadow:0 8px 24px rgba(250,204,21,.18); padding-top:17px; padding-bottom:17px; }
+    .pb-hazard::before, .pb-hazard::after { content:""; position:absolute; left:0; right:0; height:6px;
+      background:repeating-linear-gradient(45deg,#facc15 0 10px,#0c0a09 10px 12px,#facc15 12px 22px); }
+    .pb-hazard::before { top:0; } .pb-hazard::after { bottom:0; }
+    .pb-hazard .payaso-emoji { animation:honk 1s ease-in-out infinite; }
+    .pb-hazard .payaso-t1 { color:#facc15; }
+    .pb-hazard .payaso-t2 { color:#a8a29e; }
+
+    /* ── skin 4 · Sello "RECHAZADO" ── */
+    .pb-sello { background:#150b0b; border:3px double #ef4444; box-shadow:0 0 0 1px rgba(239,68,68,.4) inset, 0 8px 24px rgba(0,0,0,.5);
+      transform:rotate(-2deg); animation:stampIn .45s cubic-bezier(.2,1.4,.4,1) both; }
+    .pb-sello .payaso-emoji { filter:grayscale(.15) drop-shadow(0 0 4px rgba(239,68,68,.5)); }
+    .pb-sello .payaso-t1 { color:#ef4444; text-transform:uppercase; letter-spacing:.05em; text-shadow:0 0 1px #ef4444; }
+    .pb-sello .payaso-t2 { color:#fca5a5; opacity:.85; }
+    .pb-sello::after { content:"RECHAZADO"; position:absolute; right:8px; bottom:5px; font-size:10px; font-weight:900;
+      letter-spacing:.2em; color:rgba(239,68,68,.4); transform:rotate(-7deg); pointer-events:none; }
+
+    /* ── skin 5 · Glitch / ERROR 404 ── */
+    .pb-glitch { background:#07111c; border:1px solid #1e3a5f; box-shadow:0 8px 24px rgba(8,12,22,.6);
+      font-family:ui-monospace,SFMono-Regular,Menlo,monospace; padding-top:25px; }
+    .pb-glitch::before { content:"⚠ ERROR 404 · PRONÓSTICO_NOT_FOUND"; position:absolute; top:0; left:0; right:0;
+      padding:3px 10px; font-size:9px; font-weight:800; letter-spacing:.08em; color:#06141f; background:#38bdf8; }
+    .pb-glitch::after { content:""; position:absolute; inset:25px 0 0; pointer-events:none;
+      background:repeating-linear-gradient(0deg,rgba(56,189,248,.05) 0 1px,transparent 1px 3px); }
+    .pb-glitch .payaso-t1 { color:#e8edf5; text-shadow:1.5px 0 #f43f5e,-1.5px 0 #38bdf8; animation:glitchShift 2.4s steps(2) infinite; }
+    .pb-glitch .payaso-t2 { color:#7dd3fc; }
+
+    /* ── skin 6 · Neón parpadeante ── */
+    .pb-neon { background:#0a0a12; border:2px solid #ec4899; box-shadow:0 0 12px rgba(236,72,153,.55), inset 0 0 18px rgba(56,189,248,.18);
+      animation:neonFlicker 3.4s infinite; }
+    .pb-neon .payaso-emoji { animation:payasoBounce .9s ease-in-out infinite; }
+    .pb-neon .payaso-t1 { color:#fff; text-transform:uppercase; text-shadow:0 0 6px #ec4899,0 0 12px #ec4899; }
+    .pb-neon .payaso-t2 { color:#67e8f9; text-shadow:0 0 6px rgba(103,232,249,.7); }
+
     @keyframes payasoWobble { 0%,100%{transform:rotate(-1.3deg)} 50%{transform:rotate(1.3deg)} }
     @keyframes payasoBounce { 0%,100%{transform:translateY(0) rotate(-9deg)} 50%{transform:translateY(-7px) rotate(9deg)} }
     @keyframes payasoSheen { to { background-position:-200% 0; } }
+    @keyframes noseSpin { 0%,72%{transform:rotate(0)} 84%{transform:rotate(-20deg)} 92%{transform:rotate(14deg)} 100%{transform:rotate(0)} }
+    @keyframes honk { 0%,100%{transform:scale(1)} 45%{transform:scale(1.22)} 60%{transform:scale(.95)} }
+    @keyframes stampIn { 0%{transform:rotate(-2deg) scale(1.5); opacity:0} 60%{opacity:1} 100%{transform:rotate(-2deg) scale(1)} }
+    @keyframes glitchShift { 0%,100%{transform:translateX(0)} 48%{transform:translateX(0)} 50%{transform:translateX(-2px)} 52%{transform:translateX(2px)} 54%{transform:translateX(0)} }
+    @keyframes neonFlicker { 0%,100%{box-shadow:0 0 12px rgba(236,72,153,.55), inset 0 0 18px rgba(56,189,248,.18)} 8%{box-shadow:0 0 4px rgba(236,72,153,.2), inset 0 0 6px rgba(56,189,248,.06)} 10%{box-shadow:0 0 14px rgba(236,72,153,.6), inset 0 0 18px rgba(56,189,248,.2)} 70%{box-shadow:0 0 14px rgba(236,72,153,.6), inset 0 0 18px rgba(56,189,248,.2)} 72%{box-shadow:0 0 3px rgba(236,72,153,.15), inset 0 0 5px rgba(56,189,248,.05)} 74%{box-shadow:0 0 14px rgba(236,72,153,.6), inset 0 0 18px rgba(56,189,248,.2)} }
     @media (prefers-reduced-motion: reduce) {
-      .payaso-banner { animation:none; }
-      .payaso-banner::before { animation:none; }
-      .payaso-emoji { animation:none; transform:rotate(-6deg); }
+      .payaso-banner, .payaso-banner::before, .payaso-banner::after, .payaso-emoji,
+      .payaso-t1, .pb-sello { animation:none !important; }
+      .pb-sello { transform:rotate(-2deg); }
+      .pb-circo .payaso-emoji { transform:rotate(-6deg); }
     }
 
     /* ═══ Dashboard en vivo (overlay) ═══ */
@@ -2781,7 +2837,7 @@ function _projRows(){
   return preds.map(p => {
     const u = CACHE.users.find(x=>x.id===p.userId);
     return { userId:p.userId, name:u?u.name:'?', predHome:p.predHome, predAway:p.predAway,
-             pts: _pointsAt(p,m,CACHE.preds,LD.sh,LD.sa) || 0, me:p.userId===currentUser.id };
+             pts: (_pointsAt(p,m,CACHE.preds,LD.sh,LD.sa) || 0) + (_advanceAt(p,m,CACHE.preds,LD.sh,LD.sa) || 0), me:p.userId===currentUser.id };
   }).sort((a,b)=>b.pts-a.pts);
 }
 function _ldChips(arr){
@@ -2870,6 +2926,10 @@ function ldRenderGeneral(){
       else { rh = m.realHome ?? m.liveHome; ra = m.realAway ?? m.liveAway; }
       if (rh == null || ra == null) return;
       pts += _pointsAt(p, m, CACHE.preds, rh, ra) || 0;
+      // Pozo "quién pasa": en "antes" usa el resultado real; en vivo, el del dashboard.
+      if (!useLive) pts += calcAdvancePoints(p, m) || 0;
+      else if (m.id === LD.m.id) pts += _advanceAt(p, m, CACHE.preds, LD.sh, LD.sa) || 0;
+      else pts += calcAdvancePoints(p, m) || 0;
       if (p.predHome===rh && p.predAway===ra) exact++;
     });
     if (incluyePodio) { const mp = CACHE.podio.find(p => p.userId===u.id); pts += calcPodioPoints(mp).total; }
