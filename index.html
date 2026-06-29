@@ -551,6 +551,29 @@
     .pot-banner::after { content:""; position:absolute; top:0; left:-60%; width:40%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent); animation:shimmer 2.8s infinite; }
     @keyframes shimmer { to { left:120%; } }
 
+    /* payaso banner — para el aweonao que olvidó pronosticar (tono burlesco) */
+    .payaso-banner { position:relative; margin:12px 0 4px; padding:13px 14px 13px 62px; border-radius:14px; overflow:hidden;
+      background:repeating-linear-gradient(45deg,#dc2626 0 22px,#b91c1c 22px 44px);
+      border:3px dashed #fde047; box-shadow:0 0 0 3px #dc2626, 0 8px 26px rgba(220,38,38,.45);
+      animation:payasoWobble 1.7s ease-in-out infinite; transform-origin:center; }
+    .payaso-banner::before { content:""; position:absolute; inset:0; pointer-events:none;
+      background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.22) 50%,transparent 62%);
+      background-size:240% 100%; animation:payasoSheen 2.4s linear infinite; }
+    .payaso-emoji { position:absolute; left:12px; top:50%; margin-top:-20px; font-size:40px; line-height:1;
+      filter:drop-shadow(0 3px 5px rgba(0,0,0,.55)); animation:payasoBounce .85s ease-in-out infinite; }
+    .payaso-t1 { position:relative; font-size:18px; font-weight:900; color:#fff; text-transform:uppercase; letter-spacing:.01em;
+      line-height:1.05; text-shadow:2px 2px 0 #7f1d1d, -1px -1px 0 rgba(0,0,0,.25); }
+    .payaso-t2 { position:relative; font-size:12.5px; font-weight:800; margin-top:4px; color:#fde047;
+      line-height:1.2; text-shadow:1px 1px 0 #7f1d1d; }
+    @keyframes payasoWobble { 0%,100%{transform:rotate(-1.3deg)} 50%{transform:rotate(1.3deg)} }
+    @keyframes payasoBounce { 0%,100%{transform:translateY(0) rotate(-9deg)} 50%{transform:translateY(-7px) rotate(9deg)} }
+    @keyframes payasoSheen { to { background-position:-200% 0; } }
+    @media (prefers-reduced-motion: reduce) {
+      .payaso-banner { animation:none; }
+      .payaso-banner::before { animation:none; }
+      .payaso-emoji { animation:none; transform:rotate(-6deg); }
+    }
+
     /* ═══ Dashboard en vivo (overlay) ═══ */
     #liveDash { position:fixed; inset:0; z-index:1100; background:#080c16; transform:translateY(100%); transition:transform .35s cubic-bezier(.22,1,.36,1); overflow-y:auto; overscroll-behavior:contain; display:none; }
     #liveDash.open { transform:translateY(0); }
@@ -840,14 +863,7 @@
         <h2 style="margin:0;font-size:17px;font-weight:900">🏟️ Fixture</h2>
         <span id="clockDisplay" style="font-size:11px;color:#475569"></span>
       </div>
-      <div class="card" style="padding:10px 12px;margin-bottom:10px;font-size:11px;color:#64748b;line-height:1.8">
-        ${currentUser?.isAdmin
-          ? `👑 <b style="color:#c084fc">Modo Admin</b> — Ingresa los resultados oficiales de cada partido`
-          : `🏆 Pozo <b style="color:#38bdf8">varía por fase</b> &nbsp;·&nbsp;
-        ✅ Aciertas = <b style="color:#4ade80">pozo ÷ N</b> &nbsp;·&nbsp;
-        🥇 Exacto = <b style="color:#38bdf8">tu parte ×2</b> &nbsp;·&nbsp;
-        <a href="#" onclick="event.preventDefault();showTab('reglas')" style="color:#60a5fa;text-decoration:underline">ver pozos</a>`}
-      </div>
+      <div id="fixtureHint" class="card" style="padding:10px 12px;margin-bottom:10px;font-size:11px;color:#64748b;line-height:1.8"></div>
       <div id="tournamentPills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
       <div id="matchList" style="display:flex;flex-direction:column;gap:10px"></div>
     </div>
@@ -2784,7 +2800,14 @@ function _ldMine(){
   const el = document.getElementById('ldMine');
   if (!el) return;
   if (!mine){
-    el.innerHTML = `<div class="ld-mine ld-mine-empty">😴 No pronosticaste este partido</div>`;
+    const soyAweonao = !currentUser?.isAdmin && aweonaosDeMatch(m).some(u => u.id === currentUser.id);
+    el.innerHTML = soyAweonao
+      ? `<div class="payaso-banner" role="alert">
+          <span class="payaso-emoji">🤡</span>
+          <div class="payaso-t1">¡Eres un aweonao!</div>
+          <div class="payaso-t2">Se te olvidó poner el resultado, payaso culiao 🤡</div>
+        </div>`
+      : `<div class="ld-mine ld-mine-empty">😴 No pronosticaste este partido</div>`;
     return;
   }
   let stat = '', cls = '';
@@ -3455,6 +3478,15 @@ function normStage(raw) {
 function setTournament(t) { selectedTournament = t; renderMatches(); }
 
 function renderMatches() {
+  const hintEl = document.getElementById('fixtureHint');
+  if (hintEl) {
+    hintEl.innerHTML = currentUser?.isAdmin
+      ? `👑 <b style="color:#c084fc">Modo Admin</b> — Ingresa los resultados oficiales de cada partido`
+      : `🏆 Pozo <b style="color:#38bdf8">varía por fase</b> &nbsp;·&nbsp;
+         ✅ Aciertas = <b style="color:#4ade80">pozo ÷ N</b> &nbsp;·&nbsp;
+         🥇 Exacto = <b style="color:#38bdf8">tu parte ×2</b> &nbsp;·&nbsp;
+         <a href="#" onclick="event.preventDefault();showTab('reglas')" style="color:#60a5fa;text-decoration:underline">ver pozos</a>`;
+  }
   const allMatches = [...CACHE.matches].sort((a,b) => new Date(a.datetime)-new Date(b.datetime));
   const preds   = CACHE.preds;
   const uid     = currentUser.id;
@@ -3745,8 +3777,16 @@ function renderMatches() {
 
     // Aweonaos del partido (solo si cerró)
     let aweonaoHtml = '';
+    let payasoHtml = '';
     if (status !== 'open') {
       const aw = aweonaosDeMatch(m);
+      if (!isAdm && aw.some(u => u.id === uid)) {
+        payasoHtml = `<div class="payaso-banner" role="alert">
+          <span class="payaso-emoji">🤡</span>
+          <div class="payaso-t1">¡Eres un aweonao!</div>
+          <div class="payaso-t2">Se te olvidó poner el resultado, payaso culiao 🤡</div>
+        </div>`;
+      }
       aweonaoHtml = aw.length
         ? `<div style="font-size:11px;color:#64748b;margin-top:6px;text-align:center">🧠 <b style="color:#f87171">Aweonaos:</b> ${aw.map(u=>u.name).join(', ')}</div>`
         : `<div style="font-size:11px;color:#4ade80;margin-top:6px;text-align:center">✅ No hubieron aweonaos este partido, todos pusieron sus pronósticos</div>`;
@@ -3825,6 +3865,7 @@ function renderMatches() {
         <div style="flex:1;text-align:left;font-weight:800;font-size:13px;line-height:1.2">${m.away}${flagImg(m.away,true)}</div>
       </div>
       ${playerPredsPanel}
+      ${payasoHtml}
       ${aweonaoHtml}
       ${potenciadoToggle}
     </div>`;
@@ -4735,7 +4776,7 @@ function renderAdmin() {
   const subNav = '';
 
   document.getElementById('adminContent').innerHTML =
-    subNav + buildAdminPodioEdit() + buildAdminGestion();
+    subNav + buildAdminPozos() + buildAdminPodio() + buildAdminTorneos() + buildAdminPodioEdit() + buildAdminGestion();
 }
 
 function setAdminTab(t) { adminSubTab=t; renderAdmin(); }
