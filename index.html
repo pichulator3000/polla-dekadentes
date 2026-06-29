@@ -1531,6 +1531,34 @@ function _pointsAt(pred, match, allPreds, rh, ra) {
   return exact ? Math.round(base * 2 * 100) / 100 : base;
 }
 
+// ── Pozo "quién pasa" en el dashboard en vivo ──────────────────────────────
+// Aplica solo a KO con el pozo activo (se añadió a mitad de torneo).
+function _ldAdvanceOn(m){
+  return !!m && !normStage(m.stage).startsWith('Grupo') && m.advancePozo !== false;
+}
+// Quién avanza según el marcador EN VIVO (sh-sa efectivos del dashboard).
+// Empate sin partido cerrado → null (iría a alargue/penales: indefinido).
+function _liveAdvancer(m, sh, sa){
+  if (sh == null || sa == null) return null;
+  if (sh > sa) return m.home;
+  if (sa > sh) return m.away;
+  if (getStatus(m) === 'done' && (m.advances === m.home || m.advances === m.away)) return m.advances;
+  return null;
+}
+// Puntos del pozo de avance proyectados al marcador en vivo. Espeja advancePoints
+// pero usando _liveAdvancer en vez de matchAdvanceOutcome. null si no aplica/indefinido.
+function _advanceAt(pred, m, allPreds, sh, sa){
+  if (!_ldAdvanceOn(m)) return 0;
+  const adv = _liveAdvancer(m, sh, sa);
+  if (adv == null) return null;
+  const guess = window.__scoring.playerAdvanceGuess(pred, m);
+  if (guess !== adv) return 0;
+  const preds = allPreds || CACHE.preds;
+  const n = preds.filter(p => p.matchId === m.id &&
+    window.__scoring.playerAdvanceGuess(p, m) === adv).length || 1;
+  return Math.round((getAdvancePool() / n) * 100) / 100;
+}
+
 function fmtDate(iso) {
   const d = new Date(iso);
   const tz = 'America/Santiago';
