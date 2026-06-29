@@ -2388,6 +2388,11 @@ async function saveUpcomingPred(matchId) {
   const existing = CACHE.preds.find(p => p.userId===currentUser.id && p.matchId===matchId) || {};
   const predObj = { ...existing, userId:currentUser.id, matchId, predHome:h, predAway:a };
   if (predObj.predHome !== predObj.predAway) predObj.predAdvances = null;
+  // Actualizaci\u00f3n optimista del CACHE para que el selector "qui\u00e9n pasa"
+  // aparezca de inmediato sin esperar el listener de Firebase.
+  const _i = CACHE.preds.findIndex(p => p.userId===currentUser.id && p.matchId===matchId);
+  if (_i >= 0) CACHE.preds[_i] = predObj; else CACHE.preds.push(predObj);
+  bumpPredsVer();
   await DB.savePred(predObj);
   toast('\u2713 Predicci\u00f3n guardada');
   renderUpcoming();
@@ -3007,6 +3012,10 @@ function getAdvancePool() {
 // que un fase con texto libre (ej. "Grupo C · Miami") se trate como KO.
 function calcAdvancePoints(pred, match, allPreds) {
   if (!window.__scoring) return null;
+  // El pozo "quién pasa" se añadió a mitad del torneo. Los partidos jugados
+  // antes (ej. Sudáfrica–Canadá en 16avos) NO tienen este pozo: solo cuenta el
+  // pozo principal. Se desactiva por partido con advancePozo === false.
+  if (match && match.advancePozo === false) return 0;
   const m = match ? { ...match, stage: normStage(match.stage) } : match;
   return window.__scoring.advancePoints({
     pred, match: m, allPreds: allPreds || CACHE.preds, pool: getAdvancePool()
@@ -3934,6 +3943,10 @@ async function setAdvPred(matchId, team) {
   let pred = CACHE.preds.find(p => p.userId === uid && p.matchId === matchId);
   if (!pred) { pred = { userId: uid, matchId, predHome: 0, predAway: 0 }; }
   pred = { ...pred, predAdvances: team };
+  // Actualización optimista del CACHE para resaltar la selección al instante.
+  const _i = CACHE.preds.findIndex(p => p.userId === uid && p.matchId === matchId);
+  if (_i >= 0) CACHE.preds[_i] = pred; else CACHE.preds.push(pred);
+  bumpPredsVer();
   await DB.savePred(pred);
   // Refrescar la vista activa (fixture y/o home) para resaltar la selección.
   renderMatches();
