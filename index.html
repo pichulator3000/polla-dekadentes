@@ -782,46 +782,52 @@
     }
 
     /* ── Bracket tree ── */
-    .bkwrap { width:100%; }
-    .bktree {
-      display:flex; align-items:stretch; min-width:max-content;
-      overflow-x:auto; touch-action:pan-x pan-y pinch-zoom;
-      padding:8px 4px; gap:0;
-    }
-    .bkcol { display:flex; flex-direction:column; min-width:160px; }
-    .bklabel {
-      font-size:10px; color:#475569; text-transform:uppercase; letter-spacing:1px;
-      text-align:center; margin-bottom:8px; font-weight:800;
-    }
-    .bkcells { display:flex; flex-direction:column; justify-content:space-around; flex:1; gap:14px; }
-    .bkconn {
-  width:22px; flex:0 0 22px; align-self:stretch;
-  position:relative;
-}
-.bkconn::before {
-  content:''; position:absolute; top:50%; left:0; right:0;
-  border-top:2px solid #334155;
-}
-    .bkcell {
-      background:#0f172a; border:1px solid #1e293b; border-radius:8px;
-      overflow:hidden; align-self:center; width:150px;
-    }
-    .bkr { display:flex; align-items:center; gap:4px; padding:5px 7px; font-size:12px; color:#e2e8f0; }
-    .bkr + .bkr { border-top:1px solid #1e293b; }
-    .bkr.win { background:rgba(22,163,74,.12); color:#fff; font-weight:800; }
-    .bkr.lose { color:#64748b; }
-    .bkr.lose img { filter:grayscale(.6); opacity:.7; }
-    .bkfl { display:inline-flex; align-items:center; }
-    .bkfl img { margin:0 !important; }
-    .bknm { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .bksc { font-weight:900; font-variant-numeric:tabular-nums; }
-    .bkchk { color:#4ade80; font-size:10px; }
-    .bkmeta { font-size:9px; color:#64748b; text-align:center; padding:3px; border-top:1px solid #1e293b; }
-    .bk3p {
-      margin-top:14px; padding-top:12px; border-top:1px dashed #1e293b;
-      display:flex; flex-direction:column; align-items:center; gap:6px;
-    }
-    .bk3plabel { font-size:11px; color:#94a3b8; font-weight:800; }
+    /* ── Bracket (vista Llaves): dos lados convergen a la Final, conectores SVG ── */
+    .bk-scroll{overflow:auto;-webkit-overflow-scrolling:touch;padding:2px 2px 10px;
+      touch-action:pan-x pan-y pinch-zoom}
+    .bk-legend{display:flex;gap:14px;align-items:center;font-size:10.5px;color:#7c8aa3;margin:0 2px 8px}
+    .bk-legend .k{display:inline-flex;align-items:center;gap:5px}
+    .bk-legend .sw{width:14px;height:3px;border-radius:2px;display:inline-block}
+    .bk-cols{position:relative;height:16px;margin-bottom:6px}
+    .bk-cl{position:absolute;font-size:10px;font-weight:800;letter-spacing:2px;color:#475569;text-transform:uppercase}
+    .bk-cl.fin{color:#caa53d}
+    .bk-stage{position:relative}
+    .bk-stage svg{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:visible}
+    .bk-cell{position:absolute;z-index:2;border:1px solid #22304a;border-radius:11px;
+      background:linear-gradient(180deg,#131d31,#0f172a);box-shadow:0 2px 10px rgba(0,0,0,.35);overflow:hidden}
+    .bk-cell.decided{border-color:#2f6b46}
+    .bk-cell.fin{border-color:#34507e;box-shadow:0 0 0 1px rgba(56,189,248,.18),0 4px 16px rgba(0,0,0,.45)}
+    .bk-row{display:flex;align-items:center;gap:7px;padding:6px 9px;height:27px}
+    .bk-row + .bk-row{border-top:1px solid #1a2740}
+    .bk-row.w{background:rgba(74,222,128,.12);color:#eafff2;font-weight:800;box-shadow:inset 3px 0 0 #4ade80}
+    .bk-cell.mir .bk-row.w{box-shadow:inset -3px 0 0 #4ade80}
+    .bk-row.l{color:#7c8aa3}
+    .bk-row.l img{filter:grayscale(.65);opacity:.6}
+    .bk-fl{flex:0 0 auto;display:inline-flex;align-items:center}
+    .bk-fl img{width:22px;height:15px;border-radius:3px;object-fit:cover;
+      box-shadow:0 1px 2px rgba(0,0,0,.5);margin:0 !important;vertical-align:middle}
+    .bk-flph{width:22px;height:15px;border-radius:3px;flex:0 0 auto;
+      background:repeating-linear-gradient(45deg,#1b2840,#1b2840 3px,#16213a 3px,#16213a 6px)}
+    .bk-nm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px}
+    .bk-nm.ph{color:#5b6b85;font-style:italic;font-size:11px}
+    .bk-ck{color:#4ade80;font-size:11px;font-weight:900}
+    .bk-sc{font-weight:900;font-variant-numeric:tabular-nums;font-size:13px;min-width:12px;text-align:right}
+    .bk-sc.dim{color:#3a4763}
+    .bk-ft{height:15px;display:flex;align-items:center;justify-content:center;font-size:8.5px;
+      letter-spacing:.3px;border-top:1px solid #1a2740;color:#5b6b85}
+    .bk-ft.pend{color:#f5b54a;background:rgba(245,181,74,.05)}
+    .bk-ft.pen{color:#38bdf8}
+    .bk-crown{position:absolute;z-index:2;text-align:center;font-size:18px}
+    .bk-tp{position:absolute;z-index:2;font-size:10px;font-weight:800;letter-spacing:1.5px;
+      color:#caa53d;text-transform:uppercase;text-align:center}
+    /* fallback en flujo (estructura de bracket irregular) */
+    .bk-flow{display:flex;align-items:stretch;min-width:max-content;padding:8px 2px}
+    .bk-flow-col{display:flex;flex-direction:column;justify-content:space-around;min-width:172px;gap:12px;padding:0 6px}
+    .bk-flow-lbl{font-size:10px;font-weight:800;letter-spacing:2px;color:#475569;
+      text-transform:uppercase;text-align:center;margin-bottom:4px}
+    .bk-cell-flow{border:1px solid #22304a;border-radius:11px;align-self:center;width:160px;overflow:hidden;
+      background:linear-gradient(180deg,#131d31,#0f172a);box-shadow:0 2px 10px rgba(0,0,0,.35)}
+    .bk-cell-flow.decided{border-color:#2f6b46}
   </style>
 </head>
 <body>
@@ -3444,74 +3450,164 @@ function resolveBracketDisplay() {
 
 // Una celda del bracket: dos filas (bandera+país+marcador 90'), ganador en verde
 // con ✓, perdedor atenuado, pie con penales/120' o estado "Por jugarse".
-function renderBracketCell(m) {
-  const winner = window.__scoring.matchAdvanceOutcome
-    ? window.__scoring.matchAdvanceOutcome(m) : null;
-  const played = m.realHome != null && m.realAway != null;
+// Geometría del bracket (px). Las celdas se posicionan de forma absoluta según
+// coordenadas calculadas, y los conectores se dibujan como líneas SVG con codos
+// reales entre los centros de cada celda → calzan siempre, sin depender del flujo.
+const BK = { W: 170, H: 69, GAP: 44, get COL() { return this.W + this.GAP; }, PAD: 8, PITCH: 84 };
+const BK_LABEL = {
+  'Ronda de 32': 'R32', 'Octavos': '8vos', 'Cuartos de Final': '4tos',
+  'Semifinal': 'Semis', 'Final': 'Final'
+};
 
-  const sideRow = (team, score, isWin) => {
-    const cls = isWin ? 'bkr win' : (winner ? 'bkr lose' : 'bkr');
-    const chk = isWin ? '<span class="bkchk">✓</span>' : '';
-    const sc  = played ? `<span class="bksc">${score}</span>`
-                       : `<span class="bksc" style="color:#475569">—</span>`;
-    // flagImg() devuelve '' si el equipo no tiene bandera (ej. placeholder
-    // "Ganador R1"); en ese caso no se muestra imagen, solo el nombre.
-    return `<div class="${cls}"><span class="bkfl">${flagImg(team) || ''}</span>
-      <span class="bknm">${team || '—'}</span>${chk}${sc}</div>`;
-  };
-
-  let foot = '';
-  if (played && koWentBeyond90(m)) {
-    foot = `<div class="bkmeta">${koResultExtra(m).replace(/<[^>]+>/g, '')}</div>`;
-  } else if (!played) {
-    foot = `<div class="bkmeta" style="color:#fbbf24">Por jugarse</div>`;
-  }
-
-  return `<div class="bkcell">
-    ${sideRow(m.home, m.realHome, winner != null && winner === m.home)}
-    ${sideRow(m.away, m.realAway, winner != null && winner === m.away)}
-    ${foot}
-  </div>`;
+function bkWinner(m) {
+  return window.__scoring.matchAdvanceOutcome ? window.__scoring.matchAdvanceOutcome(m) : null;
 }
 
-// Árbol completo: columnas por ronda con conectores, scroll horizontal + zoom.
-// Tercer puesto colgado al final, cerca de la Final.
+// Devuelve { decided, html } con las dos filas de equipos + pie. Sin wrapper:
+// el contenedor (absoluto o en flujo) lo pone quien llama.
+function bracketCellInner(m) {
+  const winner  = bkWinner(m);
+  const played  = m.realHome != null && m.realAway != null;
+  const decided = !!winner;
+  const row = (team, score, isWin) => {
+    const img = flagImg(team) || '';      // '' = placeholder ("Ganador R1", sin bandera)
+    const ph  = !img;
+    const cls = isWin ? 'bk-row w' : (decided ? 'bk-row l' : 'bk-row');
+    const fl  = ph ? '<span class="bk-flph"></span>' : `<span class="bk-fl">${img}</span>`;
+    const ck  = isWin ? '<span class="bk-ck">✓</span>' : '';
+    const sc  = played ? `<span class="bk-sc">${score}</span>` : '<span class="bk-sc dim">·</span>';
+    return `<div class="${cls}">${fl}<span class="bk-nm${ph ? ' ph' : ''}">${team || '—'}</span>${ck}${sc}</div>`;
+  };
+  let ftCls = 'bk-ft', ftTxt = '';
+  if (!played)                    { ftCls = 'bk-ft pend'; ftTxt = 'Por jugarse'; }
+  else if (m.penHome != null)     { ftCls = 'bk-ft pen';  ftTxt = `Penales ${m.penHome}–${m.penAway}`; }
+  else if (m.score120Home != null){ ftCls = 'bk-ft pen';  ftTxt = `120' ${m.score120Home}–${m.score120Away}`; }
+  return { decided, html:
+    row(m.home, m.realHome, decided && winner === m.home) +
+    row(m.away, m.realAway, decided && winner === m.away) +
+    `<div class="${ftCls}">${ftTxt}</div>` };
+}
+
+// Celda posicionada absoluta (usa m._x/m._cy ya calculados).
+function bracketCellAbs(m, mir, extra) {
+  const c = bracketCellInner(m);
+  const cls = 'bk-cell' + (c.decided ? ' decided' : '') + (mir ? ' mir' : '') + (extra || '');
+  return `<div class="${cls}" style="left:${m._x}px;top:${m._cy - BK.H / 2}px;width:${BK.W}px">${c.html}</div>`;
+}
+
+// Fallback en flujo si la estructura no es un bracket completo (halving hasta 1).
+function renderBracketFlow(columns, thirdPlace) {
+  const cols = columns.map(c => {
+    const cells = c.matches.map(m => {
+      const inner = bracketCellInner(m);
+      return `<div class="bk-cell-flow${inner.decided ? ' decided' : ''}">${inner.html}</div>`;
+    }).join('');
+    return `<div class="bk-flow-col"><div class="bk-flow-lbl">${BK_LABEL[c.stage] || c.stage}</div>${cells}</div>`;
+  }).join('');
+  let tp = '';
+  if (thirdPlace) {
+    const inner = bracketCellInner(thirdPlace);
+    tp = `<div class="bk-flow-col"><div class="bk-flow-lbl">🥉 3er puesto</div>
+      <div class="bk-cell-flow${inner.decided ? ' decided' : ''}">${inner.html}</div></div>`;
+  }
+  return `<div class="bk-scroll"><div class="bk-flow">${cols}${tp}</div></div>`;
+}
+
+// Vista Llaves: dos lados convergen a la Final al centro, conectores SVG, el
+// camino del que avanza iluminado en verde. Tercer puesto colgado bajo la Final.
 function renderBracket(matches) {
-  // Normalizar stage (mismo criterio que el resto de la app) y resolver lados.
   resolveBracketDisplay();
   const norm = matches.map(m => ({ ...m, stage: normStage(m.stage) }));
   const { columns, thirdPlace } = window.__bracket.buildBracketTree(norm);
-
   if (!columns.length) {
-    return `<div style="text-align:center;color:#64748b;padding:24px">
-      Aún no hay partidos de fase final.</div>`;
+    return `<div style="text-align:center;color:#64748b;padding:24px">Aún no hay partidos de fase final.</div>`;
   }
 
-  const labelOf = (stage) => ({
-    'Ronda de 32': 'R32', 'Octavos': '8vos', 'Cuartos de Final': '4tos',
-    'Semifinal': 'Semis', 'Final': 'Final'
-  }[stage] || stage);
+  // ¿Bracket completo? Cada ronda debe ser el doble de la siguiente y la última = 1.
+  const centered = columns.length >= 2 &&
+    columns[columns.length - 1].matches.length === 1 &&
+    columns.every((c, i) => i === columns.length - 1 || c.matches.length === 2 * columns[i + 1].matches.length);
+  if (!centered) return renderBracketFlow(columns, thirdPlace);
 
-  const colHtml = columns.map((c, ci) => {
-    const cells = c.matches.map(renderBracketCell).join('');
-    const conn = ci < columns.length - 1 ? '<div class="bkconn"></div>' : '';
-    return `<div class="bkcol">
-      <div class="bklabel">${labelOf(c.stage)}</div>
-      <div class="bkcells">${cells}</div>
-    </div>${conn}`;
-  }).join('');
+  const DEPTH = columns.length - 1;        // rondas por lado (R32..Semis)
+  const L = [], R = [];
+  for (let r = 0; r < DEPTH; r++) {
+    const arr = columns[r].matches, h = arr.length / 2;
+    L[r] = arr.slice(0, h);                // mitad superior = lado izquierdo
+    R[r] = arr.slice(h);                   // mitad inferior = lado derecho
+  }
+  const final = columns[DEPTH].matches[0];
+  const half0 = L[0].length;
 
-  const tpHtml = thirdPlace ? `
-    <div class="bk3p">
-      <div class="bk3plabel">🥉 Tercer Puesto</div>
-      ${renderBracketCell(thirdPlace)}
-    </div>` : '';
+  // Coordenada Y: hojas (R32) en filas fijas; cada padre al centro de sus 2 hijos.
+  L[0].forEach((m, i) => m._cy = BK.PAD + i * BK.PITCH + BK.H / 2);
+  R[0].forEach((m, i) => m._cy = BK.PAD + i * BK.PITCH + BK.H / 2);
+  for (let r = 1; r < DEPTH; r++) {
+    L[r].forEach((m, i) => m._cy = (L[r - 1][2 * i]._cy + L[r - 1][2 * i + 1]._cy) / 2);
+    R[r].forEach((m, i) => m._cy = (R[r - 1][2 * i]._cy + R[r - 1][2 * i + 1]._cy) / 2);
+  }
+  // Coordenada X: lado izq crece →, lado der mirror, Final al centro.
+  for (let r = 0; r < DEPTH; r++) {
+    L[r].forEach(m => m._x = r * BK.COL);
+    R[r].forEach(m => m._x = (2 * DEPTH - r) * BK.COL);
+  }
+  final._x = DEPTH * BK.COL;
+  final._cy = (L[DEPTH - 1][0]._cy + R[DEPTH - 1][0]._cy) / 2;
 
-  return `
-    <div class="bkwrap">
-      <div class="bktree">${colHtml}</div>
-      ${tpHtml}
-    </div>`;
+  const totalW = 2 * DEPTH * BK.COL + BK.W;
+  const totalH = BK.PAD + half0 * BK.PITCH + 120;
+
+  // Conectores SVG (codo: H al medio, V al nivel del padre, H al borde del padre).
+  const paths = [];
+  const push = (x1, y1, x2, y2, on) => {
+    const mid = x1 + (x2 - x1) / 2;
+    paths.push(`<path d="M${x1},${y1} H${mid} V${y2} H${x2}" fill="none" stroke="${on ? '#4ade80' : '#2a3a55'}" stroke-width="${on ? 2.4 : 1.6}" stroke-linejoin="round"${on ? ' filter="drop-shadow(0 0 3px rgba(74,222,128,.5))"' : ''}/>`);
+  };
+  for (let r = 1; r < DEPTH; r++) {
+    L[r].forEach((m, i) => [L[r - 1][2 * i], L[r - 1][2 * i + 1]].forEach(c =>
+      push(c._x + BK.W, c._cy, m._x, m._cy, !!bkWinner(c))));
+    R[r].forEach((m, i) => [R[r - 1][2 * i], R[r - 1][2 * i + 1]].forEach(c =>
+      push(c._x, c._cy, m._x + BK.W, m._cy, !!bkWinner(c))));
+  }
+  push(L[DEPTH - 1][0]._x + BK.W, L[DEPTH - 1][0]._cy, final._x, final._cy, !!bkWinner(L[DEPTH - 1][0]));
+  push(R[DEPTH - 1][0]._x, R[DEPTH - 1][0]._cy, final._x + BK.W, final._cy, !!bkWinner(R[DEPTH - 1][0]));
+
+  // Celdas.
+  let cells = '';
+  L.forEach(rd => rd.forEach(m => cells += bracketCellAbs(m, false, '')));
+  R.forEach(rd => rd.forEach(m => cells += bracketCellAbs(m, true, '')));
+  cells += bracketCellAbs(final, false, ' fin');
+
+  // Corona + tercer puesto bajo la Final.
+  let extras = `<div class="bk-crown" style="left:${final._x}px;width:${BK.W}px;top:${final._cy - BK.H / 2 - 24}px">${bkWinner(final) ? '🏆' : '👑'}</div>`;
+  if (thirdPlace) {
+    const tpY = final._cy + BK.H / 2 + 30;
+    extras += `<div class="bk-tp" style="left:${final._x}px;width:${BK.W}px;top:${tpY}px">🥉 Tercer puesto</div>`;
+    thirdPlace._x = final._x;
+    thirdPlace._cy = tpY + 20 + BK.H / 2;
+    extras += bracketCellAbs(thirdPlace, false, '');
+  }
+
+  // Encabezados de columna (ambos lados + Final).
+  const heads = [];
+  for (let r = 0; r < DEPTH; r++) {
+    const lab = BK_LABEL[columns[r].stage] || columns[r].stage;
+    heads.push(`<div class="bk-cl" style="left:${r * BK.COL}px">${lab}</div>`);
+    heads.push(`<div class="bk-cl" style="left:${(2 * DEPTH - r) * BK.COL}px">${lab}</div>`);
+  }
+  heads.push(`<div class="bk-cl fin" style="left:${DEPTH * BK.COL}px">Final</div>`);
+
+  return `<div class="bk-scroll">
+    <div class="bk-legend">
+      <span class="k"><span class="sw" style="background:#4ade80"></span>avanzó</span>
+      <span class="k"><span class="sw" style="background:#2a3a55"></span>por definir</span>
+    </div>
+    <div class="bk-cols" style="width:${totalW}px">${heads.join('')}</div>
+    <div class="bk-stage" style="width:${totalW}px;height:${totalH}px">
+      <svg viewBox="0 0 ${totalW} ${totalH}" width="${totalW}" height="${totalH}">${paths.join('')}</svg>
+      ${cells}${extras}
+    </div>
+  </div>`;
 }
 
 // ═══ PODIO POINTS ═══
