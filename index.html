@@ -2877,6 +2877,7 @@ function renderLiveDash(){
     <div class="ld-sec">💰 ¿Cuánto paga cada resultado? <span class="ld-sub" id="ldPoolSub"></span></div>
     <div class="ld-pay" id="ldPay"></div>
     <div class="ld-pay-foot">El pozo se reparte entre los que le pegan al resultado · <b style="color:#facc15">marcador exacto = ×2</b></div>
+    <div id="ldAdvSec"></div>
     <div class="ld-sec">🎯 Marcador exacto <span class="ld-sub">toca un marcador</span></div>
     <div class="ld-panel">
       <div class="ld-heatwrap"><div class="ld-ytitle" id="ldYtitle"></div><div class="ld-heat" id="ldHeat"></div></div>
@@ -2900,7 +2901,7 @@ function renderLiveDash(){
     <div id="ldAweonaos"></div>`;
 
   _ldScore(); _ldMine(); _ldPotBanner(); _ldCallout();
-  ldRenderBar(); ldRenderPay(); ldRenderHeat(); ldRenderProj(); ldRenderGeneral(); _ldSwipeInit(); _ldAweonaos();
+  ldRenderBar(); ldRenderPay(); ldRenderAdvance(); ldRenderHeat(); ldRenderProj(); ldRenderGeneral(); _ldSwipeInit(); _ldAweonaos();
 }
 
 // Tabla general en vivo: destaca quién sumó puntos y quién subió/bajó de posición
@@ -3088,8 +3089,8 @@ function ldRenderBar(){
 }
 function setLdBarMode(mode){
   LD_BARMODE = mode;
-  document.querySelectorAll('#ldPill button').forEach(b=>b.classList.toggle('on', b.textContent.trim()===(mode==='pct'?'%':'N°')));
-  ldRenderBar(); ldRenderHeat();
+  document.querySelectorAll('#ldPill button, #ldAdvPill button').forEach(b=>b.classList.toggle('on', b.textContent.trim()===(mode==='pct'?'%':'N°')));
+  ldRenderBar(); ldRenderHeat(); ldRenderAdvance();
 }
 function showLdBar(k){
   const arr = LD.barGrp[k];
@@ -3126,6 +3127,70 @@ function ldRenderPay(){
       <div class="ld-pay-amt">${amt}</div>
     </div>`;
   }).join('');
+}
+
+function ldRenderAdvance(){
+  const host = document.getElementById('ldAdvSec');
+  if (!host) return;
+  const {m, preds, col, sh, sa, hasScore} = LD;
+  if (!_ldAdvanceOn(m)) { host.innerHTML = ''; return; }
+  const pool = getAdvancePool();
+  const guess = p => window.__scoring.playerAdvanceGuess(p, m);
+  const grp = { H:[], V:[] };
+  preds.forEach(p => { const g = guess(p); if (g===m.home) grp.H.push(p); else if (g===m.away) grp.V.push(p); });
+  LD.advGrp = grp;
+  const total = (grp.H.length + grp.V.length) || 1;
+  const liveAdv = hasScore ? _liveAdvancer(m, sh, sa) : null;
+  const sides = [
+    {k:'H', c:col.L, lbl:'Pasa '+m.home, team:m.home, arr:grp.H},
+    {k:'V', c:col.V, lbl:'Pasa '+m.away, team:m.away, arr:grp.V},
+  ];
+  const barSegs = sides.filter(s => s.arr.length);
+  const barHtml = barSegs.length
+    ? barSegs.map(s => { const n=s.arr.length, pct=Math.round(n/total*100);
+        return `<div class="ld-seg" style="flex:${n};background:${s.c}" onclick="showLdAdv('${s.k}')">${LD_BARMODE==='pct'?pct+'%':n}</div>`;
+      }).join('')
+    : '';
+  const legHtml = barSegs.length
+    ? barSegs.map(s => { const n=s.arr.length, pct=Math.round(n/total*100);
+        return `<span style="color:${s.c}">● ${s.lbl} · ${LD_BARMODE==='pct'?pct+'%':n}</span>`; }).join('')
+    : '<span style="color:#475569">Nadie ha pronosticado aún</span>';
+  const tieLive = hasScore && sh===sa && liveAdv==null;
+  const maxPer = Math.max(...sides.map(s=>s.arr.length?pool/s.arr.length:0),1);
+  const payHtml = sides.map(s => {
+    const n=s.arr.length, per=n?Math.round(pool/n*100)/100:0, hot=liveAdv===s.team;
+    const amt = n ? `<div class="ld-pay-big" style="color:${s.c}">+${_fmtPts(per)}</div>`
+                  : `<div class="ld-pay-none">nadie apostó</div>`;
+    const tag = hot ? '<span class="ld-hot-tag">VA PASANDO</span>'
+              : (tieLive ? '<span class="ld-hot-tag" style="background:#475569">indefinido</span>' : '');
+    return `<div class="ld-pay-row${hot?' hot':''}">
+      <div class="ld-pay-bar" style="background:${s.c};width:${n?per/maxPer*100:0}%"></div>
+      <div class="ld-pay-ic" style="background:${s.c}"></div>
+      <div class="ld-pay-info">
+        <div class="ld-pay-lbl">${s.lbl}${tag}</div>
+        <div class="ld-pay-sub">${n} ${n===1?'apostó':'apostaron'} · pozo ÷ ${n||'—'}</div>
+      </div>
+      <div class="ld-pay-amt">${amt}</div>
+    </div>`;
+  }).join('');
+  host.innerHTML = `
+    <div class="ld-sec">🎟️ ¿Quién pasa? <span class="ld-sub">pozo ${pool} pts${tieLive?' · empate':''}</span>
+      <span class="ld-pill" id="ldAdvPill"><button class="${LD_BARMODE==='pct'?'on':''}" onclick="setLdBarMode('pct')">%</button><button class="${LD_BARMODE==='cnt'?'on':''}" onclick="setLdBarMode('cnt')">N°</button></span>
+    </div>
+    <div class="ld-bar" id="ldAdvBar">${barHtml}</div>
+    <div class="ld-barleg" id="ldAdvLeg">${legHtml}</div>
+    <div class="ld-detail" id="ldAdvDetail" style="display:none;margin-top:10px"></div>
+    <div class="ld-pay" id="ldAdvPay" style="margin-top:10px">${payHtml}</div>
+    <div class="ld-pay-foot">El pozo se reparte entre los que aciertan quién avanza · empate ⇒ vale tu elección de "quién pasa"</div>`;
+}
+function showLdAdv(k){
+  const arr = (LD.advGrp && LD.advGrp[k]) || [];
+  const lbl = k==='H' ? 'Pasa '+LD.m.home : 'Pasa '+LD.m.away;
+  const d = document.getElementById('ldAdvDetail');
+  if (!d) return;
+  d.style.display='block';
+  d.innerHTML = `<div class="ld-detail-title">${lbl} · ${arr.length}</div>${arr.length?_ldChips(arr):'<div class="ld-empty">Nadie</div>'}`;
+  document.querySelectorAll('#ldAdvBar .ld-seg').forEach(s=>s.classList.toggle('sel', s.getAttribute('onclick').includes(`'${k}'`)));
 }
 
 function ldRenderHeat(){
