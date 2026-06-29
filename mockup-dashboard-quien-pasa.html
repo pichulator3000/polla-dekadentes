@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup completo · Dashboard en vivo</title>
+<style>
+  :root{ --orange:#fb923c; --orange-dim:rgba(251,146,60,.12); }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:#04070e; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; color:#e8edf5; padding:24px 12px; }
+  .wrap{ max-width:480px; margin:0 auto; }
+  .note{ max-width:480px; margin:0 auto 16px; font-size:12px; color:#64748b; line-height:1.6; border-left:3px solid #1e3a5f; padding:8px 12px; background:#0a0f1a; border-radius:0 10px 10px 0; }
+  .note b{ color:#facc15; }
+  .frame{ background:#080c16; border:1px solid #141d2e; border-radius:22px; padding:14px 16px 28px; box-shadow:0 30px 80px rgba(0,0,0,.6); }
+  .divlbl{ margin:24px 0 8px; font-size:10px; font-weight:900; color:#0b1018; background:#4ade80; display:inline-block; padding:2px 8px; border-radius:10px; letter-spacing:.06em; }
+  .newtag{ display:inline-block; font-size:9px; font-weight:900; color:#0b1018; background:#4ade80; padding:2px 7px; border-radius:10px; letter-spacing:.04em; }
+
+  .ld-head{ display:flex; align-items:center; justify-content:space-between; padding:6px 0 12px; }
+  .ld-title{ font-size:13px; font-weight:900; color:#94a3b8; text-transform:uppercase; letter-spacing:.05em; }
+  .ld-close{ background:#1e293b; border:none; color:#e8edf5; width:38px; height:38px; border-radius:12px; font-size:18px; cursor:pointer; font-weight:700; }
+
+  .badge-live{ background:var(--orange-dim); color:var(--orange); border:1px solid rgba(251,146,60,.25); border-radius:6px; padding:3px 10px; font-size:10px; font-weight:600; animation:pulse-live 1.8s ease-in-out infinite; }
+  @keyframes pulse-live{ 0%,100%{opacity:1;} 50%{opacity:.5;} }
+
+  .ld-score{ text-align:center; padding:10px 0 6px; }
+  .ld-score-row{ display:flex; align-items:center; justify-content:center; gap:18px; }
+  .ld-st{ text-align:center; }
+  .ld-st .ld-nm{ font-size:13px; font-weight:800; margin-top:4px; }
+  .ld-flag{ font-size:42px; line-height:1; }
+  .ld-num{ font-size:54px; font-weight:900; font-variant-numeric:tabular-nums; line-height:1; }
+  .ld-sep{ font-size:30px; color:#475569; font-weight:900; }
+
+  .ld-mine{ margin-top:14px; background:linear-gradient(135deg,#0e1626,#0a0f1a); border:1px solid #1e293b; border-radius:16px; padding:12px 16px 14px; display:flex; flex-direction:column; gap:8px; }
+  .ld-mine.bad{}
+  .ld-mine-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .ld-mine-lbl{ font-size:11px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:.06em; }
+  .ld-mine-sc{ display:flex; align-items:center; justify-content:center; gap:10px; font-size:24px; font-weight:900; color:#e8edf5; font-variant-numeric:tabular-nums; }
+  .ld-mine-sc b{ color:#38bdf8; min-width:18px; text-align:center; }
+  .ld-mine-sc .ld-flag{ font-size:22px; }
+  .ld-mine-dash{ color:#475569; font-weight:700; }
+  .ld-mine-stat{ font-size:11px; font-weight:800; padding:4px 9px; border-radius:999px; white-space:nowrap; color:#f87171; background:rgba(248,113,113,.12); }
+  .ld-mine-adv{ font-size:11px; color:#facc15; margin-top:6px; text-align:center; }
+
+  .ld-callout{ background:linear-gradient(135deg,#0c2a3a,#0b1a26); border:1px solid #1e4257; border-radius:14px; padding:14px; text-align:center; margin:14px 0; font-size:13px; color:#cbd5e1; }
+  .ld-callout b{ color:#38bdf8; }
+
+  .ld-sec{ font-size:14px; font-weight:900; color:#e8edf5; margin:22px 0 10px; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+  .ld-sec .ld-sub{ font-size:11px; color:#64748b; font-weight:600; }
+  .ld-panel{ background:#0c1320; border:1px solid #1e293b; border-radius:16px; padding:16px; }
+
+  .ld-bar{ height:42px; border-radius:10px; overflow:hidden; display:flex; gap:2px; }
+  .ld-seg{ display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:900; color:#0b1018; min-width:0; cursor:pointer; }
+  .ld-barleg{ display:flex; justify-content:space-between; font-size:11px; font-weight:800; margin-top:8px; gap:6px; flex-wrap:wrap; }
+  .ld-pill{ margin-left:auto; display:inline-flex; background:#0c1320; border:1px solid #1e293b; border-radius:20px; padding:2px; }
+  .ld-pill button{ border:none; background:transparent; color:#64748b; font-family:inherit; font-size:11px; font-weight:800; padding:3px 12px; border-radius:16px; cursor:pointer; }
+  .ld-pill button.on{ background:#1e293b; color:#e8edf5; }
+
+  .ld-pay{ display:flex; flex-direction:column; gap:8px; }
+  .ld-pay-row{ display:flex; align-items:center; gap:12px; background:#0c1320; border:1px solid #1e293b; border-radius:14px; padding:12px 14px; position:relative; overflow:hidden; }
+  .ld-pay-row.hot{ border-color:#facc15; box-shadow:0 0 16px rgba(250,204,21,.12); }
+  .ld-pay-bar{ position:absolute; left:0; top:0; bottom:0; opacity:.10; }
+  .ld-pay-ic{ width:8px; height:38px; border-radius:4px; flex-shrink:0; }
+  .ld-pay-info{ flex:1; min-width:0; position:relative; }
+  .ld-pay-lbl{ font-size:13px; font-weight:800; color:#e8edf5; }
+  .ld-pay-sub{ font-size:11px; color:#64748b; font-weight:600; margin-top:1px; }
+  .ld-pay-amt{ text-align:right; position:relative; flex-shrink:0; }
+  .ld-pay-big{ font-size:18px; font-weight:900; font-variant-numeric:tabular-nums; }
+  .ld-pay-x2{ font-size:10px; color:#facc15; font-weight:800; }
+  .ld-hot-tag{ font-size:9px; font-weight:900; color:#0b1018; background:#facc15; padding:1px 6px; border-radius:10px; margin-left:6px; vertical-align:middle; }
+  .ld-pay-foot{ font-size:11px; color:#64748b; text-align:center; margin-top:10px; line-height:1.5; }
+
+  .ld-detail{ background:#0a0f1a; border:1px solid #1e293b; border-radius:14px; padding:13px 14px; margin-top:10px; }
+  .ld-detail-title{ font-size:15px; font-weight:900; color:#f1f5f9; margin-bottom:10px; }
+  .ld-chips{ display:flex; flex-wrap:wrap; gap:7px; }
+  .ld-chip{ background:#1e293b; color:#cbd5e1; font-size:12px; font-weight:700; padding:5px 12px; border-radius:20px; }
+  .ld-chip.me{ background:#0c3a52; color:#7dd3fc; box-shadow:inset 0 0 0 1px #38bdf8; }
+
+  /* heatmap */
+  .ld-heatwrap{ display:flex; align-items:stretch; gap:4px; }
+  .ld-heatwrap .ld-heat{ flex:1; }
+  .ld-heat{ display:grid; gap:5px; grid-template-columns:22px repeat(4,1fr); }
+  .ld-cell{ aspect-ratio:1; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:900; color:#fff; cursor:pointer; border:2px solid transparent; }
+  .ld-cell.empty{ cursor:default; }
+  .ld-cell.sel{ border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.12); }
+  .ld-axis{ display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:#475569; }
+  .ld-ytitle{ writing-mode:vertical-rl; transform:rotate(180deg); text-align:center; font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
+  .ld-xtitle{ text-align:center; font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:.04em; margin-top:4px; }
+  .ld-heatleg{ display:flex; flex-wrap:wrap; gap:14px; justify-content:center; font-size:10px; font-weight:700; color:#94a3b8; margin-top:12px; }
+  .ld-heatleg i{ display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:5px; vertical-align:middle; }
+
+  /* proyección */
+  .ld-proj{ background:#0c1320; border:1px solid #1e293b; border-radius:16px; padding:6px 14px; }
+  .ld-prow{ display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid #141c2b; }
+  .ld-prow:last-child{ border-bottom:none; }
+  .ld-prank{ font-size:13px; font-weight:900; color:#64748b; width:18px; }
+  .ld-pinfo{ flex:1; min-width:0; }
+  .ld-ptop{ display:flex; align-items:center; gap:6px; margin-bottom:5px; }
+  .ld-pname{ font-size:13px; font-weight:700; }
+  .ld-pname.me{ color:#38bdf8; }
+  .ld-ppred{ font-size:11px; font-weight:800; color:#64748b; margin-left:auto; font-variant-numeric:tabular-nums; }
+  .ld-ptrack{ height:8px; background:#141c2b; border-radius:6px; overflow:hidden; }
+  .ld-pfill{ height:100%; border-radius:6px; }
+  .ld-ppts{ font-size:14px; font-weight:900; min-width:50px; text-align:right; font-variant-numeric:tabular-nums; }
+  .ld-soul{ font-size:12px; color:#64748b; text-align:center; margin-top:12px; }
+  .ld-soul b{ color:#fbbf24; }
+  .ld-dots{ margin-left:auto; display:inline-flex; gap:6px; align-items:center; }
+  .ld-dots i{ width:7px; height:7px; border-radius:50%; background:#334155; }
+  .ld-dots i.on{ background:#38bdf8; width:18px; border-radius:4px; }
+</style>
+</head>
+<body>
+
+<div class="note">
+  Mockup <b>completo</b> del Dashboard en vivo (mismos estilos del oficial). Partido KO: <b>Brasil 1 – 0 Argentina</b>, Cuartos de Final, en vivo.<br>
+  Lo <span class="newtag">NUEVO</span> es: el badge "quién pasa" en tu pronóstico y la sección "🎟️ ¿Quién pasa?". El resto son las secciones que ya existían.
+</div>
+
+<div class="wrap">
+<div class="frame">
+
+  <div class="ld-head">
+    <div class="ld-title">⚡ Dashboard en vivo</div>
+    <button class="ld-close">✕</button>
+  </div>
+
+  <!-- 1) Marcador -->
+  <div class="ld-score">
+    <div style="margin-bottom:12px"><span class="badge-live">🔴 EN VIVO</span></div>
+    <div class="ld-score-row">
+      <div class="ld-st"><div class="ld-flag">🇧🇷</div><div class="ld-nm" style="color:#4ade80">Brasil</div></div>
+      <div class="ld-num">1</div><div class="ld-sep">–</div><div class="ld-num">0</div>
+      <div class="ld-st"><div class="ld-flag">🇦🇷</div><div class="ld-nm" style="color:#f87171">Argentina</div></div>
+    </div>
+  </div>
+
+  <!-- 2) Tu pronóstico (empate → badge quién pasa) -->
+  <div class="ld-mine bad">
+    <div class="ld-mine-head">
+      <span class="ld-mine-lbl">Tu pronóstico</span>
+      <span class="ld-mine-stat">❌ Sin puntos por ahora</span>
+    </div>
+    <div class="ld-mine-sc"><span class="ld-flag">🇧🇷</span> <b>1</b> <span class="ld-mine-dash">–</span> <b>1</b> <span class="ld-flag">🇦🇷</span></div>
+    <div class="ld-mine-adv">🎟️ Apostaste que pasa <b>Argentina</b> ❌ <span class="newtag" style="margin-left:4px">NUEVO</span></div>
+  </div>
+
+  <!-- 3) Callout -->
+  <div class="ld-callout">Con este marcador, <b>vas 9º</b> de 11 — proyección <b>0 pts</b> 🔥</div>
+
+  <!-- 4) ¿Qué apostó la gente? -->
+  <div class="ld-sec">📊 ¿Qué apostó la gente?
+    <span class="ld-pill"><button class="on">%</button><button>N°</button></span>
+  </div>
+  <div class="ld-bar">
+    <div class="ld-seg" style="flex:5;background:#4ade80">45%</div>
+    <div class="ld-seg" style="flex:4;background:#94a3b8">36%</div>
+    <div class="ld-seg" style="flex:2;background:#f87171">18%</div>
+  </div>
+  <div class="ld-barleg">
+    <span style="color:#4ade80">● Gana Brasil · 45%</span>
+    <span style="color:#94a3b8">● Empate · 36%</span>
+    <span style="color:#f87171">● Gana Argentina · 18%</span>
+  </div>
+
+  <!-- 5) ¿Cuánto paga cada resultado? -->
+  <div class="ld-sec">💰 ¿Cuánto paga cada resultado? <span class="ld-sub">pozo 50 pts</span></div>
+  <div class="ld-pay">
+    <div class="ld-pay-row hot">
+      <div class="ld-pay-bar" style="background:#4ade80;width:40%"></div>
+      <div class="ld-pay-ic" style="background:#4ade80"></div>
+      <div class="ld-pay-info">
+        <div class="ld-pay-lbl">Gana Brasil<span class="ld-hot-tag">VA GANANDO</span></div>
+        <div class="ld-pay-sub">5 apostaron · pozo ÷ 5</div>
+      </div>
+      <div class="ld-pay-amt"><div class="ld-pay-big" style="color:#4ade80">+10</div><div class="ld-pay-x2">exacto +20</div></div>
+    </div>
+    <div class="ld-pay-row">
+      <div class="ld-pay-bar" style="background:#94a3b8;width:50%"></div>
+      <div class="ld-pay-ic" style="background:#94a3b8"></div>
+      <div class="ld-pay-info">
+        <div class="ld-pay-lbl">Empate</div>
+        <div class="ld-pay-sub">4 apostaron · pozo ÷ 4</div>
+      </div>
+      <div class="ld-pay-amt"><div class="ld-pay-big" style="color:#94a3b8">+12.5</div><div class="ld-pay-x2">exacto +25</div></div>
+    </div>
+    <div class="ld-pay-row">
+      <div class="ld-pay-bar" style="background:#f87171;width:100%"></div>
+      <div class="ld-pay-ic" style="background:#f87171"></div>
+      <div class="ld-pay-info">
+        <div class="ld-pay-lbl">Gana Argentina</div>
+        <div class="ld-pay-sub">2 apostaron · pozo ÷ 2</div>
+      </div>
+      <div class="ld-pay-amt"><div class="ld-pay-big" style="color:#f87171">+25</div><div class="ld-pay-x2">exacto +50</div></div>
+    </div>
+  </div>
+  <div class="ld-pay-foot">El pozo se reparte entre los que le pegan al resultado · <b style="color:#facc15">marcador exacto = ×2</b></div>
+
+  <!-- 6) NUEVO: ¿Quién pasa? -->
+  <div class="divlbl">▼ SECCIÓN NUEVA ▼</div>
+  <div class="ld-sec">🎟️ ¿Quién pasa? <span class="ld-sub">pozo 20 pts</span>
+    <span class="ld-pill"><button class="on">%</button><button>N°</button></span>
+  </div>
+  <div class="ld-bar">
+    <div class="ld-seg" style="flex:7;background:#4ade80">64%</div>
+    <div class="ld-seg" style="flex:4;background:#f87171">36%</div>
+  </div>
+  <div class="ld-barleg">
+    <span style="color:#4ade80">● Pasa Brasil · 64%</span>
+    <span style="color:#f87171">● Pasa Argentina · 36%</span>
+  </div>
+  <div class="ld-detail">
+    <div class="ld-detail-title">Pasa Brasil · 7</div>
+    <div class="ld-chips">
+      <span class="ld-chip">Rai</span><span class="ld-chip">Saval</span><span class="ld-chip">Coke</span>
+      <span class="ld-chip">Nacho</span><span class="ld-chip">Feña</span><span class="ld-chip">Pancho</span><span class="ld-chip">Diego</span>
+    </div>
+  </div>
+  <div class="ld-pay" style="margin-top:10px">
+    <div class="ld-pay-row hot">
+      <div class="ld-pay-bar" style="background:#4ade80;width:57%"></div>
+      <div class="ld-pay-ic" style="background:#4ade80"></div>
+      <div class="ld-pay-info">
+        <div class="ld-pay-lbl">Pasa Brasil<span class="ld-hot-tag">VA PASANDO</span></div>
+        <div class="ld-pay-sub">7 apostaron · pozo ÷ 7</div>
+      </div>
+      <div class="ld-pay-amt"><div class="ld-pay-big" style="color:#4ade80">+2.86</div></div>
+    </div>
+    <div class="ld-pay-row">
+      <div class="ld-pay-bar" style="background:#f87171;width:100%"></div>
+      <div class="ld-pay-ic" style="background:#f87171"></div>
+      <div class="ld-pay-info">
+        <div class="ld-pay-lbl">Pasa Argentina</div>
+        <div class="ld-pay-sub">4 apostaron · pozo ÷ 4</div>
+      </div>
+      <div class="ld-pay-amt"><div class="ld-pay-big" style="color:#f87171">+5</div></div>
+    </div>
+  </div>
+  <div class="ld-pay-foot">El pozo se reparte entre los que aciertan quién avanza · empate ⇒ vale tu elección de "quién pasa"</div>
+
+  <!-- 7) Marcador exacto (heatmap) -->
+  <div class="ld-sec">🎯 Marcador exacto <span class="ld-sub">toca un marcador</span></div>
+  <div class="ld-panel">
+    <div class="ld-heatwrap">
+      <div class="ld-ytitle">Brasil ↑</div>
+      <div class="ld-heat">
+        <!-- fila y=3 -->
+        <div class="ld-axis">3</div>
+        <div class="ld-cell empty" style="background:rgba(255,255,255,.025)"></div>
+        <div class="ld-cell empty" style="background:rgba(255,255,255,.025)"></div>
+        <div class="ld-cell empty" style="background:rgba(255,255,255,.025)"></div>
+        <div class="ld-cell empty" style="background:rgba(255,255,255,.025)"></div>
+        <!-- fila y=2 -->
+        <div class="ld-axis">2</div>
+        <div class="ld-cell" style="background:rgba(74,222,128,.55)">1</div>
+        <div class="ld-cell" style="background:rgba(74,222,128,.85)">2</div>
+        <div class="ld-cell empty" style="background:rgba(255,255,255,.025)"></div>
+        <div class="ld-cell empty" style="background:rgba(255,255,255,.025)"></div>
+        <!-- fila y=1 -->
+        <div class="ld-axis">1</div>
+        <div class="ld-cell sel" style="background:rgba(74,222,128,1)">5</div>
+        <div class="ld-cell" style="background:rgba(148,163,184,.85)">4</div>
+        <div class="ld-cell empty" style="background:rgba(255,255,255,.025)"></div>
+        <div class="ld-cell empty" style="background:rgba(255,255,255,.025)"></div>
+        <!-- fila y=0 -->
+        <div class="ld-axis">0</div>
+        <div class="ld-cell" style="background:rgba(148,163,184,.5)">2</div>
+        <div class="ld-cell" style="background:rgba(248,113,113,.45)">1</div>
+        <div class="ld-cell empty" style="background:rgba(255,255,255,.025)"></div>
+        <div class="ld-cell empty" style="background:rgba(255,255,255,.025)"></div>
+        <!-- eje x -->
+        <div></div>
+        <div class="ld-axis">0</div><div class="ld-axis">1</div><div class="ld-axis">2</div><div class="ld-axis">3</div>
+      </div>
+    </div>
+    <div class="ld-xtitle">← Argentina</div>
+    <div class="ld-heatleg">
+      <span><i style="background:#4ade80"></i>Gana Brasil</span>
+      <span><i style="background:#94a3b8"></i>Empate</span>
+      <span><i style="background:#f87171"></i>Gana Argentina</span>
+    </div>
+    <div class="ld-detail" style="margin-top:14px">
+      <div class="ld-detail-title">Brasil 1 – 0 Argentina <span style="font-size:11px;color:#f87171;font-weight:800">· EN VIVO</span></div>
+      <div class="ld-chips">
+        <span class="ld-chip">Rai</span><span class="ld-chip">Coke</span><span class="ld-chip">Feña</span><span class="ld-chip">Pancho</span><span class="ld-chip">Diego</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8) Swipe: Quién gana más puntos / Tabla general -->
+  <div class="ld-sec">🏆 Quién gana más puntos <span class="ld-sub">proyección al 1–0</span>
+    <span class="ld-dots"><i class="on"></i><i></i></span>
+  </div>
+  <div class="ld-proj">
+    <div class="ld-prow">
+      <span class="ld-prank">1</span><span style="font-size:16px">🥇</span>
+      <div class="ld-pinfo">
+        <div class="ld-ptop"><span class="ld-pname">Coke</span><span class="ld-ppred">1–0</span></div>
+        <div class="ld-ptrack"><div class="ld-pfill" style="background:#38bdf8;width:100%"></div></div>
+      </div>
+      <span class="ld-ppts" style="color:#38bdf8">+22.86</span>
+    </div>
+    <div class="ld-prow">
+      <span class="ld-prank">2</span><span style="font-size:16px">🥇</span>
+      <div class="ld-pinfo">
+        <div class="ld-ptop"><span class="ld-pname">Rai</span><span class="ld-ppred">1–0</span></div>
+        <div class="ld-ptrack"><div class="ld-pfill" style="background:#38bdf8;width:100%"></div></div>
+      </div>
+      <span class="ld-ppts" style="color:#38bdf8">+22.86</span>
+    </div>
+    <div class="ld-prow">
+      <span class="ld-prank">3</span><span style="font-size:16px">✅</span>
+      <div class="ld-pinfo">
+        <div class="ld-ptop"><span class="ld-pname">Nacho</span><span class="ld-ppred">2–1</span></div>
+        <div class="ld-ptrack"><div class="ld-pfill" style="background:#4ade80;width:56%"></div></div>
+      </div>
+      <span class="ld-ppts" style="color:#4ade80">+12.86</span>
+    </div>
+    <div class="ld-prow">
+      <span class="ld-prank">4</span><span style="font-size:16px">✅</span>
+      <div class="ld-pinfo">
+        <div class="ld-ptop"><span class="ld-pname">Feña</span><span class="ld-ppred">2–0</span></div>
+        <div class="ld-ptrack"><div class="ld-pfill" style="background:#4ade80;width:44%"></div></div>
+      </div>
+      <span class="ld-ppts" style="color:#4ade80">+10</span>
+    </div>
+    <div class="ld-prow">
+      <span class="ld-prank">5</span><span style="font-size:16px">❌</span>
+      <div class="ld-pinfo">
+        <div class="ld-ptop"><span class="ld-pname me">Rai (tú)</span><span class="ld-ppred">1–1</span></div>
+        <div class="ld-ptrack"><div class="ld-pfill" style="background:#64748b;width:0%"></div></div>
+      </div>
+      <span class="ld-ppts" style="color:#64748b">0</span>
+    </div>
+  </div>
+  <div class="ld-soul">👯 <b>2 almas gemelas</b> apostaron tu mismo marcador (1–1)</div>
+
+  <!-- 9) Aweonaos -->
+  <div class="ld-sec">🧠 Aweonaos <span class="ld-sub">no pronosticaron este partido</span></div>
+  <div class="ld-chips">
+    <span class="ld-chip">Lucho</span><span class="ld-chip">Tincho</span>
+  </div>
+
+</div>
+</div>
+
+</body>
+</html>
