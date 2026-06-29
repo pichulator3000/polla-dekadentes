@@ -814,8 +814,10 @@
     .bk-cell.live{border-color:#7f1d1d;box-shadow:0 0 0 1px rgba(248,113,113,.18),0 4px 16px rgba(0,0,0,.45)}
     .bk-cell.fin{border-color:#34507e;box-shadow:0 0 0 1px rgba(56,189,248,.18),0 4px 16px rgba(0,0,0,.45)}
     .bk-cell.fin.live{border-color:#7f1d1d;box-shadow:0 0 0 1px rgba(248,113,113,.18),0 4px 16px rgba(0,0,0,.45)}
+    .bk-cell.pred,.bk-cell-flow.pred{border-color:#2563eb}
     .bk-row{display:flex;align-items:center;gap:7px;padding:6px 9px;height:27px}
     .bk-row + .bk-row{border-top:1px solid #1a2740}
+    .bk-cell.pred .bk-row,.bk-cell-flow.pred .bk-row{height:29px;padding:4px 7px;gap:5px}
     .bk-row.w{background:rgba(74,222,128,.12);color:#eafff2;font-weight:800;box-shadow:inset 3px 0 0 #4ade80}
     .bk-cell.mir .bk-row.w{box-shadow:inset -3px 0 0 #4ade80}
     .bk-row.l{color:#7c8aa3}
@@ -831,6 +833,17 @@
     .bk-sc{font-weight:900;font-variant-numeric:tabular-nums;font-size:13px;min-width:12px;text-align:right}
     .bk-sc.live{color:#fbbf24}
     .bk-sc.dim{color:#3a4763}
+    .bk-score-input{width:29px;height:23px;border:1px solid #2563eb;border-radius:6px;background:#0f172a;color:#f1f5f9;
+      text-align:center;font-size:12px;font-weight:900;font-variant-numeric:tabular-nums;padding:0}
+    .bk-score-input.saved{border-color:#16a34a}
+    .bk-pred-ft{min-height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+      border-top:1px solid #1a2740;background:rgba(37,99,235,.10);padding:4px 6px}
+    .bk-adv-pick{gap:4px;width:100%}
+    .bk-adv-pick button{flex:1;min-width:0;border:1px solid #334155;border-radius:6px;background:#18243a;color:#94a3b8;
+      font-size:8.5px;font-weight:900;padding:3px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+    .bk-adv-pick button.on{background:#14532d;border-color:#22c55e;color:#dcfce7}
+    .bk-save{border:0;border-radius:7px;background:#2563eb;color:#fff;font-size:9px;font-weight:900;padding:4px 10px;cursor:pointer}
+    .bk-save.saved{background:#16a34a}
     .bk-ft{height:15px;display:flex;align-items:center;justify-content:center;font-size:8.5px;
       letter-spacing:.3px;border-top:1px solid #1a2740;color:#5b6b85}
     .bk-ft.pend{color:#f5b54a;background:rgba(245,181,74,.05)}
@@ -3527,7 +3540,15 @@ function resolveBracketDisplay() {
 // Geometría del bracket (px). Las celdas se posicionan de forma absoluta según
 // coordenadas calculadas, y los conectores se dibujan como líneas SVG con codos
 // reales entre los centros de cada celda → calzan siempre, sin depender del flujo.
-const BK = { W: 170, H: 69, GAP: 44, get COL() { return this.W + this.GAP; }, PAD: 8, PITCH: 84 };
+let BK_TALL = false;
+const BK = {
+  W: 170,
+  get H() { return BK_TALL ? 108 : 69; },
+  GAP: 44,
+  get COL() { return this.W + this.GAP; },
+  PAD: 8,
+  get PITCH() { return this.H + 15; }
+};
 const BK_LABEL = {
   'Ronda de 32': 'R32', 'Octavos': '8vos', 'Cuartos de Final': '4tos',
   'Semifinal': 'Semis', 'Final': 'Final'
@@ -3708,40 +3729,71 @@ function bkWinner(m) {
   return window.__scoring.matchAdvanceOutcome ? window.__scoring.matchAdvanceOutcome(m) : null;
 }
 
+function bkCanPredict(m) {
+  return !!m && !currentUser?.isAdmin && getStatus(m) === 'open' &&
+    m.home && m.away && m.home !== 'Por definir' && m.away !== 'Por definir' &&
+    !/^(Ganador|Perdedor)\s+/i.test(m.home) && !/^(Ganador|Perdedor)\s+/i.test(m.away);
+}
+
 // Devuelve { decided, html } con las dos filas de equipos + pie. Sin wrapper:
 // el contenedor (absoluto o en flujo) lo pone quien llama.
 function bracketCellInner(m) {
   const done    = m.realHome != null && m.realAway != null;
   const isLive  = !done && getStatus(m) === 'live' && m.liveHome != null && m.liveAway != null;
+  const canPred = bkCanPredict(m);
+  const pred    = canPred ? CACHE.preds.find(p => p.userId===currentUser.id && p.matchId===m.id) : null;
   const winner  = done ? bkWinner(m) : null;
   const played  = done || isLive;
   const decided = !!winner;
   const homeScore = done ? m.realHome : (isLive ? m.liveHome : null);
   const awayScore = done ? m.realAway : (isLive ? m.liveAway : null);
-  const row = (team, score, isWin) => {
+  const row = (team, score, isWin, side) => {
     const img = flagImg(team) || '';      // '' = placeholder ("Ganador R1", sin bandera)
     const ph  = !img;
     const cls = isWin ? 'bk-row w' : (decided ? 'bk-row l' : 'bk-row');
     const fl  = ph ? '<span class="bk-flph"></span>' : `<span class="bk-fl">${img}</span>`;
     const ck  = isWin ? '<span class="bk-ck">✓</span>' : '';
-    const sc  = played ? `<span class="bk-sc${isLive ? ' live' : ''}">${score}</span>` : '<span class="bk-sc dim">·</span>';
+    const inputId = side === 'H' ? `bkph_${m.id}` : `bkpa_${m.id}`;
+    const predVal = side === 'H' ? pred?.predHome : pred?.predAway;
+    const predSc = `<input id="${inputId}" class="bk-score-input${pred?' saved':''}" type="number" inputmode="numeric" min="0" max="20"
+      value="${predVal ?? ''}" placeholder="-" oninput="${side==='H'?`autoJump(this,'bkpa_${m.id}');`:''}toggleBracketPredAdv('${m.id}')" onchange="setBracketPred('${m.id}')" onclick="event.stopPropagation()"/>`;
+    const sc  = canPred ? predSc : (played ? `<span class="bk-sc${isLive ? ' live' : ''}">${score}</span>` : '<span class="bk-sc dim">·</span>');
     return `<div class="${cls}">${fl}<span class="bk-nm${ph ? ' ph' : ''}">${team || '—'}</span>${ck}${sc}</div>`;
   };
+  if (canPred) {
+    const isKO = !normStage(m.stage).startsWith('Grupo');
+    const isDrawPred = pred && pred.predHome === pred.predAway;
+    const showAdv = isKO && isDrawPred;
+    const safeHome = (m.home || '').replace(/'/g,"\\'");
+    const safeAway = (m.away || '').replace(/'/g,"\\'");
+    const saveCls = pred ? 'bk-save saved' : 'bk-save';
+    return { decided, live: isLive, pred: true, html:
+      row(m.home, null, false, 'H') +
+      row(m.away, null, false, 'A') +
+      `<div class="bk-pred-ft">
+        <input type="hidden" id="bkpredadv_${m.id}" value="${pred?.predAdvances || ''}"/>
+        <div class="bk-adv-pick" id="bkpredadvpick_${m.id}" style="display:${showAdv?'flex':'none'}">
+          <button type="button" class="${pred?.predAdvances===m.home?'on':''}" onclick="setBracketPredAdv('${m.id}','${safeHome}');event.stopPropagation()">${m.home}</button>
+          <button type="button" class="${pred?.predAdvances===m.away?'on':''}" onclick="setBracketPredAdv('${m.id}','${safeAway}');event.stopPropagation()">${m.away}</button>
+        </div>
+        <button type="button" class="${saveCls}" onclick="setBracketPred('${m.id}');event.stopPropagation()">${pred?'✓ Guardado':'💾 Guardar'}</button>
+      </div>` };
+  }
   let ftCls = 'bk-ft', ftTxt = '';
   if (isLive)                     { ftCls = 'bk-ft live'; ftTxt = '● EN VIVO'; }
   else if (!played)               { ftCls = 'bk-ft pend'; ftTxt = 'Por jugarse'; }
   else if (m.penHome != null)     { ftCls = 'bk-ft pen';  ftTxt = `Penales ${m.penHome}–${m.penAway}`; }
   else if (m.score120Home != null){ ftCls = 'bk-ft pen';  ftTxt = `120' ${m.score120Home}–${m.score120Away}`; }
   return { decided, live: isLive, html:
-    row(m.home, homeScore, decided && winner === m.home) +
-    row(m.away, awayScore, decided && winner === m.away) +
+    row(m.home, homeScore, decided && winner === m.home, 'H') +
+    row(m.away, awayScore, decided && winner === m.away, 'A') +
     `<div class="${ftCls}">${ftTxt}</div>` };
 }
 
 // Celda posicionada absoluta (usa m._x/m._cy ya calculados).
 function bracketCellAbs(m, mir, extra) {
   const c = bracketCellInner(m);
-  const cls = 'bk-cell' + (c.decided ? ' decided' : '') + (c.live ? ' live' : '') + (mir ? ' mir' : '') + (extra || '');
+  const cls = 'bk-cell' + (c.decided ? ' decided' : '') + (c.live ? ' live' : '') + (c.pred ? ' pred' : '') + (mir ? ' mir' : '') + (extra || '');
   return `<div class="${cls}" style="left:${m._x}px;top:${m._cy - BK.H / 2}px;width:${BK.W}px">${c.html}</div>`;
 }
 
@@ -3750,7 +3802,7 @@ function renderBracketFlow(columns, thirdPlace) {
   const cols = columns.map(c => {
     const cells = c.matches.map(m => {
       const inner = bracketCellInner(m);
-      return `<div class="bk-cell-flow${inner.decided ? ' decided' : ''}${inner.live ? ' live' : ''}">${inner.html}</div>`;
+      return `<div class="bk-cell-flow${inner.decided ? ' decided' : ''}${inner.live ? ' live' : ''}${inner.pred ? ' pred' : ''}">${inner.html}</div>`;
     }).join('');
     return `<div class="bk-flow-col"><div class="bk-flow-lbl">${BK_LABEL[c.stage] || c.stage}</div>${cells}</div>`;
   }).join('');
@@ -3758,7 +3810,7 @@ function renderBracketFlow(columns, thirdPlace) {
   if (thirdPlace) {
     const inner = bracketCellInner(thirdPlace);
     tp = `<div class="bk-flow-col"><div class="bk-flow-lbl">🥉 3er puesto</div>
-      <div class="bk-cell-flow${inner.decided ? ' decided' : ''}${inner.live ? ' live' : ''}">${inner.html}</div></div>`;
+      <div class="bk-cell-flow${inner.decided ? ' decided' : ''}${inner.live ? ' live' : ''}${inner.pred ? ' pred' : ''}">${inner.html}</div></div>`;
   }
   return renderBracketChrome(`<div class="bk-flow">${cols}${tp}</div>`);
 }
@@ -3766,6 +3818,7 @@ function renderBracketFlow(columns, thirdPlace) {
 // Vista Llaves: dos lados convergen a la Final al centro, conectores SVG, el
 // camino del que avanza iluminado en verde. Tercer puesto colgado bajo la Final.
 function renderBracket(matches) {
+  BK_TALL = matches.some(m => bkCanPredict(m));
   resolveBracketDisplay();
   const norm = matches.map(m => ({ ...m, stage: normStage(m.stage) }));
   const { columns, thirdPlace } = window.__bracket.buildBracketTree(norm);
@@ -4740,10 +4793,8 @@ function renderMatches() {
   document.getElementById('matchList').innerHTML = outerHtml || '<p style="color:#475569;text-align:center;padding:32px 0">No hay partidos cargados</p>';
 }
 
-async function savePred(matchId) {
+async function _savePredValues(matchId, hVal, aVal, opts = {}) {
   if (currentUser?.isAdmin) return toast('Admin no puede predecir', 'err');
-  const hVal = document.getElementById('ph_'+matchId)?.value;
-  const aVal = document.getElementById('pa_'+matchId)?.value;
   if (hVal === '' && aVal === '') {
     const predKey = currentUser.id + '__' + matchId;
     await RT.ref('pf/preds/' + predKey).remove();
@@ -4762,12 +4813,22 @@ async function savePred(matchId) {
   const predObj = existingPred
     ? { ...existingPred, predHome: h, predAway: a }
     : { userId: currentUser.id, matchId, predHome: h, predAway: a };
-  if (predObj.predHome !== predObj.predAway) { predObj.predAdvances = null; }
+  if (predObj.predHome !== predObj.predAway) {
+    predObj.predAdvances = null;
+  } else if (opts.predAdvances) {
+    predObj.predAdvances = opts.predAdvances;
+  }
   await DB.savePred(predObj);
   const box = document.getElementById('advBox_' + matchId);
   if (box) box.style.display = (predObj.predHome === predObj.predAway && !normStage(match.stage).startsWith('Grupo')) ? 'block' : 'none';
   toast('✓ Predicción guardada');
   renderMatches();
+}
+
+async function savePred(matchId) {
+  const hVal = document.getElementById('ph_'+matchId)?.value;
+  const aVal = document.getElementById('pa_'+matchId)?.value;
+  return _savePredValues(matchId, hVal, aVal);
 }
 
 // Guarda el equipo del pozo "quién pasa" en la predicción del jugador.
@@ -4787,6 +4848,32 @@ async function setAdvPred(matchId, team) {
   // Refrescar la vista activa (fixture y/o home) para resaltar la selección.
   renderMatches();
   if (typeof renderUpcoming === 'function') renderUpcoming();
+}
+
+function toggleBracketPredAdv(matchId) {
+  const m = CACHE.matches.find(x => x.id === matchId);
+  const pick = document.getElementById('bkpredadvpick_' + matchId);
+  if (!m || !pick) return;
+  const hVal = document.getElementById('bkph_'+matchId)?.value;
+  const aVal = document.getElementById('bkpa_'+matchId)?.value;
+  const show = !normStage(m.stage).startsWith('Grupo') &&
+    hVal !== '' && aVal !== '' && parseInt(hVal) === parseInt(aVal);
+  pick.style.display = show ? 'flex' : 'none';
+}
+
+async function setBracketPred(matchId, predAdvances) {
+  const hVal = document.getElementById('bkph_'+matchId)?.value;
+  const aVal = document.getElementById('bkpa_'+matchId)?.value;
+  return _savePredValues(matchId, hVal, aVal, { predAdvances });
+}
+
+async function setBracketPredAdv(matchId, team) {
+  const hVal = document.getElementById('bkph_'+matchId)?.value;
+  const aVal = document.getElementById('bkpa_'+matchId)?.value;
+  if (hVal === '' || aVal === '' || parseInt(hVal) !== parseInt(aVal)) {
+    return toast('Primero pon un empate', 'err');
+  }
+  return _savePredValues(matchId, hVal, aVal, { predAdvances: team });
 }
 
 // ═══ RANKING ═══
