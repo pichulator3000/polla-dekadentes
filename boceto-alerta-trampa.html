@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alerta Anti-Trampa IA — Tarjeta Roja</title>
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; background:#070a12; color:#e8edf5;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    padding:40px 16px 80px; }
+  .wrap { max-width:380px; margin:0 auto; }
+  .hint { font-size:12px; color:#475569; text-align:center; margin-bottom:24px; }
+
+  /* ============ TARJETA ROJA — versión dinámica ============ */
+  .rc { position:relative; background:linear-gradient(150deg,#e2241a,#a8120c); color:#fff;
+    border-radius:14px; padding:18px 18px 16px; overflow:hidden;
+    box-shadow:0 18px 40px rgba(226,36,26,.32);
+    animation:enter .55s cubic-bezier(.2,.9,.3,1.3) both; }
+  @keyframes enter { from{opacity:0; transform:translateY(18px) scale(.96);} }
+  .rc::after { content:""; position:absolute; top:-60px; right:-60px; width:180px; height:180px;
+    background:radial-gradient(circle,rgba(255,255,255,.16),transparent 70%); pointer-events:none; }
+
+  .rc .whistle { font-size:10px; letter-spacing:.16em; text-transform:uppercase; font-weight:800;
+    opacity:.9; display:flex; align-items:center; gap:8px; }
+  .rc .whistle .pill { background:rgba(0,0,0,.28); padding:2px 8px; border-radius:20px; font-size:9px;
+    letter-spacing:.1em; }
+  .rc .live { width:7px; height:7px; border-radius:50%; background:#fff;
+    box-shadow:0 0 8px #fff; animation:blink 1s infinite; }
+  @keyframes blink { 50%{opacity:.25;} }
+
+  .rc h2 { font-size:22px; font-weight:900; margin:11px 0 6px; line-height:1.02; letter-spacing:-.01em;
+    position:relative; z-index:2; }
+  .rc .deck { font-size:12.5px; opacity:.95; line-height:1.45; margin:0; max-width:38ch;
+    position:relative; z-index:2; }
+  .rc .serious { font-size:12px; line-height:1.45; margin:11px 0 0; max-width:42ch;
+    background:rgba(0,0,0,.22); border-left:3px solid rgba(255,255,255,.65);
+    padding:9px 12px; border-radius:0 8px 8px 0; position:relative; z-index:2; }
+  .rc .serious b { font-weight:800; }
+
+  /* VAR scan + medidor dinámico */
+  .rc .var { margin-top:14px; position:relative; z-index:2; }
+  .rc .var .vh { display:flex; justify-content:space-between; align-items:center;
+    font-size:10px; font-weight:700; letter-spacing:.05em; margin-bottom:6px; }
+  .rc .var .vh .tag { display:inline-flex; align-items:center; gap:6px; opacity:.95; }
+  .rc .var .vh .pct { font-family:ui-monospace,monospace; font-size:12px; font-weight:800; }
+  .rc .track { height:8px; background:rgba(0,0,0,.3); border-radius:20px; overflow:hidden;
+    position:relative; }
+  .rc .track i { display:block; height:100%; width:0;
+    background:linear-gradient(90deg,#ffd24d,#fff);
+    border-radius:20px; animation:fill 1.8s .4s cubic-bezier(.3,.8,.2,1) forwards; }
+  @keyframes fill { to{ width:96%; } }
+  .rc .track .scan { position:absolute; top:0; bottom:0; width:60px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);
+    animation:scan 1.6s linear 3; }
+  @keyframes scan { from{left:-60px;} to{left:100%;} }
+
+  .rc .foot { margin-top:14px; font-size:10.5px; opacity:.82; line-height:1.45;
+    border-top:1px solid rgba(255,255,255,.22); padding-top:10px; position:relative; z-index:2; }
+
+  /* tarjeta roja física, latiendo */
+  .rc .card-icon { position:absolute; bottom:-26px; right:12px; width:78px; height:100px;
+    background:linear-gradient(160deg,#d8201a,#9c0f0a); border:2px solid rgba(255,255,255,.4);
+    border-radius:8px; transform:rotate(14deg); box-shadow:0 10px 24px rgba(0,0,0,.45);
+    animation:beat 2.4s ease-in-out infinite; z-index:1; }
+  @keyframes beat { 0%,100%{transform:rotate(14deg) scale(1);} 50%{transform:rotate(14deg) scale(1.05);} }
+
+  @media (prefers-reduced-motion: reduce){
+    .rc, .rc *{ animation:none !important; }
+    .rc .track i{ width:96%; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="hint">Tarjeta roja + dinamismo del VAR. La sanción va en serio.</p>
+
+  <div class="rc">
+    <div class="whistle"><span class="live"></span> Pitazo del árbitro <span class="pill">FALTA TÉCNICA</span></div>
+
+    <h2>Tarjeta roja por IA</h2>
+    <p class="deck">El VAR revisó tus predicciones y algo no le cuadró.</p>
+
+    <p class="serious">El Comité de Integridad ha registrado uso excesivo de inteligencia artificial en tus pronósticos. <b>Tu caso quedó en revisión y bajo evaluación de las sanciones que correspondan.</b></p>
+
+    <div class="var">
+      <div class="vh">
+        <span class="tag">📺 Revisión del VAR · IA detectada</span>
+        <span class="pct" id="pct">0%</span>
+      </div>
+      <div class="track"><span class="scan"></span><i id="bar"></i></div>
+    </div>
+
+    <div class="foot">¿Crees que es un error? Responde antes del próximo partido.</div>
+    <div class="card-icon"></div>
+  </div>
+</div>
+
+<script>
+  // medidor: cuenta el % en sincronía con la barra
+  (function(){
+    var pct = document.getElementById('pct');
+    var target = 96, start = null, dur = 1800, delay = 400;
+    var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce){ pct.textContent = target + '%'; return; }
+    function step(ts){
+      if(!start) start = ts;
+      var t = Math.min((ts - start) / dur, 1);
+      var eased = 1 - Math.pow(1 - t, 3);
+      pct.textContent = Math.round(eased * target) + '%';
+      if(t < 1) requestAnimationFrame(step);
+    }
+    setTimeout(function(){ requestAnimationFrame(step); }, delay);
+  })();
+</script>
+</body>
+</html>

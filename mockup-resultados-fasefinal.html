@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup · Resultados fase final (90' + alargue + penales)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#060d1b; --bg-surface:#0c1526; --bg-card:#0f1b2d; --line:#1e293b;
+    --ink:#e8edf5; --muted:#64748b; --muted2:#94a3b8;
+    --sky:#38bdf8; --cyan:#22d3ee; --green:#4ade80; --greenline:#16a34a;
+    --amber:#f59e0b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(120% 80% at 50% -10%,#0a1830,transparent 60%),var(--bg-deep);
+       font-family:'Outfit',-apple-system,sans-serif;color:var(--ink);padding:24px 14px 60px;}
+  h1{font-size:18px;font-weight:900;text-align:center;margin:0 0 4px}
+  .sub{text-align:center;color:var(--muted2);font-size:13px;margin:0 auto 26px;max-width:560px;line-height:1.45}
+  .grid{display:grid;gap:26px;max-width:1180px;margin:0 auto;
+        grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .col{display:flex;flex-direction:column;gap:12px}
+  .vtag{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan);
+        text-align:center;background:#0c1a2e;border:1px solid #143a52;border-radius:999px;padding:5px 0}
+  .vnote{font-size:11px;color:var(--muted);text-align:center;margin:-4px 0 2px;line-height:1.4}
+
+  /* ── Card base (calcado de .pm-card del app) ── */
+  .card{border-radius:18px;padding:15px;position:relative;overflow:hidden;
+        border:1px solid var(--line);background:linear-gradient(180deg,#101725,#0c1320)}
+  .card.ko{border-color:#243a52}
+  .stage{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#5b7799;
+         display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .stage .clk{color:var(--muted);font-weight:600;letter-spacing:0}
+
+  .teams{display:flex;align-items:center;justify-content:center;gap:10px}
+  .team{display:flex;align-items:center;gap:7px;min-width:0;flex:1}
+  .team.r{justify-content:flex-end}
+  .team img{width:26px;height:18px;border-radius:3px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+  .team .nm{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* ── 90' protagonista ── */
+  .big{display:flex;align-items:center;justify-content:center;gap:14px;margin:8px 0 2px}
+  .big .n{font-size:34px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+  .big .dash{font-size:20px;color:#33506e;font-weight:800}
+  .big .win{color:#fff}
+  .lbl90{text-align:center;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+         color:var(--green);margin-bottom:10px}
+  .lbl90 .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--green);
+              margin-right:5px;vertical-align:middle}
+
+  .divider{height:1px;background:linear-gradient(90deg,transparent,#1e2f44,transparent);margin:4px 0 10px}
+
+  /* badge avanza */
+  .adv{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:800;
+       color:var(--green);background:rgba(22,163,74,.10);border:1px solid rgba(22,163,74,.35);
+       border-radius:10px;padding:7px;margin-top:10px}
+
+  /* ── Variante 1: pill resumen ── */
+  .pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .pill{font-size:11px;font-weight:700;color:var(--muted2);background:#0b1626;border:1px solid #18283d;
+        border-radius:999px;padding:5px 11px}
+  .pill b{color:var(--ink);font-weight:800}
+  .pill.pen b{color:var(--sky)}
+
+  /* ── Variante 2: filas etiquetadas ── */
+  .rows{display:flex;flex-direction:column;gap:6px}
+  .row{display:flex;align-items:center;justify-content:space-between;font-size:12px;
+       background:#0b1626;border:1px solid #18283d;border-radius:9px;padding:6px 11px}
+  .row .k{color:var(--muted2);font-weight:700;display:flex;align-items:center;gap:6px}
+  .row .v{font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.04em}
+  .row.pen .v{color:var(--sky)}
+  .row .tick{color:var(--green);font-size:11px;font-weight:800}
+
+  /* ── Variante 3: estilo TV inline ── */
+  .tv{text-align:center;font-size:12px;color:var(--muted2);font-weight:600;margin-top:2px}
+  .tv .seg{display:inline-block;margin:0 4px}
+  .tv b{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
+  .tv .pen b{color:var(--sky)}
+  .tv .et{color:var(--muted)}
+  .polla{margin-top:9px;text-align:center;font-size:11px;color:var(--muted)}
+  .polla b{color:var(--green);font-weight:800}
+
+  .pred{margin-top:9px;text-align:center;font-size:11px;font-weight:700;color:var(--green)}
+  .pred.miss{color:#f87171}
+  .footnote{max-width:1180px;margin:30px auto 0;color:var(--muted);font-size:12px;line-height:1.6;
+            border-top:1px solid var(--line);padding-top:16px}
+  .footnote b{color:var(--ink)}
+</style>
+</head>
+<body>
+  <h1>Resultados de fase final — 3 variantes</h1>
+  <p class="sub">Concepto elegido: el <b style="color:var(--green)">marcador de 90'</b> es el protagonista (es lo que da puntos en la polla).
+     Alargue y penales van abajo, en secundario, con badge de quién avanza. Caso de ejemplo:
+     <b>Brasil&nbsp;1-1&nbsp;Argentina</b> a los 90', 2-2 en alargue, Argentina gana 4-3 en penales.</p>
+
+  <div class="grid">
+
+    <!-- ══════════ VARIANTE 1 ══════════ -->
+    <div class="col">
+      <div class="vtag">Variante 1 · Pills</div>
+      <div class="vnote">Resumen compacto en una línea de “pastillas”.</div>
+      <div class="card ko">
+        <div class="stage"><span>Octavos de final</span><span class="clk">Sáb 4 jul · 17:00</span></div>
+        <div class="teams">
+          <div class="team"><img src="https://flagcdn.com/br.svg" alt=""><span class="nm">Brasil</span></div>
+          <div class="team r"><span class="nm">Argentina</span><img src="https://flagcdn.com/ar.svg" alt=""></div>
+        </div>
+        <div class="big"><span class="n">1</span><span class="dash">–</span><span class="n">1</span></div>
+        <div class="lbl90"><span class="dot"></span>Resultado 90' · vale para la polla</div>
+        <div class="divider"></div>
+        <div class="pills">
+          <span class="pill">Alargue <b>2–2</b></span>
+          <span class="pill pen">Penales <b>4–3</b></span>
+        </div>
+        <div class="adv">✓ Avanza Argentina</div>
+        <div class="pred">Tu predicción: 1-1 · acertaste (+35)</div>
+      </div>
+    </div>
+
+    <!-- ══════════ VARIANTE 2 ══════════ -->
+    <div class="col">
+      <div class="vtag">Variante 2 · Filas</div>
+      <div class="vnote">Cada fase en su fila etiquetada. La más explícita.</div>
+      <div class="card ko">
+        <div class="stage"><span>Octavos de final</span><span class="clk">Sáb 4 jul · 17:00</span></div>
+        <div class="teams">
+          <div class="team"><img src="https://flagcdn.com/br.svg" alt=""><span class="nm">Brasil</span></div>
+          <div class="team r"><span class="nm">Argentina</span><img src="https://flagcdn.com/ar.svg" alt=""></div>
+        </div>
+        <div class="big"><span class="n">1</span><span class="dash">–</span><span class="n">1</span></div>
+        <div class="lbl90"><span class="dot"></span>Resultado 90' · vale para la polla</div>
+        <div class="divider"></div>
+        <div class="rows">
+          <div class="row"><span class="k">Alargue (120')</span><span class="v">2 – 2</span></div>
+          <div class="row pen"><span class="k">Penales</span><span class="v">4 – 3 <span class="tick">✓ ARG</span></span></div>
+        </div>
+        <div class="pred">Tu predicción: 1-1 · acertaste (+35)</div>
+      </div>
+    </div>
+
+    <!-- ══════════ VARIANTE 3 ══════════ -->
+    <div class="col">
+      <div class="vtag">Variante 3 · TV inline</div>
+      <div class="vnote">Minimalista, una línea estilo transmisión bajo el 90'.</div>
+      <div class="card ko">
+        <div class="stage"><span>Octavos de final</span><span class="clk">Sáb 4 jul · 17:00</span></div>
+        <div class="teams">
+          <div class="team"><img src="https://flagcdn.com/br.svg" alt=""><span class="nm">Brasil</span></div>
+          <div class="team r"><span class="nm">Argentina</span><img src="https://flagcdn.com/ar.svg" alt=""></div>
+        </div>
+        <div class="big"><span class="n">1</span><span class="dash">–</span><span class="n">1</span></div>
+        <div class="lbl90"><span class="dot"></span>Resultado 90' · vale para la polla</div>
+        <div class="divider"></div>
+        <div class="tv">
+          <span class="seg et">120': <b>2–2</b></span>·
+          <span class="seg pen">Penales <b>4–3</b></span>
+        </div>
+        <div class="adv">✓ Avanza Argentina</div>
+        <div class="pred">Tu predicción: 1-1 · acertaste (+35)</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- contexto: cómo conviven con los otros estados -->
+  <div class="grid" style="margin-top:30px">
+    <div class="col">
+      <div class="vtag" style="color:var(--muted2);border-color:#26344a">Contexto · KO sin alargue</div>
+      <div class="card ko">
+        <div class="stage"><span>Cuartos de final</span><span class="clk">Vie 10 jul · 13:00</span></div>
+        <div class="teams">
+          <div class="team"><img src="https://flagcdn.com/fr.svg" alt=""><span class="nm">Francia</span></div>
+          <div class="team r"><span class="nm">España</span><img src="https://flagcdn.com/es.svg" alt=""></div>
+        </div>
+        <div class="big"><span class="n win">2</span><span class="dash">–</span><span class="n">0</span></div>
+        <div class="lbl90"><span class="dot"></span>Resultado 90' · vale para la polla</div>
+        <div class="adv">✓ Avanza Francia</div>
+        <div class="pred miss">Tu predicción: 1-2 · sin puntos</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="vtag" style="color:var(--muted2);border-color:#26344a">Contexto · Fase de grupos</div>
+      <div class="card">
+        <div class="stage"><span>Grupo C</span><span class="clk">Sáb 13 jun · 18:00</span></div>
+        <div class="teams">
+          <div class="team"><img src="https://flagcdn.com/br.svg" alt=""><span class="nm">Brasil</span></div>
+          <div class="team r"><span class="nm">Marruecos</span><img src="https://flagcdn.com/ma.svg" alt=""></div>
+        </div>
+        <div class="big"><span class="n win">3</span><span class="dash">–</span><span class="n">1</span></div>
+        <div style="text-align:center;font-size:10px;color:var(--muted);margin-bottom:2px">Resultado final</div>
+        <div class="pred">Tu predicción: 3-1 · marcador exacto (+60)</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="vtag" style="color:var(--muted2);border-color:#26344a">Contexto · Llave por definir</div>
+      <div class="card ko" style="opacity:.92">
+        <div class="stage"><span>Semifinal</span><span class="clk">Mar 14 jul · 17:00</span></div>
+        <div class="teams">
+          <div class="team"><span class="nm" style="color:var(--muted2)">Ganador 4A</span></div>
+          <span style="font-size:11px;color:#475569;font-weight:900">VS</span>
+          <div class="team r"><span class="nm" style="color:var(--muted2)">Ganador 4B</span></div>
+        </div>
+        <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:14px">Se completa solo al definirse los cuartos</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="footnote">
+    <b>Datos:</b> los tres marcadores salen del endpoint <i>summary</i> de ESPN (campo <code>linescores</code> por período):
+    90' = 1ºT+2ºT, 120' = +alargue, penales = última columna. <b>Para la polla solo cuenta el 90'</b> (se guarda en
+    <code>realHome/realAway</code>); alargue y penales se guardan aparte solo para mostrar. El <b>“Avanza X”</b> sale del
+    flag <code>winner</code> de ESPN y es lo que arma la llave siguiente.<br>
+    Decime qué variante (1, 2 o 3) y ajusto detalles (colores, tamaños, textos).
+  </p>
+</body>
+</html>

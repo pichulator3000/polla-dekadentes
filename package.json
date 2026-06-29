@@ -1,0 +1,17 @@
+{
+  "name": "polla-dekadentes",
+  "version": "1.0.0",
+  "description": "Sync de resultados Mundial 2026 (ESPN → Firebase) y utilidades",
+  "license": "ISC",
+  "type": "module",
+  "scripts": {
+    "sync": "node scripts/sync_results.mjs",
+    "test": "node --test \"scripts/**/*.test.mjs\""
+  },
+  "dependencies": {
+    "@actions/core": "^3.0.1",
+    "firebase-admin": "^13.10.0",
+    "libsodium-wrappers": "^0.8.4",
+    "tweetnacl": "^1.0.3"
+  }
+}
