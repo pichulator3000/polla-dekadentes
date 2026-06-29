@@ -783,11 +783,23 @@
 
     /* ── Bracket tree ── */
     /* ── Bracket (vista Llaves): dos lados convergen a la Final, conectores SVG ── */
+    .bk-shell{position:relative}
+    .bk-tools{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 8px}
     .bk-scroll{overflow:auto;-webkit-overflow-scrolling:touch;padding:2px 2px 10px;
-      touch-action:pan-x pan-y pinch-zoom}
-    .bk-legend{display:flex;gap:14px;align-items:center;font-size:10.5px;color:#7c8aa3;margin:0 2px 8px}
+      touch-action:pan-x pan-y;overscroll-behavior:contain}
+    .bk-zoom-sizer{position:relative;min-width:1px;min-height:1px}
+    .bk-zoom-content{transform-origin:0 0;will-change:transform}
+    .bk-legend{display:flex;gap:14px;align-items:center;font-size:10.5px;color:#7c8aa3;margin:0}
     .bk-legend .k{display:inline-flex;align-items:center;gap:5px}
     .bk-legend .sw{width:14px;height:3px;border-radius:2px;display:inline-block}
+    .bk-zoomctl{display:inline-flex;align-items:center;gap:3px;padding:3px;border:1px solid #26344f;
+      border-radius:999px;background:#0f172a;box-shadow:0 2px 10px rgba(0,0,0,.22)}
+    .bk-zbtn,.bk-zpct{height:28px;border:0;border-radius:999px;background:#18243a;color:#dbeafe;
+      font-weight:900;cursor:pointer;line-height:1;touch-action:manipulation}
+    .bk-zbtn{width:30px;font-size:18px}
+    .bk-zpct{min-width:48px;padding:0 8px;font-size:11px;font-variant-numeric:tabular-nums}
+    .bk-zbtn:disabled{opacity:.38;cursor:default}
+    .bk-zbtn:active,.bk-zpct:active{transform:scale(.96)}
     .bk-cols{position:relative;height:16px;margin-bottom:6px}
     .bk-cl{position:absolute;font-size:10px;font-weight:800;letter-spacing:2px;color:#475569;text-transform:uppercase}
     .bk-cl.fin{color:#caa53d}
@@ -828,6 +840,14 @@
     .bk-cell-flow{border:1px solid #22304a;border-radius:11px;align-self:center;width:160px;overflow:hidden;
       background:linear-gradient(180deg,#131d31,#0f172a);box-shadow:0 2px 10px rgba(0,0,0,.35)}
     .bk-cell-flow.decided{border-color:#2f6b46}
+    @media (max-width:600px){
+      .bk-tools{position:sticky;top:0;z-index:5;padding:6px 0;
+        background:linear-gradient(180deg,#0f172a 70%,rgba(15,23,42,.72))}
+      .bk-legend{gap:9px;font-size:9.5px;flex-wrap:wrap}
+      .bk-zbtn,.bk-zpct{height:32px}
+      .bk-zbtn{width:34px;font-size:20px}
+      .bk-zpct{min-width:52px}
+    }
   </style>
 </head>
 <body>
@@ -3458,6 +3478,173 @@ const BK_LABEL = {
   'Ronda de 32': 'R32', 'Octavos': '8vos', 'Cuartos de Final': '4tos',
   'Semifinal': 'Semis', 'Final': 'Final'
 };
+const BK_ZOOM = { MIN: 0.45, MAX: 1.85 };
+let bracketZoom = 1;
+
+function clampBracketZoom(v) {
+  return Math.max(BK_ZOOM.MIN, Math.min(BK_ZOOM.MAX, Number(v) || 1));
+}
+
+function bracketZoomPercent() {
+  return `${Math.round(bracketZoom * 100)}%`;
+}
+
+function renderBracketChrome(mapHtml, baseW, baseH) {
+  const z = clampBracketZoom(bracketZoom);
+  const sizerStyle = baseW && baseH
+    ? ` style="width:${Math.ceil(baseW * z)}px;height:${Math.ceil(baseH * z)}px"`
+    : '';
+  const baseAttrs = baseW && baseH ? ` data-bk-base-w="${baseW}" data-bk-base-h="${baseH}"` : '';
+  const contentStyle = baseW && baseH
+    ? ` style="width:${baseW}px;height:${baseH}px;transform:scale(${z})"`
+    : ` style="transform:scale(${z})"`;
+  return `<div class="bk-shell" data-bk-shell data-bk-zoom="${z}">
+    <div class="bk-tools">
+      <div class="bk-legend">
+        <span class="k"><span class="sw" style="background:#4ade80"></span>avanzó</span>
+        <span class="k"><span class="sw" style="background:#2a3a55"></span>por definir</span>
+      </div>
+      <div class="bk-zoomctl" role="group" aria-label="Zoom de llaves">
+        <button type="button" class="bk-zbtn" onclick="changeBracketZoom(-0.12)"
+          data-bk-zoom-out title="Alejar" aria-label="Alejar llaves">&minus;</button>
+        <button type="button" class="bk-zpct" onclick="resetBracketZoom()"
+          data-bk-zoom-pct title="Restablecer zoom" aria-label="Restablecer zoom">${bracketZoomPercent()}</button>
+        <button type="button" class="bk-zbtn" onclick="changeBracketZoom(0.12)"
+          data-bk-zoom-in title="Acercar" aria-label="Acercar llaves">+</button>
+      </div>
+    </div>
+    <div class="bk-scroll" data-bk-scroll>
+      <div class="bk-zoom-sizer" data-bk-sizer${baseAttrs}${sizerStyle}>
+        <div class="bk-zoom-content" data-bk-content${contentStyle}>${mapHtml}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function bracketBaseSize(shell) {
+  const sizer = shell?.querySelector('[data-bk-sizer]');
+  const content = shell?.querySelector('[data-bk-content]');
+  if (!sizer || !content) return { w: 0, h: 0 };
+  const storedW = Number(sizer.dataset.bkBaseW);
+  const storedH = Number(sizer.dataset.bkBaseH);
+  if (storedW && storedH) return { w: storedW, h: storedH };
+
+  const prevTransform = content.style.transform;
+  const prevW = sizer.style.width;
+  const prevH = sizer.style.height;
+  content.style.transform = 'scale(1)';
+  sizer.style.width = '';
+  sizer.style.height = '';
+  const w = Math.max(content.scrollWidth, content.offsetWidth);
+  const h = Math.max(content.scrollHeight, content.offsetHeight);
+  sizer.dataset.bkBaseW = String(w);
+  sizer.dataset.bkBaseH = String(h);
+  content.style.transform = prevTransform;
+  sizer.style.width = prevW;
+  sizer.style.height = prevH;
+  return { w, h };
+}
+
+function applyBracketZoom(anchor = {}) {
+  const shell = document.querySelector('[data-bk-shell]');
+  if (!shell) return;
+  const scroll = shell.querySelector('[data-bk-scroll]');
+  const sizer = shell.querySelector('[data-bk-sizer]');
+  const content = shell.querySelector('[data-bk-content]');
+  if (!scroll || !sizer || !content) return;
+
+  const oldZoom = Number(shell.dataset.bkZoom) || bracketZoom || 1;
+  bracketZoom = clampBracketZoom(bracketZoom);
+
+  const rect = scroll.getBoundingClientRect();
+  const focusX = anchor.clientX != null ? anchor.clientX - rect.left : scroll.clientWidth / 2;
+  const focusY = anchor.clientY != null ? anchor.clientY - rect.top : scroll.clientHeight / 2;
+  const contentX = anchor.contentX != null ? anchor.contentX : (scroll.scrollLeft + focusX) / oldZoom;
+  const contentY = anchor.contentY != null ? anchor.contentY : (scroll.scrollTop + focusY) / oldZoom;
+  const { w, h } = bracketBaseSize(shell);
+
+  content.style.transform = `scale(${bracketZoom})`;
+  sizer.style.width = `${Math.ceil(w * bracketZoom)}px`;
+  sizer.style.height = `${Math.ceil(h * bracketZoom)}px`;
+  shell.dataset.bkZoom = String(bracketZoom);
+
+  const pct = shell.querySelector('[data-bk-zoom-pct]');
+  if (pct) pct.textContent = bracketZoomPercent();
+  const out = shell.querySelector('[data-bk-zoom-out]');
+  const inn = shell.querySelector('[data-bk-zoom-in]');
+  if (out) out.disabled = bracketZoom <= BK_ZOOM.MIN + 0.005;
+  if (inn) inn.disabled = bracketZoom >= BK_ZOOM.MAX - 0.005;
+
+  scroll.scrollLeft = Math.max(0, contentX * bracketZoom - focusX);
+  scroll.scrollTop = Math.max(0, contentY * bracketZoom - focusY);
+}
+
+function setBracketZoom(next, anchor) {
+  bracketZoom = clampBracketZoom(next);
+  applyBracketZoom(anchor);
+}
+
+function changeBracketZoom(delta) {
+  setBracketZoom(bracketZoom + delta);
+}
+
+function resetBracketZoom() {
+  setBracketZoom(1);
+}
+
+function initBracketZoom() {
+  const shell = document.querySelector('[data-bk-shell]');
+  if (!shell) return;
+  const scroll = shell.querySelector('[data-bk-scroll]');
+  if (!scroll) return;
+  applyBracketZoom();
+
+  let pinch = null;
+  const pinchPoint = (e) => {
+    const a = e.touches[0], b = e.touches[1];
+    const x = (a.clientX + b.clientX) / 2;
+    const y = (a.clientY + b.clientY) / 2;
+    return { x, y, d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) };
+  };
+
+  scroll.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 2) return;
+    const p = pinchPoint(e);
+    const rect = scroll.getBoundingClientRect();
+    const z = bracketZoom || 1;
+    pinch = {
+      d: p.d,
+      z,
+      contentX: (scroll.scrollLeft + p.x - rect.left) / z,
+      contentY: (scroll.scrollTop + p.y - rect.top) / z
+    };
+    e.preventDefault();
+  }, { passive: false });
+
+  scroll.addEventListener('touchmove', (e) => {
+    if (!pinch || e.touches.length !== 2) return;
+    const p = pinchPoint(e);
+    setBracketZoom(pinch.z * (p.d / pinch.d), {
+      clientX: p.x,
+      clientY: p.y,
+      contentX: pinch.contentX,
+      contentY: pinch.contentY
+    });
+    e.preventDefault();
+  }, { passive: false });
+
+  const endPinch = () => { pinch = null; };
+  scroll.addEventListener('touchend', endPinch, { passive: true });
+  scroll.addEventListener('touchcancel', endPinch, { passive: true });
+  scroll.addEventListener('gesturestart', e => e.preventDefault(), { passive: false });
+  scroll.addEventListener('gesturechange', e => e.preventDefault(), { passive: false });
+
+  scroll.addEventListener('wheel', (e) => {
+    if (!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault();
+    setBracketZoom(bracketZoom * Math.exp(-e.deltaY * 0.0015), { clientX: e.clientX, clientY: e.clientY });
+  }, { passive: false });
+}
 
 function bkWinner(m) {
   return window.__scoring.matchAdvanceOutcome ? window.__scoring.matchAdvanceOutcome(m) : null;
@@ -3510,7 +3697,7 @@ function renderBracketFlow(columns, thirdPlace) {
     tp = `<div class="bk-flow-col"><div class="bk-flow-lbl">🥉 3er puesto</div>
       <div class="bk-cell-flow${inner.decided ? ' decided' : ''}">${inner.html}</div></div>`;
   }
-  return `<div class="bk-scroll"><div class="bk-flow">${cols}${tp}</div></div>`;
+  return renderBracketChrome(`<div class="bk-flow">${cols}${tp}</div>`);
 }
 
 // Vista Llaves: dos lados convergen a la Final al centro, conectores SVG, el
@@ -3597,17 +3784,13 @@ function renderBracket(matches) {
   }
   heads.push(`<div class="bk-cl fin" style="left:${DEPTH * BK.COL}px">Final</div>`);
 
-  return `<div class="bk-scroll">
-    <div class="bk-legend">
-      <span class="k"><span class="sw" style="background:#4ade80"></span>avanzó</span>
-      <span class="k"><span class="sw" style="background:#2a3a55"></span>por definir</span>
-    </div>
+  const mapH = totalH + 22;
+  return renderBracketChrome(`
     <div class="bk-cols" style="width:${totalW}px">${heads.join('')}</div>
     <div class="bk-stage" style="width:${totalW}px;height:${totalH}px">
       <svg viewBox="0 0 ${totalW} ${totalH}" width="${totalW}" height="${totalH}">${paths.join('')}</svg>
       ${cells}${extras}
-    </div>
-  </div>`;
+    </div>`, totalW, mapH);
 }
 
 // ═══ PODIO POINTS ═══
@@ -4066,6 +4249,7 @@ function renderMatches() {
   if (fixtureView === 'bracket' && hasKO) {
     const listEl = document.getElementById('matchList');
     listEl.innerHTML = renderBracket(matches);
+    initBracketZoom();
     return;
   }
 
