@@ -756,9 +756,9 @@
           <span style="font-size:24px;flex-shrink:0">🚫</span>
           <div><b style="color:#f1f5f9;font-size:14px">Sin ediciones post-cierre</b><br/><span style="font-size:12px;color:#64748b">Partido iniciado, celda bloqueada.</span></div>
         </div>
-        <div class="card" style="padding:14px;display:flex;gap:12px;align-items:flex-start">
+        <div class="card" style="padding:14px;display:flex;gap:12px;align-items:flex-start;opacity:0.5">
           <span style="font-size:24px;flex-shrink:0">⚡</span>
-          <div><b style="color:#f1f5f9;font-size:14px">Partido potenciado</b><br/><span style="font-size:12px;color:#64748b">Un partido aleatorio por fecha se potencia en fase de grupos. ¡Duplica los puntos!</span></div>
+          <div><b style="color:#f1f5f9;font-size:14px">Partido potenciado</b><br/><span style="font-size:12px;color:#64748b">Función disponible solo durante fase de grupos. El pozo se duplica para partidos marcados.</span></div>
         </div>
       </div>
     </div>
@@ -1162,7 +1162,7 @@ function refreshActiveTab() {
   if (selectedStatsTournament !== '__all__' && isTournamentHidden(selectedStatsTournament)) {
     selectedStatsTournament = '__all__';
   }
-  if (currentTab === 'home')     { renderHomeStats(); renderPotenciado(); renderUpcoming(); }
+  if (currentTab === 'home')     { renderHomeStats(); renderUpcoming(); }
   if (currentTab === 'partidos') renderMatches();
   if (currentTab === 'ranking')  renderRanking();
   if (currentTab === 'stats')    renderStats();
@@ -1399,7 +1399,6 @@ function showHome() {
   document.getElementById('mainContent').scrollTop = 0;
   currentTab = 'home';
   renderHomeStats();
-  renderPotenciado();
   renderUpcoming();
 }
 
@@ -3709,7 +3708,6 @@ async function syncESPNResults() {
     document.getElementById('mainContent').scrollTop = 0;
     currentTab = 'home';
     renderHomeStats();
-    renderPotenciado();
     renderUpcoming();
 
     // 5. Notificar
