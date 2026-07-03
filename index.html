@@ -1003,7 +1003,7 @@
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <button onclick="showTab('partidos')" class="card" style="padding:20px 12px;text-align:center;border:none;cursor:pointer;width:100%">
+        <button onclick="openFixture()" class="card" style="padding:20px 12px;text-align:center;border:none;cursor:pointer;width:100%">
           <div style="font-size:36px;margin-bottom:8px">🏟️</div>
           <div style="font-weight:900;color:#f1f5f9;font-size:15px">Fixture</div>
           <div style="font-size:11px;color:#64748b;margin-top:4px">Tus predicciones</div>
@@ -1273,7 +1273,7 @@
     <button class="nav-btn nav-active" id="nb-home" onclick="showHome()">
       <span class="nicon">🏠</span><span>Inicio</span>
     </button>
-    <button class="nav-btn" id="nb-partidos" onclick="showTab('partidos')">
+    <button class="nav-btn" id="nb-partidos" onclick="openFixture()">
       <span class="nicon">🏟️</span><span>Fixture</span>
     </button>
     <button class="nav-btn" id="nb-ranking" onclick="showTab('ranking')">
@@ -2890,11 +2890,18 @@ function updateMatchCountdown(){
   setL('pm-cl-1',l1); setL('pm-cl-2',l2); setL('pm-cl-3',l3);
 }
 
+// ── Fixture desde el botón de navegación: siempre abre en Llaves ──
+function openFixture(){
+  fixtureView = 'bracket';
+  showTab('partidos');
+}
+
 // ── Salto + resaltado al fixture ──
 function jumpToMatch(mid){
   const m = CACHE.matches.find(x=>x.id===mid);
   if (!m) return;
   selectedTournament = m.tournament || 'Sin Torneo';
+  fixtureView = 'list'; // saltar a un partido concreto → vista Lista
   showTab('partidos');
   setTimeout(()=>{
     const el = document.getElementById('match_'+mid);
