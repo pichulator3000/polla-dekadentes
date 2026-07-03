@@ -1026,6 +1026,25 @@
         </div>
       </button>
 
+      <!-- Expandible Analytics (solo Admin) -->
+      <div id="homeAnalyticsContainer" style="display:none;margin-top:14px">
+        <button onclick="toggleHomeAnalytics()" class="card" style="width:100%;padding:14px 16px;text-align:left;border:none;cursor:pointer;display:flex;align-items:center;gap:12px;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="font-size:24px">📊</span>
+            <div>
+              <div style="font-weight:900;color:#e8edf5">Analytics</div>
+              <div style="font-size:11px;color:#64748b">Monitoreo y detección</div>
+            </div>
+          </div>
+          <span id="analyticsToggleIcon" style="font-size:16px;transition:transform 0.3s">▼</span>
+        </button>
+        <div id="homeAnalyticsContent" style="display:none;margin-top:8px;background:rgba(15,23,42,0.5);border-radius:10px;padding:14px;border:1px solid var(--border)">
+          <div id="homeAnalyticsDashboard" style="min-height:200px;display:flex;align-items:center;justify-content:center;color:#64748b">
+            <span>Cargando datos...</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Próximos Partidos -->
       <div style="margin-top:16px">
         <h3 style="font-weight:900;font-size:15px;margin:0 0 10px;color:#e8edf5">📅 Próximos Partidos</h3>
@@ -1815,6 +1834,7 @@ function launchApp(user) {
 
   const isA = user.isAdmin;
   document.getElementById('homeAdminBtn').style.display = isA ? 'flex' : 'none';
+  document.getElementById('homeAnalyticsContainer').style.display = isA ? 'block' : 'none';
   document.getElementById('nb-admin').style.display     = isA ? 'flex' : 'none';
 
   if (prefs.pcMode) document.body.classList.add('pc-mode');
@@ -1854,6 +1874,7 @@ function showHome() {
   renderHomeMatchStrip();
   renderUpcoming();
   renderCheatAlert();
+  updateHomeAnalyticsVisibility();
 }
 
 // Jugadores marcados por uso excesivo de IA (match por substring del nombre, case-insensitive)
@@ -5554,6 +5575,73 @@ function renderAdmin() {
 }
 
 function setAdminTab(t) { adminSubTab=t; renderAdmin(); }
+
+function toggleHomeAnalytics() {
+  const content = document.getElementById('homeAnalyticsContent');
+  const icon = document.getElementById('analyticsToggleIcon');
+  const isOpen = content.style.display === 'block';
+  
+  content.style.display = isOpen ? 'none' : 'block';
+  icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+  
+  if (!isOpen) {
+    loadHomeAnalytics();
+  }
+}
+
+async function loadHomeAnalytics() {
+  const dashboard = document.getElementById('homeAnalyticsDashboard');
+  
+  if (!window.__analytics) {
+    dashboard.innerHTML = '<span style="color:#f87171">Módulo de analytics no disponible</span>';
+    return;
+  }
+  
+  try {
+    const stats = await window.__analytics.getAnalyticsStats(RT, 24);
+    
+    if (!stats) {
+      dashboard.innerHTML = '<span style="color:#fbbf24">Sin datos aún</span>';
+      return;
+    }
+    
+    const html = `
+      <div style="width:100%;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div style="background:rgba(96,165,250,0.1);border:1px solid #0ea5e9;border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:11px;color:#64748b;margin-bottom:6px">Sesiones</div>
+          <div style="font-size:20px;font-weight:900;color:#38bdf8">${stats.totalSessions || 0}</div>
+        </div>
+        <div style="background:rgba(34,197,94,0.1);border:1px solid #10b981;border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:11px;color:#64748b;margin-bottom:6px">Usuarios</div>
+          <div style="font-size:20px;font-weight:900;color:#34d399">${stats.uniqueUsers || 0}</div>
+        </div>
+        <div style="background:rgba(239,68,68,0.1);border:1px solid #ef4444;border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:11px;color:#64748b;margin-bottom:6px">🤖 Bots</div>
+          <div style="font-size:20px;font-weight:900;color:#f87171">${stats.botsDetected || 0}</div>
+        </div>
+        <div style="background:rgba(249,115,22,0.1);border:1px solid #f97316;border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:11px;color:#64748b;margin-bottom:6px">Sospechosos</div>
+          <div style="font-size:20px;font-weight:900;color:#fb923c">${stats.suspiciousSessions?.length || 0}</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#64748b;text-align:center;padding:8px;border-top:1px solid var(--border);margin-top:10px;padding-top:10px">
+        📊 Últimas 24 horas
+      </div>
+    `;
+    
+    dashboard.innerHTML = html;
+  } catch(e) {
+    console.error('Error cargando analytics:', e);
+    dashboard.innerHTML = '<span style="color:#f87171">Error al cargar datos</span>';
+  }
+}
+
+function updateHomeAnalyticsVisibility() {
+  const container = document.getElementById('homeAnalyticsContainer');
+  if (container && currentUser?.isAdmin) {
+    container.style.display = 'block';
+  }
+}
 
 
 function buildAdminPodioEdit() {
