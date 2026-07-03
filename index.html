@@ -1876,18 +1876,20 @@ function renderCheatAlert() {
   if (!CHEAT_FLAGGED.some(f => name.includes(f))) { el.innerHTML = ''; return; }
   el.innerHTML = `
     <div class="cheat">
-      <div class="c-whistle"><span class="c-live"></span> Pitazo del árbitro <span class="c-pill">FALTA TÉCNICA</span></div>
-      <h2>Tarjeta roja por IA</h2>
-      <p class="c-deck">El VAR revisó tus predicciones y algo no le cuadró.</p>
-      <p class="c-serious">El Comité de Integridad ha registrado uso excesivo de inteligencia artificial en tus pronósticos. <b>Tu caso quedó en revisión y bajo evaluación de las sanciones que correspondan.</b></p>
+      <div class="c-whistle"><span class="c-live"></span> Comité de Integridad <span class="c-pill">ACTUALIZACIÓN DEL CASO</span></div>
+      <h2>Novedades sobre tu caso</h2>
+      <p class="c-deck">Hay avances en tu proceso. El Comité terminó de revisar los antecedentes y tomó una decisión.</p>
+      <p class="c-serious">Como parte de la resolución, el Comité te solicita cumplir <b>dos condiciones antes del próximo partido</b>.</p>
+      <p class="c-serious"><b>1.</b> Revela la herramienta de IA que utilizaste.<br><b>2.</b> Confirma por escrito que <b>no volverás a usarla</b>.<br><span style="display:block;margin-top:6px;opacity:.9">Ambas respuestas deben enviarse <b>al grupo</b>.</span></p>
+      <p class="c-serious">De no cumplir con lo anterior, el caso escala y <b>las sanciones podrían ser mayores.</b></p>
       <div class="c-var">
         <div class="c-vh">
-          <span class="c-tag">📺 Revisión del VAR · IA detectada</span>
+          <span class="c-tag">📋 Estado del caso · en seguimiento</span>
           <span class="c-pct" id="cheatPct">0%</span>
         </div>
         <div class="c-track"><span class="c-scan"></span><i></i></div>
       </div>
-      <div class="c-foot">¿Crees que es un error? Responde antes del próximo partido.</div>
+      <div class="c-foot">Plazo vigente: responde en el grupo antes del próximo partido.</div>
       <div class="c-card"></div>
     </div>`;
   // contador animado sincronizado con la barra
@@ -2834,7 +2836,9 @@ function _liveCardHtml(m){
   const mine = uid ? CACHE.preds.find(p => p.userId===uid && p.matchId===m.id && p.predHome!=null) : null;
   let mineHtml;
   if (!mine){
-    mineHtml = `<div class="pm-mine empty">😴 Aweonao, no pronosticaste este partido</div>`;
+    mineHtml = currentUser?.isAdmin
+      ? `<div class="pm-mine empty">😴 No pronosticaste este partido</div>`
+      : payasoBannerHtml(m);
   } else {
     const hasScore = (m.realHome ?? m.liveHome) != null;
     let stat = '', cls = '';
@@ -4602,12 +4606,8 @@ function renderMatches() {
 
     // Aweonaos del partido (solo si cerró)
     let aweonaoHtml = '';
-    let payasoHtml = '';
     if (status !== 'open') {
       const aw = aweonaosDeMatch(m);
-      if (!isAdm && aw.some(u => u.id === uid)) {
-        payasoHtml = payasoBannerHtml(m);
-      }
       aweonaoHtml = aw.length
         ? `<div style="font-size:11px;color:#64748b;margin-top:6px;text-align:center">🧠 <b style="color:#f87171">Aweonaos:</b> ${aw.map(u=>u.name).join(', ')}</div>`
         : `<div style="font-size:11px;color:#4ade80;margin-top:6px;text-align:center">✅ No hubieron aweonaos este partido, todos pusieron sus pronósticos</div>`;
@@ -4686,7 +4686,6 @@ function renderMatches() {
         <div style="flex:1;text-align:left;font-weight:800;font-size:13px;line-height:1.2">${m.away}${flagImg(m.away,true)}</div>
       </div>
       ${playerPredsPanel}
-      ${payasoHtml}
       ${aweonaoHtml}
       ${potenciadoToggle}
     </div>`;
