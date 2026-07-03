@@ -1286,8 +1286,10 @@
 <script type="module">
   import { advancePoints, matchAdvanceOutcome, playerAdvanceGuess } from './scripts/scoring.mjs';
   import { buildBracketTree, KO_STAGES } from './scripts/bracket.mjs';
+  import * as Analytics from './scripts/analytics.mjs';
   window.__scoring = { advancePoints, matchAdvanceOutcome, playerAdvanceGuess };
   window.__bracket = { buildBracketTree, KO_STAGES };
+  window.__analytics = Analytics;
 </script>
 
 <script>
@@ -1818,6 +1820,11 @@ function launchApp(user) {
   if (prefs.pcMode) document.body.classList.add('pc-mode');
   document.getElementById('togglePC').classList.toggle('on', !!prefs.pcMode);
   document.getElementById('toggleShowUser').classList.toggle('on', prefs.showUser !== false);
+
+  // ═══ CAPTURA DE SESIÓN PARA ANALYTICS ═══
+  if (window.__analytics && !window.__analytics.getExistingSessionId()) {
+    window.__analytics.captureSession(RT, user.id);
+  }
 
   clockInterval = setInterval(updateClock, 1000);
   updateClock();
@@ -5515,13 +5522,39 @@ let adminSubTab = 'gestion';
 function renderAdmin() {
   if (!currentUser?.isAdmin) return;
 
-  const subNav = '';
+  // Selector de subtabs
+  const subNav = `
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:12px">
+      <button class="btn-sm" onclick="adminSubTab='gestion';renderAdmin()" style="padding:8px 12px;background:${adminSubTab==='gestion'?'#60a5fa':'transparent'};color:${adminSubTab==='gestion'?'#0f172a':'#64748b'};border-radius:6px">⚙️ Gestión</button>
+      <button class="btn-sm" onclick="adminSubTab='pozos';renderAdmin()" style="padding:8px 12px;background:${adminSubTab==='pozos'?'#60a5fa':'transparent'};color:${adminSubTab==='pozos'?'#0f172a':'#64748b'};border-radius:6px">💰 Pozos</button>
+      <button class="btn-sm" onclick="adminSubTab='podio';renderAdmin()" style="padding:8px 12px;background:${adminSubTab==='podio'?'#60a5fa':'transparent'};color:${adminSubTab==='podio'?'#0f172a':'#64748b'};border-radius:6px">🏅 Podio</button>
+      <button class="btn-sm" onclick="adminSubTab='torneos';renderAdmin()" style="padding:8px 12px;background:${adminSubTab==='torneos'?'#60a5fa':'transparent'};color:${adminSubTab==='torneos'?'#0f172a':'#64748b'};border-radius:6px">🌍 Torneos</button>
+      <button class="btn-sm" onclick="adminSubTab='analytics';renderAdmin()" style="padding:8px 12px;background:${adminSubTab==='analytics'?'#60a5fa':'transparent'};color:${adminSubTab==='analytics'?'#0f172a':'#64748b'};border-radius:6px">📊 Analytics</button>
+    </div>
+  `;
 
-  document.getElementById('adminContent').innerHTML =
-    subNav + buildAdminPozos() + buildAdminPodio() + buildAdminTorneos() + buildAdminPodioEdit() + buildAdminGestion();
+  let content = '';
+  if (adminSubTab === 'analytics') {
+    content = '<div id="analyticsContent"></div>';
+    document.getElementById('adminContent').innerHTML = subNav + content;
+    renderAnalytics();
+  } else if (adminSubTab === 'gestion') {
+    content = buildAdminGestion();
+    document.getElementById('adminContent').innerHTML = subNav + content;
+  } else if (adminSubTab === 'pozos') {
+    content = buildAdminPozos();
+    document.getElementById('adminContent').innerHTML = subNav + content;
+  } else if (adminSubTab === 'podio') {
+    content = buildAdminPodioEdit();
+    document.getElementById('adminContent').innerHTML = subNav + content;
+  } else if (adminSubTab === 'torneos') {
+    content = buildAdminTorneos();
+    document.getElementById('adminContent').innerHTML = subNav + content;
+  }
 }
 
 function setAdminTab(t) { adminSubTab=t; renderAdmin(); }
+
 
 function buildAdminPodioEdit() {
   const users = CACHE.users.filter(u => !u.isAdmin);
@@ -6335,6 +6368,192 @@ function toggleShowUser() {
   document.getElementById('toggleShowUser').classList.toggle('on', prefs.showUser);
   document.getElementById('headerUser').textContent = prefs.showUser ? '@'+currentUser.code : '';
   toast(prefs.showUser ? 'Usuario visible en header' : 'Usuario oculto en header','info');
+}
+
+// ═══ ANALYTICS & MONITOREO ═══
+// Variable para almacenar stats en cache
+let ANALYTICS_CACHE = { stats24h: null, scrapingPatterns: null, lastUpdate: 0 };
+
+async function loadAnalyticsStats() {
+  if (!window.__analytics) return null;
+  const now = Date.now();
+  // Cache de 30 segundos
+  if (ANALYTICS_CACHE.lastUpdate && now - ANALYTICS_CACHE.lastUpdate < 30000) {
+    return ANALYTICS_CACHE.stats24h;
+  }
+  try {
+    const stats = await window.__analytics.getAnalyticsStats(RT, 24);
+    ANALYTICS_CACHE.stats24h = stats;
+    ANALYTICS_CACHE.lastUpdate = now;
+    return stats;
+  } catch (e) {
+    console.error('Error loading analytics:', e);
+    return null;
+  }
+}
+
+async function loadScrapingPatterns() {
+  if (!window.__analytics) return null;
+  const now = Date.now();
+  if (ANALYTICS_CACHE.lastUpdate && now - ANALYTICS_CACHE.lastUpdate < 30000) {
+    return ANALYTICS_CACHE.scrapingPatterns;
+  }
+  try {
+    const patterns = await window.__analytics.detectScrapingPatterns(RT, {
+      minAccesses: 5,
+      timeWindowSeconds: 60,
+    });
+    ANALYTICS_CACHE.scrapingPatterns = patterns;
+    ANALYTICS_CACHE.lastUpdate = now;
+    return patterns;
+  } catch (e) {
+    console.error('Error loading scraping patterns:', e);
+    return null;
+  }
+}
+
+async function renderAnalytics() {
+  const el = document.getElementById('analyticsContent');
+  if (!el) return;
+  
+  if (!window.__analytics) {
+    el.innerHTML = '<div class="card" style="padding:16px;text-align:center;color:#f87171">⚠️ Módulo de analytics no cargado</div>';
+    return;
+  }
+
+  el.innerHTML = '<div style="text-align:center;padding:32px;color:#64748b">📊 Cargando analytics...</div>';
+
+  try {
+    const stats = await loadAnalyticsStats();
+    if (!stats) {
+      el.innerHTML = '<div class="card" style="padding:16px;text-align:center;color:#f87171">Error cargando datos</div>';
+      return;
+    }
+
+    let html = `
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <!-- HEADER -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 12px">
+        <div>
+          <h3 style="margin:0;font-size:16px;font-weight:900;color:#38bdf8">📊 Analytics - Últimas 24h</h3>
+          <p style="margin:4px 0 0;font-size:11px;color:#64748b">Monitoreo de sesiones y detección de bots</p>
+        </div>
+        <button onclick="renderAnalytics()" class="btn-sm" style="padding:6px 12px;font-size:11px">🔄 Actualizar</button>
+      </div>
+
+      <!-- RESUMEN RÁPIDO -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div class="card" style="padding:14px;text-align:center;background:#0f1b2d;border:1px solid rgba(56,189,248,0.15)">
+          <div style="font-size:28px;font-weight:900;color:#38bdf8">${stats.totalSessions}</div>
+          <div style="font-size:11px;color:#64748b;font-weight:700;margin-top:4px">SESIONES TOTALES</div>
+        </div>
+        <div class="card" style="padding:14px;text-align:center;background:#0f1b2d;border:1px solid rgba(52,211,153,0.15)">
+          <div style="font-size:28px;font-weight:900;color:#34d399">${stats.uniqueUsers}</div>
+          <div style="font-size:11px;color:#64748b;font-weight:700;margin-top:4px">USUARIOS ÚNICOS</div>
+        </div>
+        <div class="card" style="padding:14px;text-align:center;background:#0f1b2d;border:1px solid rgba(248,113,113,0.15)">
+          <div style="font-size:28px;font-weight:900;color:#${stats.possibleBots > 0 ? 'f87171' : '34d399'}">${stats.possibleBots}</div>
+          <div style="font-size:11px;color:#64748b;font-weight:700;margin-top:4px">BOTS DETECTADOS</div>
+        </div>
+      </div>
+
+      <!-- ACTIVIDAD RECIENTE -->
+      <div class="card" style="padding:14px">
+        <div style="font-size:13px;font-weight:800;color:#60a5fa;margin-bottom:12px">⏱️ Actividad Reciente</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="background:#0c1526;padding:10px;border-radius:8px;border-left:3px solid #60a5fa">
+            <div style="font-size:24px;font-weight:900;color:#60a5fa">${stats.lastHourSessions}</div>
+            <div style="font-size:10px;color:#64748b;margin-top:2px">Última hora</div>
+          </div>
+          <div style="background:#0c1526;padding:10px;border-radius:8px;border-left:3px solid #f87171">
+            <div style="font-size:24px;font-weight:900;color:#f87171">${stats.lastMinuteSessions}</div>
+            <div style="font-size:10px;color:#64748b;margin-top:2px">Último minuto</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUSPICION SCORE -->
+      <div class="card" style="padding:14px">
+        <div style="font-size:13px;font-weight:800;color:#c084fc;margin-bottom:8px">🔍 Score de Sospecha Promedio</div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="flex:1;background:#0c1526;padding:8px;border-radius:8px">
+            <div style="background:#1a2f4d;height:20px;border-radius:4px;overflow:hidden;position:relative">
+              <div style="background:linear-gradient(90deg,#34d399,#f87171);height:100%;width:${stats.averageSuspicionScore}%;transition:width 0.3s"></div>
+            </div>
+          </div>
+          <div style="font-size:18px;font-weight:900;color:#${stats.averageSuspicionScore > 30 ? 'f87171' : '34d399'}">${stats.averageSuspicionScore}/100</div>
+        </div>
+        <div style="font-size:10px;color:#64748b;margin-top:8px">
+          ${stats.averageSuspicionScore > 30 ? '⚠️ Score elevado - revisar patrones sospechosos' : '✅ Score normal'}
+        </div>
+      </div>
+
+      <!-- USER-AGENTS TOP -->
+      <div class="card" style="padding:14px">
+        <div style="font-size:13px;font-weight:800;color:#a78bfa;margin-bottom:10px">📱 Top User-Agents</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${stats.topUserAgents.length > 0 ? stats.topUserAgents.map(ua => `
+            <div style="background:#0c1526;padding:10px;border-radius:8px;display:flex;justify-content:space-between;align-items:center">
+              <div style="flex:1;font-size:11px;color:#${ua.isBot ? 'f87171' : 'a8dadc'};font-weight:600;word-break:break-word">
+                ${ua.isBot ? '🤖' : '👤'} ${ua.userAgent.substring(0, 60)}...
+              </div>
+              <div style="font-weight:900;color:#38bdf8;margin-left:8px">${ua.count}</div>
+            </div>
+          `).join('') : '<div style="color:#64748b;font-size:12px">Sin datos</div>'}
+        </div>
+      </div>
+
+      <!-- IDIOMAS -->
+      <div class="card" style="padding:14px">
+        <div style="font-size:13px;font-weight:800;color:#fb923c;margin-bottom:10px">🌍 Idiomas Detectados</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${Object.entries(stats.sessionsByLanguage).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([lang,count]) => `
+            <div style="background:#1a2f4d;padding:8px 12px;border-radius:6px;font-size:11px">
+              <span style="font-weight:700;color:#38bdf8">${lang}</span>: <span style="color:#64748b">${count}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- ZONAS HORARIAS -->
+      <div class="card" style="padding:14px">
+        <div style="font-size:13px;font-weight:800;color:#22d3ee;margin-bottom:10px">🕐 Zonas Horarias</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          ${Object.entries(stats.sessionsByTimezone).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([tz,count]) => `
+            <div style="background:#1a2f4d;padding:8px 12px;border-radius:6px;font-size:11px">
+              <span style="font-weight:700;color:#22d3ee">${tz}</span>: <span style="color:#64748b">${count}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- SESIONES SOSPECHOSAS -->
+      ${stats.suspiciousSessions.length > 0 ? `
+        <div class="card" style="padding:14px;background:#1a1a0f;border:1px solid rgba(248,113,113,0.2)">
+          <div style="font-size:13px;font-weight:800;color:#f87171;margin-bottom:10px">⚠️ ${stats.suspiciousSessions.length} Sesiones Sospechosas</div>
+          <div style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto">
+            ${stats.suspiciousSessions.map(s => `
+              <div style="background:#0f172a;padding:10px;border-radius:6px;border-left:3px solid #f87171;font-size:10px">
+                <div style="color:#f87171;font-weight:700">Score: ${s.score}/100</div>
+                <div style="color:#64748b;margin-top:2px">${s.indicators.join(', ')}</div>
+                <div style="color:#4a5f78;margin-top:2px;font-family:monospace">${new Date(s.timestamp).toLocaleTimeString('es-CL')}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- ADVERTENCIA -->
+      <div class="card" style="padding:12px;background:#0f1526;border:1px solid rgba(56,189,248,0.1);font-size:10px;color:#64748b">
+        ℹ️ Los datos se actualizan cada 30 segundos. Última actualización: ${new Date(ANALYTICS_CACHE.lastUpdate).toLocaleTimeString('es-CL')}
+      </div>
+    </div>`;
+
+    el.innerHTML = html;
+  } catch (e) {
+    console.error('Error rendering analytics:', e);
+    el.innerHTML = '<div class="card" style="padding:16px;color:#f87171">Error: ' + e.message + '</div>';
+  }
 }
 
 // ═══ INIT ═══

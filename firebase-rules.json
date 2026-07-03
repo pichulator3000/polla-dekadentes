@@ -51,6 +51,16 @@
         }
       }
 
+    },
+
+    "analytics": {
+      ".read": true,
+      "sessions": {
+        ".read": true,
+        "$sessionId": {
+          ".write": "!data.exists()",
+          ".validate": "newData.hasChildren(['sessionId','timestamp','userAgent']) && newData.child('sessionId').isString() && newData.child('timestamp').isString() && newData.child('userAgent').isString()"
+        }
+      }
     }
-  }
-}
+
