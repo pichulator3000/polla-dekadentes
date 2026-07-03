@@ -310,6 +310,7 @@ export async function getAnalyticsStats(databaseRef, hoursBack = 24) {
   const timezones = {};
   const orientations = {};
   const dayGroups = {};
+  const sessionsByUser = {};
   const now = Date.now();
   const lastHourMs = now - 3600000;
   const lastMinuteMs = now - 60000;
@@ -322,6 +323,26 @@ export async function getAnalyticsStats(databaseRef, hoursBack = 24) {
   for (const session of sessions) {
     // Contar usuarios únicos
     if (session.userId) userIds.add(session.userId);
+
+    // Agrupar por usuario
+    const userId = session.userId || 'anonymous';
+    if (!sessionsByUser[userId]) {
+      sessionsByUser[userId] = {
+        totalSessions: 0,
+        botSessions: 0,
+        suspiciousSessions: 0,
+        maxSuspicion: 0,
+        lastSeen: null,
+      };
+    }
+    sessionsByUser[userId].totalSessions++;
+    if (session.isBot) sessionsByUser[userId].botSessions++;
+    const suspicion = session.suspicionScore || 0;
+    if (suspicion > 30) sessionsByUser[userId].suspiciousSessions++;
+    if (suspicion > sessionsByUser[userId].maxSuspicion) {
+      sessionsByUser[userId].maxSuspicion = suspicion;
+    }
+    sessionsByUser[userId].lastSeen = session.timestamp;
 
     // User-Agent stats
     const ua = session.userAgent || 'unknown';
@@ -379,6 +400,7 @@ export async function getAnalyticsStats(databaseRef, hoursBack = 24) {
     uniqueUsers: userIds.size,
     averageSuspicionScore: Math.round(totalSuspicion / sessions.length),
     possibleBots: botCount,
+    sessionsByUser: sessionsByUser,
     sessionsByUserAgent: userAgents,
     topUserAgents,
     sessionsByLanguage: languages,
