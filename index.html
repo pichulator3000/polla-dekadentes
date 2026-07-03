@@ -5576,6 +5576,8 @@ function renderAdmin() {
 
 function setAdminTab(t) { adminSubTab=t; renderAdmin(); }
 
+let analyticsTimeRange = 24;
+
 function toggleHomeAnalytics() {
   const content = document.getElementById('homeAnalyticsContent');
   const icon = document.getElementById('analyticsToggleIcon');
@@ -5598,42 +5600,111 @@ async function loadHomeAnalytics() {
   }
   
   try {
-    const stats = await window.__analytics.getAnalyticsStats(RT, 24);
+    dashboard.innerHTML = '<span style="color:#64748b">Cargando...</span>';
+    
+    const stats = await window.__analytics.getAnalyticsStats(RT, analyticsTimeRange);
     
     if (!stats) {
       dashboard.innerHTML = '<span style="color:#fbbf24">Sin datos aún</span>';
       return;
     }
     
-    const html = `
+    // Selector de rango de tiempo
+    const rangeSelector = `
+      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+        <button onclick="changeAnalyticsRange(24)" style="padding:6px 12px;border-radius:6px;border:1px solid ${analyticsTimeRange===24?'#38bdf8':'var(--border)'};background:${analyticsTimeRange===24?'rgba(56,189,248,0.1)':'transparent'};color:${analyticsTimeRange===24?'#38bdf8':'#64748b'};cursor:pointer;font-size:11px;font-weight:700">24h</button>
+        <button onclick="changeAnalyticsRange(168)" style="padding:6px 12px;border-radius:6px;border:1px solid ${analyticsTimeRange===168?'#38bdf8':'var(--border)'};background:${analyticsTimeRange===168?'rgba(56,189,248,0.1)':'transparent'};color:${analyticsTimeRange===168?'#38bdf8':'#64748b'};cursor:pointer;font-size:11px;font-weight:700">7 días</button>
+        <button onclick="changeAnalyticsRange(720)" style="padding:6px 12px;border-radius:6px;border:1px solid ${analyticsTimeRange===720?'#38bdf8':'var(--border)'};background:${analyticsTimeRange===720?'rgba(56,189,248,0.1)':'transparent'};color:${analyticsTimeRange===720?'#38bdf8':'#64748b'};cursor:pointer;font-size:11px;font-weight:700">30 días</button>
+        <button onclick="changeAnalyticsRange(8760)" style="padding:6px 12px;border-radius:6px;border:1px solid ${analyticsTimeRange===8760?'#38bdf8':'var(--border)'};background:${analyticsTimeRange===8760?'rgba(56,189,248,0.1)':'transparent'};color:${analyticsTimeRange===8760?'#38bdf8':'#64748b'};cursor:pointer;font-size:11px;font-weight:700">Todo</button>
+      </div>
+    `;
+
+    // KPIs
+    const kpis = `
       <div style="width:100%;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
         <div style="background:rgba(96,165,250,0.1);border:1px solid #0ea5e9;border-radius:8px;padding:12px;text-align:center">
           <div style="font-size:11px;color:#64748b;margin-bottom:6px">Sesiones</div>
-          <div style="font-size:20px;font-weight:900;color:#38bdf8">${stats.totalSessions || 0}</div>
+          <div style="font-size:18px;font-weight:900;color:#38bdf8">${stats.totalSessions || 0}</div>
         </div>
         <div style="background:rgba(34,197,94,0.1);border:1px solid #10b981;border-radius:8px;padding:12px;text-align:center">
           <div style="font-size:11px;color:#64748b;margin-bottom:6px">Usuarios</div>
-          <div style="font-size:20px;font-weight:900;color:#34d399">${stats.uniqueUsers || 0}</div>
+          <div style="font-size:18px;font-weight:900;color:#34d399">${stats.uniqueUsers || 0}</div>
         </div>
         <div style="background:rgba(239,68,68,0.1);border:1px solid #ef4444;border-radius:8px;padding:12px;text-align:center">
           <div style="font-size:11px;color:#64748b;margin-bottom:6px">🤖 Bots</div>
-          <div style="font-size:20px;font-weight:900;color:#f87171">${stats.botsDetected || 0}</div>
+          <div style="font-size:18px;font-weight:900;color:#f87171">${stats.botsDetected || 0}</div>
         </div>
         <div style="background:rgba(249,115,22,0.1);border:1px solid #f97316;border-radius:8px;padding:12px;text-align:center">
           <div style="font-size:11px;color:#64748b;margin-bottom:6px">Sospechosos</div>
-          <div style="font-size:20px;font-weight:900;color:#fb923c">${stats.suspiciousSessions?.length || 0}</div>
+          <div style="font-size:18px;font-weight:900;color:#fb923c">${stats.suspiciousSessions?.length || 0}</div>
         </div>
       </div>
-      <div style="font-size:11px;color:#64748b;text-align:center;padding:8px;border-top:1px solid var(--border);margin-top:10px;padding-top:10px">
-        📊 Últimas 24 horas
+    `;
+
+    // Tabla de usuarios
+    const usersBySession = {};
+    if (stats.sessionsByUser) {
+      Object.entries(stats.sessionsByUser).forEach(([userId, sessions]) => {
+        const botCount = sessions.filter(s => s.isBot).length;
+        const suspiciousCount = sessions.filter(s => s.suspicionScore > 30).length;
+        usersBySession[userId] = {
+          count: sessions.length,
+          bots: botCount,
+          suspicious: suspiciousCount,
+          lastSeen: sessions[sessions.length - 1]?.timestamp
+        };
+      });
+    }
+
+    const usersTable = `
+      <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+        <h4 style="margin:0 0 8px;font-size:12px;font-weight:700;color:#e8edf5">👥 Actividad por Usuario</h4>
+        <div style="max-height:200px;overflow-y:auto;font-size:11px">
+          ${Object.keys(usersBySession).length > 0 ? `
+            <table style="width:100%;border-collapse:collapse">
+              <thead style="position:sticky;top:0;background:rgba(15,23,42,0.8)">
+                <tr style="border-bottom:1px solid var(--border)">
+                  <th style="padding:6px;text-align:left;color:#94a3b8">Usuario</th>
+                  <th style="padding:6px;text-align:center;color:#94a3b8">Sesiones</th>
+                  <th style="padding:6px;text-align:center;color:#94a3b8">🤖 Bots</th>
+                  <th style="padding:6px;text-align:center;color:#94a3b8">⚠️ Sosp</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${Object.entries(usersBySession).slice(0, 10).map(([userId, data]) => `
+                  <tr style="border-bottom:1px solid rgba(148,163,184,0.1)">
+                    <td style="padding:6px;color:#cbd5e1;word-break:break-word">${userId}</td>
+                    <td style="padding:6px;text-align:center;color:#38bdf8;font-weight:600">${data.count}</td>
+                    <td style="padding:6px;text-align:center;color:${data.bots>0?'#f87171':'#64748b'}">${data.bots}</td>
+                    <td style="padding:6px;text-align:center;color:${data.suspicious>0?'#fb923c':'#64748b'}">${data.suspicious}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            ${Object.keys(usersBySession).length > 10 ? `<div style="padding:8px;text-align:center;color:#64748b;border-top:1px solid var(--border);margin-top:6px">+${Object.keys(usersBySession).length - 10} más</div>` : ''}
+          ` : '<div style="color:#64748b">Sin datos de usuarios</div>'}
+        </div>
       </div>
     `;
-    
-    dashboard.innerHTML = html;
+
+    const timeLabel = analyticsTimeRange === 24 ? 'últimas 24 horas' : 
+                     analyticsTimeRange === 168 ? 'últimos 7 días' : 
+                     analyticsTimeRange === 720 ? 'últimos 30 días' : 'todos los tiempos';
+
+    dashboard.innerHTML = rangeSelector + kpis + usersTable + `
+      <div style="font-size:10px;color:#64748b;text-align:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+        📊 ${timeLabel}
+      </div>
+    `;
   } catch(e) {
     console.error('Error cargando analytics:', e);
-    dashboard.innerHTML = '<span style="color:#f87171">Error al cargar datos</span>';
+    dashboard.innerHTML = '<span style="color:#f87171">Error: ' + e.message + '</span>';
   }
+}
+
+function changeAnalyticsRange(hours) {
+  analyticsTimeRange = hours;
+  loadHomeAnalytics();
 }
 
 function updateHomeAnalyticsVisibility() {
