@@ -1,7 +1,7 @@
 // scripts/sync_results.test.mjs
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { normalizeTeam, findFirebaseMatch, findFirebaseMatchForLive, resolveScores, matchOutcome, computeBracketUpdates, parsePeriods, resolveFinalUpdate } from './sync_results.mjs';
+import { normalizeTeam, findFirebaseMatch, findFirebaseMatchForLive, resolveScores, matchOutcome, computeBracketUpdates, parsePeriods, resolveFinalUpdate, isFinalStatus, isLiveStatus } from './sync_results.mjs';
 
 // ─── normalizeTeam ─────────────────────────────────────────────────────────────
 
@@ -272,6 +272,33 @@ test('resolveFinalUpdate: KO sin desglose (summary falló) → no escribe score,
   assert.deepEqual(
     resolveFinalUpdate({ stage: 'Cuartos de Final', periods: null, winnerName: 'Brasil' }),
     { liveHome: null, liveAway: null, advances: 'Brasil' });
+});
+
+// ─── isFinalStatus / isLiveStatus (clasificación de estados ESPN) ────────────
+
+test('isFinalStatus: estados de partido terminado', () => {
+  assert.equal(isFinalStatus('STATUS_FINAL'), true);
+  assert.equal(isFinalStatus('STATUS_FULL_TIME'), true);
+  assert.equal(isFinalStatus('STATUS_FINAL_PEN'), true);
+  // Partido resuelto en alargue (extra time): ESPN reporta STATUS_FINAL_AET.
+  // Antes quedaba sin manejar → el partido nunca se finalizaba y quedaba "en vivo".
+  assert.equal(isFinalStatus('STATUS_FINAL_AET'), true);
+});
+
+test('isFinalStatus: estados en curso / programados no son finales', () => {
+  assert.equal(isFinalStatus('STATUS_IN_PLAY'), false);
+  assert.equal(isFinalStatus('STATUS_HALFTIME'), false);
+  assert.equal(isFinalStatus('STATUS_SCHEDULED'), false);
+});
+
+test('isLiveStatus: estados en curso', () => {
+  assert.equal(isLiveStatus('STATUS_IN_PLAY'), true);
+  assert.equal(isLiveStatus('STATUS_FIRST_HALF'), true);
+  assert.equal(isLiveStatus('STATUS_SECOND_HALF'), true);
+  assert.equal(isLiveStatus('STATUS_HALFTIME'), true);
+  assert.equal(isLiveStatus('STATUS_DELAYED'), true);
+  assert.equal(isLiveStatus('STATUS_FINAL'), false);
+  assert.equal(isLiveStatus('STATUS_FINAL_AET'), false);
 });
 
 // ─── findFirebaseMatchForLive (legacy football-data.org shape) ────────────────
