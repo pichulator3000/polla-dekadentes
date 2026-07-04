@@ -207,6 +207,34 @@ export function computeBracketUpdates(matches) {
   return updates;
 }
 
+// ─── Clasificación de estados del scoreboard de ESPN ─────────────────────────
+//
+// ESPN reporta distintos `status.type.name` según cómo termina el partido:
+//   STATUS_FULL_TIME   → terminó en los 90'
+//   STATUS_FINAL_AET   → terminó en el alargue (extra time, sin penales)
+//   STATUS_FINAL_PEN   → terminó en penales
+//   STATUS_FINAL       → genérico terminado
+// OJO: si un estado final no está en esta lista, el partido nunca escribe
+// realHome/realAway ni limpia liveHome/liveAway → queda "en vivo" para siempre.
+
+const FINAL_STATUSES = new Set([
+  'STATUS_FINAL',
+  'STATUS_FULL_TIME',
+  'STATUS_FINAL_AET',
+  'STATUS_FINAL_PEN',
+]);
+
+const LIVE_STATUSES = new Set([
+  'STATUS_IN_PLAY',
+  'STATUS_FIRST_HALF',
+  'STATUS_SECOND_HALF',
+  'STATUS_HALFTIME',
+  'STATUS_DELAYED',
+]);
+
+export function isFinalStatus(status) { return FINAL_STATUSES.has(status); }
+export function isLiveStatus(status)  { return LIVE_STATUSES.has(status); }
+
 // ─── Marcador por fases (90' / alargue / penales) ────────────────────────────
 //
 // La polla SOLO puntúa el resultado a los 90'. ESPN entrega el marcador agregado
@@ -365,8 +393,14 @@ async function run() {
     bracketResolved++;
   }
 
-  // Fetch ESPN scoreboard
-  const res = await fetch(ESPN_BASE, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+  // Fetch ESPN scoreboard sobre una ventana de días (no solo hoy). Así, si en un
+  // ciclo anterior nos perdimos el FINAL de un partido (p.ej. terminó en alargue y
+  // el estado quedó sin capturar), lo recuperamos: findFirebaseMatch ignora los que
+  // ya tienen resultado, así que reprocesar días recientes es idempotente y barato.
+  const fmt = (d) => d.toISOString().slice(0, 10).replace(/-/g, '');
+  const today = new Date();
+  const from = new Date(today); from.setUTCDate(from.getUTCDate() - 3);
+  const res = await fetch(`${ESPN_BASE}?dates=${fmt(from)}-${fmt(today)}`, { headers: { 'User-Agent': 'Mozilla/5.0' } });
   if (!res.ok) { console.error(`ESPN fetch error: ${res.status}`); process.exit(1); }
   const data = await res.json();
 
@@ -399,7 +433,7 @@ async function run() {
       fbMatch, normalizeTeam(homeTeam), normalizeTeam(awayTeam), homeScore, awayScore,
     );
 
-    if (status === 'STATUS_FINAL' || status === 'STATUS_FULL_TIME' || status === 'STATUS_FINAL_PEN') {
+    if (isFinalStatus(status)) {
       // La polla solo puntúa el 90'. Para fase final pedimos el desglose por período
       // (summary → linescores) y derivamos 90'/120'/penales; el `winner` de ESPN dice
       // quién clasifica (sirve para armar la llave aunque haya alargue o penales).
@@ -428,7 +462,7 @@ async function run() {
       await db.ref(`pf/matches/${fbMatch.id}`).update(finalUpdate);
       console.log(`FINAL ${desc}${finalUpdate.advances ? ` · avanza ${finalUpdate.advances}` : ''}`);
       updatedFinal++;
-    } else if (status === 'STATUS_IN_PLAY' || status === 'STATUS_FIRST_HALF' || status === 'STATUS_SECOND_HALF' || status === 'STATUS_HALFTIME' || status === 'STATUS_DELAYED') {
+    } else if (isLiveStatus(status)) {
       if (DRY_RUN) {
         console.log(`[dry-run LIVE] ${fbMatch.home} ${fbHomeScore}-${fbAwayScore} ${fbMatch.away}`);
         continue;
