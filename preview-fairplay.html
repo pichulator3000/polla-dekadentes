@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Preview · Banner Fair Play</title>
+<style>
+  body{margin:0;background:#080c16;color:#e8edf5;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:24px;display:flex;justify-content:center}
+  .wrap{max-width:480px;width:100%}
+  h2{font-size:13px;color:#64748b;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin:0 0 12px}
+
+  .fairplay-banner { position:relative; margin:0 0 14px; padding:15px 16px 15px 66px; border-radius:16px; overflow:hidden;
+    background:linear-gradient(135deg,#064e3b 0%,#065f46 45%,#0b3d2e 100%);
+    border:2px solid #fcd34d; box-shadow:0 0 0 1px rgba(252,211,77,.25) inset, 0 10px 30px rgba(5,150,105,.35); }
+  .fairplay-banner::before { content:""; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(115deg,transparent 40%,rgba(252,211,77,.18) 50%,transparent 60%);
+    background-size:240% 100%; animation:fpSheen 3.2s linear infinite; }
+  .fp-emoji { position:absolute; left:14px; top:50%; margin-top:-22px; font-size:44px; line-height:1; z-index:1;
+    filter:drop-shadow(0 3px 6px rgba(0,0,0,.5)); animation:fpBob 2.4s ease-in-out infinite; }
+  .fp-tag { position:relative; display:inline-block; font-size:10px; font-weight:900; letter-spacing:.12em;
+    color:#052e1a; background:#fcd34d; padding:2px 9px; border-radius:20px; margin-bottom:6px; text-transform:uppercase; }
+  .fp-t1 { position:relative; font-size:18px; font-weight:900; color:#fff; line-height:1.1; }
+  .fp-t2 { position:relative; font-size:12.5px; font-weight:700; margin-top:5px; color:#d1fae5; line-height:1.35; }
+  .fp-t2 b { color:#fcd34d; }
+  .fp-pts { position:relative; margin-top:9px; font-size:12px; font-weight:900; color:#6ee7b7;
+    border-top:1px dashed rgba(252,211,77,.35); padding-top:8px; }
+  .fp-pts s { color:#86efac; opacity:.7; }
+  .fp-wink { color:#fcd34d; font-weight:800; }
+  @keyframes fpSheen { to { background-position:-200% 0; } }
+  @keyframes fpBob { 0%,100%{transform:translateY(0) rotate(-4deg)} 50%{transform:translateY(-6px) rotate(4deg)} }
+</style></head>
+<body><div class="wrap">
+  <h2>Preview — así se verá en el home</h2>
+  <div class="fairplay-banner" role="note">
+    <span class="fp-emoji">🤝</span>
+    <span class="fp-tag">🏅 Fair Play</span>
+    <div class="fp-t1">¡Aplausos para Rai!</div>
+    <div class="fp-t2">Detectó una falla con la que pudo haber tomado ventaja… <b>y aun así no lo hizo</b>. Ese es el ejemplo de un buen jugador — todo lo contrario al careraja de Alejandro Saval. 👏</div>
+    <div class="fp-pts">🎁 Por su honestidad se le suman <span class="fp-wink">+50 puntos</span> 👏</div>
+  </div>
+</div></body></html>

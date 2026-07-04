@@ -630,6 +630,30 @@
       .pb-circo .payaso-emoji { transform:rotate(-6deg); }
     }
 
+    /* fair-play banner — homenaje al jugador honesto (tono premio/dorado) */
+    .fairplay-banner { position:relative; margin:0 0 14px; padding:15px 16px 15px 66px; border-radius:16px; overflow:hidden;
+      background:linear-gradient(135deg,#064e3b 0%,#065f46 45%,#0b3d2e 100%);
+      border:2px solid #fcd34d; box-shadow:0 0 0 1px rgba(252,211,77,.25) inset, 0 10px 30px rgba(5,150,105,.35); }
+    .fairplay-banner::before { content:""; position:absolute; inset:0; pointer-events:none;
+      background:linear-gradient(115deg,transparent 40%,rgba(252,211,77,.18) 50%,transparent 60%);
+      background-size:240% 100%; animation:fpSheen 3.2s linear infinite; }
+    .fp-emoji { position:absolute; left:14px; top:50%; margin-top:-22px; font-size:44px; line-height:1; z-index:1;
+      filter:drop-shadow(0 3px 6px rgba(0,0,0,.5)); animation:fpBob 2.4s ease-in-out infinite; }
+    .fp-tag { position:relative; display:inline-block; font-size:10px; font-weight:900; letter-spacing:.12em;
+      color:#052e1a; background:#fcd34d; padding:2px 9px; border-radius:20px; margin-bottom:6px; text-transform:uppercase; }
+    .fp-t1 { position:relative; font-size:18px; font-weight:900; color:#fff; line-height:1.1; }
+    .fp-t2 { position:relative; font-size:12.5px; font-weight:700; margin-top:5px; color:#d1fae5; line-height:1.35; }
+    .fp-t2 b { color:#fcd34d; }
+    .fp-pts { position:relative; margin-top:9px; font-size:12px; font-weight:900; color:#6ee7b7;
+      border-top:1px dashed rgba(252,211,77,.35); padding-top:8px; }
+    .fp-pts s { color:#86efac; opacity:.7; }
+    .fp-wink { color:#fcd34d; font-weight:800; }
+    @keyframes fpSheen { to { background-position:-200% 0; } }
+    @keyframes fpBob { 0%,100%{transform:translateY(0) rotate(-4deg)} 50%{transform:translateY(-6px) rotate(4deg)} }
+    @media (prefers-reduced-motion: reduce) {
+      .fairplay-banner::before, .fp-emoji { animation:none !important; }
+    }
+
     /* ═══ Dashboard en vivo (overlay) ═══ */
     #liveDash { position:fixed; inset:0; z-index:1100; background:#080c16; transform:translateY(100%); transition:transform .35s cubic-bezier(.22,1,.36,1); overflow-y:auto; overscroll-behavior:contain; display:none; }
     #liveDash.open { transform:translateY(0); }
@@ -986,6 +1010,9 @@
 
       <!-- Alerta Anti-Trampa IA (solo jugadores marcados) -->
       <div id="homeCheatAlert"></div>
+
+      <!-- Fair Play (homenaje, hasta el próximo partido) -->
+      <div id="homeFairPlay" style="display:none"></div>
 
       <!-- Próximo partido / En vivo -->
       <div id="homeMatchStrip" style="display:none"></div>
@@ -1584,7 +1611,7 @@ function refreshActiveTab() {
   if (selectedStatsTournament !== '__all__' && isTournamentHidden(selectedStatsTournament)) {
     selectedStatsTournament = '__all__';
   }
-  if (currentTab === 'home')     { renderHomeStats(); renderHomeMatchStrip(); renderUpcoming(); }
+  if (currentTab === 'home')     { renderHomeStats(); renderFairPlay(); renderHomeMatchStrip(); renderUpcoming(); }
   if (currentTab === 'partidos') renderMatches();
   if (currentTab === 'ranking')  renderRanking();
   if (currentTab === 'stats')    renderStats();
@@ -1888,6 +1915,7 @@ function showHome() {
   document.getElementById('mainContent').scrollTop = 0;
   currentTab = 'home';
   renderHomeStats();
+  renderFairPlay();
   renderHomeMatchStrip();
   renderUpcoming();
   renderCheatAlert();
@@ -2820,6 +2848,42 @@ function aweonaoStats(scope){
     id: u.id, name: u.name,
     olvidos: cerrados.filter(m => !_tienePred(u.id, m.id)).length
   })).sort((a,b) => b.olvidos - a.olvidos || a.name.localeCompare(b.name));
+}
+
+// ── Banner Fair Play: homenaje que vive solo hasta el próximo partido ──
+function fairPlayHtml(){
+  return `<div class="fairplay-banner" role="note">
+    <span class="fp-emoji">🤝</span>
+    <span class="fp-tag">🏅 Fair Play</span>
+    <div class="fp-t1">¡Aplausos para Rai!</div>
+    <div class="fp-t2">Detectó una falla con la que pudo haber tomado ventaja… <b>y aun así no lo hizo</b>. Ese es el ejemplo de un buen jugador — todo lo contrario al careraja de Alejandro Saval. 👏</div>
+    <div class="fp-pts">🎁 Por su honestidad se le suman <span class="fp-wink">+50 puntos</span> 👏</div>
+  </div>`;
+}
+function renderFairPlay(){
+  const el = document.getElementById('homeFairPlay');
+  if (!el) return;
+  const now = new Date();
+  const matches = CACHE.matches || [];
+  // Ancla: el partido de "este momento" (en vivo), o el próximo por jugarse.
+  let anchorId = localStorage.getItem('fairplayMatch');
+  if (!anchorId){
+    const live = matches.filter(m => getStatus(m)==='live')
+      .sort((a,b)=>new Date(a.datetime)-new Date(b.datetime))[0];
+    const next = matches.filter(m => new Date(m.datetime) > now)
+      .sort((a,b)=>new Date(a.datetime)-new Date(b.datetime))[0];
+    const anchor = live || next;
+    if (anchor){ anchorId = anchor.id; localStorage.setItem('fairplayMatch', anchorId); }
+  }
+  const anchor = matches.find(m => m.id === anchorId);
+  // Se muestra hasta que ESE partido termine (queda con resultado final / cerrado).
+  const activo = anchor ? ['open','live'].includes(getStatus(anchor)) : true;
+  if (activo){
+    el.innerHTML = fairPlayHtml();
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
 }
 
 // ── Home strip: en vivo (arriba) + próximo partido ──
