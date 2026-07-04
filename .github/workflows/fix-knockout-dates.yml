@@ -1,0 +1,40 @@
+# .github/workflows/fix-knockout-dates.yml
+# Corrige las fechas/horas de la fase final (octavos → final) en Firebase usando
+# el calendario real de ESPN. Se dispara a mano desde la pestaña Actions.
+name: Fix fechas fase final
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: 'Aplicar cambios (si lo dejas desmarcado, solo muestra el plan)'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: fix-knockout-dates
+  cancel-in-progress: false
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fix knockout dates (ESPN → Firebase)
+        env:
+          FIREBASE_DATABASE_URL: ${{ secrets.FIREBASE_DATABASE_URL }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          APPLY: ${{ github.event.inputs.apply == 'true' && '1' || '0' }}
+        run: node scripts/fix_knockout_dates.mjs
