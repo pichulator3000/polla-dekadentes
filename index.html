@@ -4495,11 +4495,21 @@ function renderMatches() {
       const until  = timeUntil(m.datetime);
 
       const badges = {
-        open:   `<span class="badge-open">● Abierto</span>`,
-        locked: `<span class="badge-lock">🔒 Cerrado</span>`,
-        live:   `<span class="badge-live">🔴 En vivo${m.liveHome != null ? ` <b style="color:#fbbf24">${m.liveHome}–${m.liveAway}</b>` : ''}</span>`,
-        done:   `<span class="badge-done">✓ Fin</span>`,
+        open:   `<span class=\"badge-open\">● Abierto</span>`,
+        locked: `<span class=\"badge-lock\">🔒 Cerrado</span>`,
+        live:   `<span class=\"badge-live\">🔴 En vivo${m.liveHome != null ? ` <b style=\"color:#fbbf24\">${m.liveHome}–${m.liveAway}</b>` : ''}</span>`,
+        done:   `<span class=\"badge-done\">✓ Fin</span>`,
       };
+
+    // ══ ADMIN: Quick Config Button ══
+    let configBtn = '';
+    if (isAdm) {
+      configBtn = `<button onclick=\"openMatchConfig('${m.id}')\" 
+        style=\"position:absolute;top:8px;right:8px;width:22px;height:22px;padding:0;border-radius:50%;border:1px solid #475569;
+        background:#1e293b;color:#94a3b8;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all 0.2s\"
+        onmouseover=\"this.style.borderColor='#c084fc';this.style.color='#c084fc'\"
+        onmouseout=\"this.style.borderColor='#475569';this.style.color='#94a3b8'\">⚙️</button>`;
+    }
 
     // Puntos: mostrar en done y en live (provisional)
     let ptsHtml = '';
@@ -6855,16 +6865,29 @@ async function renderAnalytics() {
 
       <!-- USER-AGENTS TOP -->
       <div class="card" style="padding:14px">
-        <div style="font-size:13px;font-weight:800;color:#a78bfa;margin-bottom:10px">📱 Top User-Agents</div>
+        <div style="font-size:13px;font-weight:800;color:#a78bfa;margin-bottom:10px">👥 Top Usuarios (por sesiones)</div>
         <div style="display:flex;flex-direction:column;gap:8px">
-          ${stats.topUserAgents.length > 0 ? stats.topUserAgents.map(ua => `
+          ${stats.topUserAgents.length > 0 ? stats.topUserAgents.map(ua => {
+            // Buscar nombres de usuario asociados a este userAgent
+            const userNames = (ua.userIds || [])
+              .map(uid => {
+                const user = CACHE.users.find(u => u.id === uid);
+                return user ? user.name : (uid === 'anonymous' ? 'Anónimo' : `@${uid}`);
+              })
+              .filter(n => n)
+              .slice(0, 3); // máx 3 nombres
+            const displayName = userNames.length > 0
+              ? userNames.join(', ') + (userNames.length >= 3 ? '…' : '')
+              : `${ua.isBot ? '🤖' : '👤'} ${ua.userAgent.substring(0, 45)}...`;
+            const isBot = ua.isBot;
+            return `
             <div style="background:#0c1526;padding:10px;border-radius:8px;display:flex;justify-content:space-between;align-items:center">
-              <div style="flex:1;font-size:11px;color:#${ua.isBot ? 'f87171' : 'a8dadc'};font-weight:600;word-break:break-word">
-                ${ua.isBot ? '🤖' : '👤'} ${ua.userAgent.substring(0, 60)}...
+              <div style="flex:1;font-size:11px;color:#${isBot ? 'f87171' : 'a8dadc'};font-weight:600;word-break:break-word">
+                ${displayName}
               </div>
               <div style="font-weight:900;color:#38bdf8;margin-left:8px">${ua.count}</div>
             </div>
-          `).join('') : '<div style="color:#64748b;font-size:12px">Sin datos</div>'}
+          `;}).join('') : '<div style="color:#64748b;font-size:12px">Sin datos</div>'}
         </div>
       </div>
 
