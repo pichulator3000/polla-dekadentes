@@ -384,6 +384,15 @@ export async function getAnalyticsStats(databaseRef, hoursBack = 24) {
     }
   }
 
+  // Mapear userAgent -> Set de userIds
+  const uaToUserIds = {};
+  for (const session of sessions) {
+    const ua = session.userAgent || 'unknown';
+    const uid = session.userId || 'anonymous';
+    if (!uaToUserIds[ua]) uaToUserIds[ua] = new Set();
+    uaToUserIds[ua].add(uid);
+  }
+
   // Ordenar User-Agents por frecuencia y detectar bots
   const topUserAgents = Object.entries(userAgents)
     .sort((a, b) => b[1] - a[1])
@@ -393,6 +402,7 @@ export async function getAnalyticsStats(databaseRef, hoursBack = 24) {
       count,
       isBot: detectBot(ua).isBot,
       botName: detectBot(ua).botName,
+      userIds: Array.from(uaToUserIds[ua] || []),
     }));
 
   return {
