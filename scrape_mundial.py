@@ -119,49 +119,49 @@ PARTIDOS_GRUPOS = [
 TBD = "Por definir"
 
 PARTIDOS_ELIMINATORIAS = [
-    # ── Ronda de 32 (16 partidos) — 1-4 julio 2026 ───────────────────────────
-    (TBD, TBD, "Ronda de 32", "2026-07-01T13:00", "Sede por confirmar"),
+    # ── Ronda de 32 (16 partidos) — 28 jun a 3 jul 2026 ──────────────────────
+    (TBD, TBD, "Ronda de 32", "2026-06-28T13:00", "Sede por confirmar"),
+    (TBD, TBD, "Ronda de 32", "2026-06-29T13:00", "Sede por confirmar"),
+    (TBD, TBD, "Ronda de 32", "2026-06-29T16:30", "Sede por confirmar"),
+    (TBD, TBD, "Ronda de 32", "2026-06-29T21:00", "Sede por confirmar"),
+    (TBD, TBD, "Ronda de 32", "2026-06-30T13:00", "Sede por confirmar"),
+    (TBD, TBD, "Ronda de 32", "2026-06-30T17:00", "Sede por confirmar"),
+    (TBD, TBD, "Ronda de 32", "2026-06-30T21:00", "Sede por confirmar"),
+    (TBD, TBD, "Ronda de 32", "2026-07-01T14:00", "Sede por confirmar"),
     (TBD, TBD, "Ronda de 32", "2026-07-01T17:00", "Sede por confirmar"),
-    (TBD, TBD, "Ronda de 32", "2026-07-01T21:00", "Sede por confirmar"),
-    (TBD, TBD, "Ronda de 32", "2026-07-02T13:00", "Sede por confirmar"),
-    (TBD, TBD, "Ronda de 32", "2026-07-02T17:00", "Sede por confirmar"),
-    (TBD, TBD, "Ronda de 32", "2026-07-02T21:00", "Sede por confirmar"),
+    (TBD, TBD, "Ronda de 32", "2026-07-01T20:00", "Sede por confirmar"),
+    (TBD, TBD, "Ronda de 32", "2026-07-02T15:00", "Sede por confirmar"),
+    (TBD, TBD, "Ronda de 32", "2026-07-02T16:00", "Sede por confirmar"),
+    (TBD, TBD, "Ronda de 32", "2026-07-02T19:00", "Sede por confirmar"),
     (TBD, TBD, "Ronda de 32", "2026-07-03T13:00", "Sede por confirmar"),
-    (TBD, TBD, "Ronda de 32", "2026-07-03T17:00", "Sede por confirmar"),
-    (TBD, TBD, "Ronda de 32", "2026-07-03T21:00", "Sede por confirmar"),
-    (TBD, TBD, "Ronda de 32", "2026-07-04T13:00", "Sede por confirmar"),
-    (TBD, TBD, "Ronda de 32", "2026-07-04T17:00", "Sede por confirmar"),
-    (TBD, TBD, "Ronda de 32", "2026-07-04T21:00", "Sede por confirmar"),
-    (TBD, TBD, "Ronda de 32", "2026-07-05T13:00", "Sede por confirmar"),
-    (TBD, TBD, "Ronda de 32", "2026-07-05T17:00", "Sede por confirmar"),
-    (TBD, TBD, "Ronda de 32", "2026-07-05T21:00", "Sede por confirmar"),
-    (TBD, TBD, "Ronda de 32", "2026-07-06T17:00", "Sede por confirmar"),
+    (TBD, TBD, "Ronda de 32", "2026-07-03T15:00", "Sede por confirmar"),
+    (TBD, TBD, "Ronda de 32", "2026-07-03T20:00", "Sede por confirmar"),
 
-    # ── Octavos de Final (8 partidos) — 9-12 julio ───────────────────────────
-    (TBD, TBD, "Octavos", "2026-07-09T17:00", "Sede por confirmar"),
-    (TBD, TBD, "Octavos", "2026-07-09T21:00", "Sede por confirmar"),
-    (TBD, TBD, "Octavos", "2026-07-10T17:00", "Sede por confirmar"),
-    (TBD, TBD, "Octavos", "2026-07-10T21:00", "Sede por confirmar"),
-    (TBD, TBD, "Octavos", "2026-07-11T17:00", "Sede por confirmar"),
-    (TBD, TBD, "Octavos", "2026-07-11T21:00", "Sede por confirmar"),
-    (TBD, TBD, "Octavos", "2026-07-12T17:00", "Sede por confirmar"),
-    (TBD, TBD, "Octavos", "2026-07-12T21:00", "Sede por confirmar"),
+    # ── Octavos de Final (8 partidos) — 4 a 7 jul ────────────────────────────
+    (TBD, TBD, "Octavos", "2026-07-04T13:00", "Sede por confirmar"),
+    (TBD, TBD, "Octavos", "2026-07-04T17:00", "Sede por confirmar"),
+    (TBD, TBD, "Octavos", "2026-07-05T16:00", "Sede por confirmar"),
+    (TBD, TBD, "Octavos", "2026-07-05T20:00", "Sede por confirmar"),
+    (TBD, TBD, "Octavos", "2026-07-06T15:00", "Sede por confirmar"),
+    (TBD, TBD, "Octavos", "2026-07-06T17:00", "Sede por confirmar"),
+    (TBD, TBD, "Octavos", "2026-07-07T12:00", "Sede por confirmar"),
+    (TBD, TBD, "Octavos", "2026-07-07T16:00", "Sede por confirmar"),
 
-    # ── Cuartos de Final (4 partidos) — 16-17 julio ──────────────────────────
-    (TBD, TBD, "Cuartos de Final", "2026-07-16T17:00", "Sede por confirmar"),
-    (TBD, TBD, "Cuartos de Final", "2026-07-16T21:00", "Sede por confirmar"),
-    (TBD, TBD, "Cuartos de Final", "2026-07-17T17:00", "Sede por confirmar"),
-    (TBD, TBD, "Cuartos de Final", "2026-07-17T21:00", "Sede por confirmar"),
+    # ── Cuartos de Final (4 partidos) — 9 a 11 jul ───────────────────────────
+    (TBD, TBD, "Cuartos de Final", "2026-07-09T16:00", "Sede por confirmar"),
+    (TBD, TBD, "Cuartos de Final", "2026-07-10T15:00", "Sede por confirmar"),
+    (TBD, TBD, "Cuartos de Final", "2026-07-11T17:00", "Sede por confirmar"),
+    (TBD, TBD, "Cuartos de Final", "2026-07-11T21:00", "Sede por confirmar"),
 
-    # ── Semifinales (2 partidos) — 21-22 julio ───────────────────────────────
-    (TBD, TBD, "Semifinal", "2026-07-21T21:00", "Sede por confirmar"),
-    (TBD, TBD, "Semifinal", "2026-07-22T21:00", "Sede por confirmar"),
+    # ── Semifinales (2 partidos) — 14 y 15 jul ───────────────────────────────
+    (TBD, TBD, "Semifinal", "2026-07-14T15:00", "Sede por confirmar"),
+    (TBD, TBD, "Semifinal", "2026-07-15T15:00", "Sede por confirmar"),
 
-    # ── Tercer Puesto — 25 julio ─────────────────────────────────────────────
-    (TBD, TBD, "Tercer Puesto", "2026-07-25T20:00", "Sede por confirmar"),
+    # ── Tercer Puesto — 18 jul ───────────────────────────────────────────────
+    (TBD, TBD, "Tercer Puesto", "2026-07-18T17:00", "Miami Stadium"),
 
-    # ── FINAL — 19 julio ─────────────────────────────────────────────────────
-    (TBD, TBD, "Final", "2026-07-19T20:00", "New York / New Jersey Stadium"),
+    # ── FINAL — 19 jul ───────────────────────────────────────────────────────
+    (TBD, TBD, "Final", "2026-07-19T15:00", "New York / New Jersey Stadium"),
 ]
 
 
