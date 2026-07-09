@@ -1897,11 +1897,18 @@ function launchApp(user) {
   document.getElementById('togglePC').classList.toggle('on', !!prefs.pcMode);
   document.getElementById('toggleShowUser').classList.toggle('on', prefs.showUser !== false);
 
-  // ═══ CAPTURA DE SESIÓN PARA ANALYTICS (vincula usuario logueado) ═══
-  // Si ya existia una sesion anonima de esta visita, se crea una nueva vinculada
-  // al usuario (las reglas de Firebase solo permiten crear, no actualizar).
+  // ═══ CAPTURA / VINCULACIÓN DE SESIÓN PARA ANALYTICS ═══
+  // Al loguear, vinculamos la sesion anonima de esta visita al usuario
+  // (update del userId). Si no hay sesion previa, creamos una nueva.
   if (window.__analytics) {
-    window.__analytics.captureSession(RT, user.id);
+    const _anonId = window.__analytics.getExistingSessionId();
+    if (_anonId) {
+      RT.ref('analytics/sessions/' + _anonId)
+        .update({ userId: user.id, userName: user.name || null })
+        .catch(() => window.__analytics.captureSession(RT, user.id));
+    } else {
+      window.__analytics.captureSession(RT, user.id);
+    }
   }
 
   clockInterval = setInterval(updateClock, 1000);
