@@ -1388,6 +1388,18 @@ if (FIREBASE_CONFIG.apiKey === 'TU_API_KEY') {
 }
 const RT = firebase.database();
 
+// ═══ CAPTURA DE SESIÓN ANÓNIMA PARA ANALYTICS / DETECTOR DE BOTS ═══
+// Registra visitantes sin login (bots que solo golpean la página) para que el
+// detector de bots vea TODO el tráfico, no solo usuarios logueados.
+window.addEventListener('DOMContentLoaded', function () {
+  try {
+    if (window.__analytics && !window.__analytics.getExistingSessionId()) {
+      window.__analytics.captureSession(RT, null);
+    }
+  } catch (e) { /* analytics no es crítico para el funcionamiento */ }
+});
+
+
 // ═══ CACHE local (espejo de Firebase) ═══
 const CACHE  = { users: [], matches: [], preds: [], podio: [], pending: [], settings: {} };
 const LOADED = { users: false, matches: false, preds: false, podio: false, messages: false };
@@ -1885,8 +1897,10 @@ function launchApp(user) {
   document.getElementById('togglePC').classList.toggle('on', !!prefs.pcMode);
   document.getElementById('toggleShowUser').classList.toggle('on', prefs.showUser !== false);
 
-  // ═══ CAPTURA DE SESIÓN PARA ANALYTICS ═══
-  if (window.__analytics && !window.__analytics.getExistingSessionId()) {
+  // ═══ CAPTURA DE SESIÓN PARA ANALYTICS (vincula usuario logueado) ═══
+  // Si ya existia una sesion anonima de esta visita, se crea una nueva vinculada
+  // al usuario (las reglas de Firebase solo permiten crear, no actualizar).
+  if (window.__analytics) {
     window.__analytics.captureSession(RT, user.id);
   }
 
@@ -6772,6 +6786,7 @@ function toggleShowUser() {
 // ═══ ANALYTICS & MONITOREO ═══
 // Variable para almacenar stats en cache
 let ANALYTICS_CACHE = { stats24h: null, scrapingPatterns: null, lastUpdate: 0 };
+let analyticsTimer = null;
 
 async function loadAnalyticsStats() {
   if (!window.__analytics) return null;
@@ -6812,6 +6827,7 @@ async function loadScrapingPatterns() {
 }
 
 async function renderAnalytics() {
+  if (analyticsTimer) { clearInterval(analyticsTimer); analyticsTimer = null; }
   const el = document.getElementById('analyticsContent');
   if (!el) return;
   
@@ -6962,6 +6978,13 @@ async function renderAnalytics() {
     </div>`;
 
     el.innerHTML = html;
+
+    // Auto-refresh del detector de bots mientras el panel esta abierto
+    analyticsTimer = setInterval(function () {
+      const stillOpen = document.getElementById('analyticsContent');
+      if (!stillOpen) { clearInterval(analyticsTimer); analyticsTimer = null; return; }
+      renderAnalytics();
+    }, 30000);
   } catch (e) {
     console.error('Error rendering analytics:', e);
     el.innerHTML = '<div class="card" style="padding:16px;color:#f87171">Error: ' + e.message + '</div>';
