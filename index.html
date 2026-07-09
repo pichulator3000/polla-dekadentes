@@ -1924,11 +1924,29 @@ function showHome() {
 
 // Jugadores marcados por uso excesivo de IA (match por substring del nombre, case-insensitive)
 const CHEAT_FLAGGED = ['saval'];
+// Castigo aplicado a los tramposos: puntos descontados del total
+const CHEAT_PENALTY = 100;
+function isCheater(name){
+  return CHEAT_FLAGGED.some(f => (name||'').trim().toLowerCase().includes(f));
+}
+function cheatPenalty(name){
+  return isCheater(name) ? CHEAT_PENALTY : 0;
+}
 function renderCheatAlert() {
   const el = document.getElementById('homeCheatAlert');
   if (!el) return;
   const name = (currentUser?.name || '').trim().toLowerCase();
-  if (!CHEAT_FLAGGED.some(f => name.includes(f))) { el.innerHTML = ''; return; }
+  if (!isCheater(name)) {
+    // Banner público: informar al resto de la sanción a Saval
+    el.innerHTML = `
+      <div style="position:relative;margin:0 0 14px;padding:14px 16px;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,#1e1b4b,#0f172a);border:1px solid #6366f1">
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.04em;color:#c7d2fe;text-transform:uppercase">📢 Comunicado oficial · Comité de Integridad</div>
+        <div style="font-size:17px;font-weight:900;color:#fff;margin-top:6px">🥷🤡 Saval fue pillado usando IA</div>
+        <div style="font-size:12.5px;font-weight:600;color:#e0e7ff;margin-top:6px;line-height:1.5">Tras revisión del VAR, se confirmó que <b style="color:#fca5a5">Saval hizo trampa con inteligencia artificial</b>. El Comité aplicó una sanción de <b style="color:#fca5a5">−100 puntos</b>, ya reflejada en la tabla. Ahora luce su ladrón 🥷 y su payaso 🤡 con orgullo. 🤡</div>
+        <div style="font-size:11.5px;font-weight:600;color:#a5b4fc;margin-top:8px;line-height:1.5">Que sirva de ejemplo: acá se pronostica con el corazón, no con el ChatGPT. Un aplauso para Saval, el primer campeón… en hacer el ridículo. 👏😂</div>
+      </div>`;
+    return;
+  }
   // Versión "actualización del caso" (guardada para reutilizar más adelante):
   // <div class="cheat">
   //   <div class="c-whistle"><span class="c-live"></span> Comité de Integridad <span class="c-pill">ACTUALIZACIÓN DEL CASO</span></div>
@@ -1949,13 +1967,14 @@ function renderCheatAlert() {
   // </div>
   el.innerHTML = `
     <div class="cheat">
-      <div class="c-whistle"><span class="c-live"></span> Pitazo del árbitro <span class="c-pill">FALTA TÉCNICA</span></div>
-      <h2>Tarjeta roja por IA</h2>
-      <p class="c-deck">El VAR revisó tus predicciones y algo no le cuadró.</p>
-      <p class="c-serious">El Comité de Integridad ha registrado uso excesivo de inteligencia artificial en tus pronósticos. <b>Tu caso quedó en revisión y bajo evaluación de las sanciones que correspondan.</b></p>
+      <div class="c-whistle"><span class="c-live"></span> Comité de Integridad <span class="c-pill">CASTIGO APLICADO</span></div>
+      <h2>🥷🤡 −100 puntos, tramposo</h2>
+      <p class="c-deck">Se acabó la fiesta, Saval. El VAR ya no está revisando: ya falló.</p>
+      <p class="c-serious">Se confirmó tu uso de inteligencia artificial y el Comité <b>ya aplicó la sanción: −100 puntos</b> a tu marcador. Ahora apareces en la tabla con el ladrón 🥷 y el payaso 🤡 que te ganaste con tanto esfuerzo… de la IA. 🤖</p>
+      <p class="c-serious">Tranquilo, igual te dejamos jugar. Alguien tiene que ir último. 😂</p>
       <div class="c-var">
         <div class="c-vh">
-          <span class="c-tag">📺 Revisión del VAR · IA detectada</span>
+          <span class="c-tag">📺 VAR · trampa confirmada</span>
           <span class="c-pct" id="cheatPct">0%</span>
         </div>
         <div class="c-track"><span class="c-scan"></span><i></i></div>
@@ -1965,7 +1984,7 @@ function renderCheatAlert() {
   // contador animado sincronizado con la barra
   const pct = document.getElementById('cheatPct');
   if (!pct) return;
-  const target = 96;
+  const target = 100;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) { pct.textContent = target + '%'; return; }
   let start = null;
   function step(ts){
@@ -2137,7 +2156,7 @@ function renderHomeStats() {
   const myPts   = myDone.reduce((s, p) => {
     const m = doneOrLive.find(x => x.id === p.matchId);
     return s + (m ? totalPoints(p, m, preds) : 0);
-  }, 0);
+  }, 0) - cheatPenalty(currentUser?.name);
   const avg = myDone.length ? (myPts / myDone.length).toFixed(2) : '0.00';
   const exact = myDone.filter(p => {
     const m = doneOrLive.find(x => x.id === p.matchId);
@@ -2169,7 +2188,7 @@ function renderHomeStats() {
     const uPts = uDone.reduce((s, p) => {
       const m = doneOrLive.find(x => x.id === p.matchId);
       return s + (m ? totalPoints(p, m, preds) : 0);
-    }, 0);
+    }, 0) - cheatPenalty(u.name);
     return { name: u.name, pts: uPts, id: u.id };
   }).sort((a, b) => b.pts - a.pts);
   const myPos = ranking.findIndex(r => r.id === uid) + 1;
@@ -5007,7 +5026,9 @@ function renderRanking() {
       podioPts = calcPodioPoints(myPodio).total;
       pts += podioPts;
     }
-    return { ...u, pts, exact, correct, played, podioPts };
+    const penalty = cheatPenalty(u.name);
+    pts -= penalty;
+    return { ...u, pts, exact, correct, played, podioPts, penalty };
   }).sort((a,b) => b.pts-a.pts || b.exact-a.exact);
 
   const total = doneOrLive.filter(m => m.realHome!=null).length;
@@ -5031,14 +5052,17 @@ function renderRanking() {
     const isMine = s.id===currentUser.id;
     const rowBg  = isMine ? 'background:#1e3a5f' : (i%2===0?'background:#1e293b':'background:#182030');
     const pagoHtml = last3 ? '<div style="font-size:9px;color:#f87171;font-weight:700;margin-top:2px">🍺 Pagando 24 pack</div>' : '';
+    const cheatTag = s.penalty ? ' <span title="Tramposo — castigo por uso de IA" style="font-size:13px">🥷🤡</span>' : '';
+    const cheatBadge = s.penalty ? `<div style="display:inline-block;font-size:9px;color:#fca5a5;font-weight:900;margin-top:2px;background:#450a0a;border:1px solid #b91c1c;border-radius:6px;padding:1px 6px">⚠️ CASTIGO −${s.penalty} pts por trampa</div>` : '';
     html += `<tr style="${rowBg}">
       <td style="padding:12px 10px;font-weight:800;font-size:14px">${medal||i+1}</td>
       <td style="padding:12px 4px">
-        <div style="font-weight:700;font-size:13px">${s.name}${isMine?' <span style="color:#38bdf8;font-size:10px">(tú)</span>':''}</div>
+        <div style="font-weight:700;font-size:13px">${s.name}${cheatTag}${isMine?' <span style="color:#38bdf8;font-size:10px">(tú)</span>':''}</div>
         <div style="color:#475569;font-size:10px">@${s.code}</div>
+        ${cheatBadge}
         ${pagoHtml}
       </td>
-      <td style="padding:12px 6px;text-align:center;font-weight:900;color:${hasLiveMatch?'#fbbf24':'#38bdf8'};font-size:16px">${s.pts.toFixed(2)}</td>
+      <td style="padding:12px 6px;text-align:center;font-weight:900;color:${s.penalty?'#f87171':(hasLiveMatch?'#fbbf24':'#38bdf8')};font-size:16px">${s.pts.toFixed(2)}${s.penalty?`<div style="font-size:9px;color:#f87171;font-weight:800">−${s.penalty}</div>`:''}</td>
       ${showPodioCol ? `<td style="padding:12px 6px;text-align:center;color:${s.podioPts>0?'#38bdf8':'#475569'};font-weight:700">${s.podioPts>0?('+'+s.podioPts):'—'}</td>` : ''}
       <td style="padding:12px 6px;text-align:center;color:#38bdf8">${s.exact}</td>
       <td style="padding:12px 6px;text-align:center;color:#4ade80">${s.correct}</td>
