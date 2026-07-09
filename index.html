@@ -5066,7 +5066,7 @@ function renderRanking() {
       pts += podioPts;
     }
     const pen = getPenaltyTotal(u.id);
-    return { ...u, pts: Math.max(0, pts - pen), penalizado: pen > 0, penAmt: pen, exact, correct, played, podioPts };
+    return { ...u, pts: Math.max(0, pts - pen), penalizado: pen > 0, exact, correct, played, podioPts };
   }).sort((a,b) => b.pts-a.pts || b.exact-a.exact);
 
   const total = doneOrLive.filter(m => m.realHome!=null).length;
@@ -5090,7 +5090,8 @@ function renderRanking() {
     const isMine = s.id===currentUser.id;
     const rowBg  = isMine ? 'background:#1e3a5f' : (i%2===0?'background:#1e293b':'background:#182030');
     const pagoHtml = last3 ? '<div style="font-size:9px;color:#f87171;font-weight:700;margin-top:2px">🍺 Pagando 24 pack</div>' : '';
-        const cheatBadge = s.penalizado ? `<div style="display:inline-block;font-size:9px;color:#fca5a5;font-weight:900;margin-top:2px;background:#450a0a;border:1px solid #b91c1c;border-radius:6px;padding:1px 6px">⚠️ SANCIÓN −${s.penAmt} pts</div>` : '';
+    const cheatTag = s.penalizado ? ' <span title="Sancionado" style="font-size:13px">🥷🤡</span>' : '';
+    const cheatBadge = s.penalizado ? `<div style="display:inline-block;font-size:9px;color:#fca5a5;font-weight:900;margin-top:2px;background:#450a0a;border:1px solid #b91c1c;border-radius:6px;padding:1px 6px">⚠️ SANCIÓN −${s.penalizado} pts</div>` : '';
     html += `<tr style="${rowBg}">
       <td style="padding:12px 10px;font-weight:800;font-size:14px">${medal||i+1}</td>
       <td style="padding:12px 4px">
@@ -5099,7 +5100,7 @@ function renderRanking() {
         ${cheatBadge}
         ${pagoHtml}
       </td>
-      <td style="padding:12px 6px;text-align:center;font-weight:900;color:${s.penalizado?'#f87171':(hasLiveMatch?'#fbbf24':'#38bdf8')};font-size:16px">${s.pts.toFixed(2)}${s.penalizado?`<div style="font-size:9px;color:#f87171;font-weight:800">−${s.penAmt}</div>`:''}</td>
+      <td style="padding:12px 6px;text-align:center;font-weight:900;color:${s.penalizado?'#f87171':(hasLiveMatch?'#fbbf24':'#38bdf8')};font-size:16px">${s.pts.toFixed(2)}${s.penalizado?`<div style="font-size:9px;color:#f87171;font-weight:800">−${s.penalizado}</div>`:''}</td>
       ${showPodioCol ? `<td style="padding:12px 6px;text-align:center;color:${s.podioPts>0?'#38bdf8':'#475569'};font-weight:700">${s.podioPts>0?('+'+s.podioPts):'—'}</td>` : ''}
       <td style="padding:12px 6px;text-align:center;color:#38bdf8">${s.exact}</td>
       <td style="padding:12px 6px;text-align:center;color:#4ade80">${s.correct}</td>
@@ -7014,11 +7015,6 @@ initFirebase();
 
 <!-- Cloudflare Web Analytics (privacy-first, sin cookies, sin GDPR popup) -->
 <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
-  data-cf-beacon='{"token": "8b814d319f8c48e4a10e25084553a75b"}'></script>
-
-</body>
-</html>
-eacon.min.js'
   data-cf-beacon='{"token": "8b814d319f8c48e4a10e25084553a75b"}'></script>
 
 </body>
