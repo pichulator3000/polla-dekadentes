@@ -380,6 +380,7 @@ export async function getAnalyticsStats(databaseRef, hoursBack = 24) {
         indicators: session.suspicionIndicators,
         timestamp: session.timestamp,
         userAgent: ua,
+        userId: session.userId,
       });
     }
   }

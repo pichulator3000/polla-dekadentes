@@ -6960,13 +6960,19 @@ async function renderAnalytics() {
         <div class="card" style="padding:14px;background:#1a1a0f;border:1px solid rgba(248,113,113,0.2)">
           <div style="font-size:13px;font-weight:800;color:#f87171;margin-bottom:10px">⚠️ ${stats.suspiciousSessions.length} Sesiones Sospechosas</div>
           <div style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto">
-            ${stats.suspiciousSessions.map(s => `
+            ${stats.suspiciousSessions.map(s => {
+              const sUid = s.userId;
+              const sPlayer = sUid ? CACHE.users.find(u => u.id === sUid) : null;
+              const sPlayerName = !sUid ? 'An\u00f3nimo' : (sPlayer ? sPlayer.name : '@'+sUid);
+              return `
               <div style="background:#0f172a;padding:10px;border-radius:6px;border-left:3px solid #f87171;font-size:10px">
                 <div style="color:#f87171;font-weight:700">Score: ${s.score}/100</div>
+                <div style="color:#fbbf24;margin-top:2px;font-weight:700">🎯 ${sPlayerName}</div>
                 <div style="color:#64748b;margin-top:2px">${s.indicators.join(', ')}</div>
                 <div style="color:#4a5f78;margin-top:2px;font-family:monospace">${new Date(s.timestamp).toLocaleTimeString('es-CL')}</div>
               </div>
-            `).join('')}
+              `;
+            }).join('')}
           </div>
         </div>
       ` : ''}
