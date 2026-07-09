@@ -1391,10 +1391,15 @@ const RT = firebase.database();
 // ═══ CAPTURA DE SESIÓN ANÓNIMA PARA ANALYTICS / DETECTOR DE BOTS ═══
 // Registra visitantes sin login (bots que solo golpean la página) para que el
 // detector de bots vea TODO el tráfico, no solo usuarios logueados.
+// Se difiere ~3s: si el usuario inicia sesion antes, no queda sesion anonima huerfana.
 window.addEventListener('DOMContentLoaded', function () {
   try {
-    if (window.__analytics && !window.__analytics.getExistingSessionId()) {
-      window.__analytics.captureSession(RT, null);
+    if (window.__analytics) {
+      window.__anonTimer = setTimeout(function () {
+        if (!CURRENT_USER && !window.__analytics.getExistingSessionId()) {
+          window.__analytics.captureSession(RT, null);
+        }
+      }, 3000);
     }
   } catch (e) { /* analytics no es crítico para el funcionamiento */ }
 });
@@ -1897,6 +1902,7 @@ function launchApp(user) {
   document.getElementById('togglePC').classList.toggle('on', !!prefs.pcMode);
   document.getElementById('toggleShowUser').classList.toggle('on', prefs.showUser !== false);
 
+  clearTimeout(window.__anonTimer);
   // ═══ CAPTURA / VINCULACIÓN DE SESIÓN PARA ANALYTICS ═══
   // Al loguear, vinculamos la sesion anonima de esta visita al usuario
   // (update del userId). Si no hay sesion previa, creamos una nueva.
