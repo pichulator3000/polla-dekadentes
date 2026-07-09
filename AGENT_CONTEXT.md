@@ -321,6 +321,20 @@ polla-dekadentes/
 
 ---
 
+## ⚠️ Sanciones (penalizaciones de puntos)
+
+Los admins restan puntos a participantes desde **Ajustes → Sanciones** (solo modo admin).
+
+- **Nodo Firebase:** `pf/sanciones/{id}` = `{ id, userId, userName, points, reason, byAdmin, ts }`
+- El admin elige participante, **puntos a restar** y un **motivo corto (máx 60 chars)**
+- Se resta de los puntos totales del jugador en Ranking, Home, Stats, Chart y Resultados
+- Feed rojo en el **Home** de todos: *"⚠️ {nombre} fue sancionado con {x} puntos debido a {motivo}"* (últimos 30 días, máx 5)
+- En el **Ranking** los castigados llevan un signo ⚠️ rojo
+- Se revierte con 🗑️ en "Sanciones aplicadas"
+- Funciones: `getPenaltyTotal(uid)`, `isSancionado(uid)`, `applySanction(...)`, `renderSancionesAdmin()`, `renderSancionesHome()`, `aplicarSancion()`, `removeSanction(id)`
+
+---
+
 ## 🔧 Cómo hacer cambios
 
 1. Editar `index.html` localmente

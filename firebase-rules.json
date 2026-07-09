@@ -49,6 +49,14 @@
           ".write": true,
           ".validate": "!newData.exists() || (newData.hasChildren(['code','name']) && newData.child('name').val().length <= 60 && newData.child('code').val().length <= 40)"
         }
+      },
+
+      "sanciones": {
+        ".read": true,
+        "$sid": {
+          ".write": true,
+          ".validate": "!newData.exists() || (newData.hasChildren(['id','userId','points']) && newData.child('id').isString() && newData.child('userId').isString() && newData.child('points').isNumber() && newData.child('points').val() >= 0 && newData.child('points').val() <= 10000 && (!newData.child('reason').exists() || newData.child('reason').isString()))"
+        }
       }
 
     },

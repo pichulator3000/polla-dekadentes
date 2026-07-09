@@ -1029,6 +1029,9 @@
         </div>
       </div>
 
+      <!-- Sanciones recientes (feed en Home) -->
+      <div id="sancionesHome" style="display:none;margin-bottom:14px"></div>
+
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <button onclick="openFixture()" class="card" style="padding:20px 12px;text-align:center;border:none;cursor:pointer;width:100%">
           <div style="font-size:36px;margin-bottom:8px">🏟️</div>
@@ -1279,6 +1282,13 @@
         <div id="credsList" style="overflow-x:auto"></div>
       </div>
 
+      <!-- Sanciones (solo admin) -->
+      <div id="sancionesCard" class="card" style="padding:16px;margin-bottom:12px;display:none">
+        <h3 style="margin:0 0 4px;font-size:14px;font-weight:800;color:#f87171">⚠️ Sanciones / Penalizaciones</h3>
+        <p style="font-size:12px;color:#64748b;margin:0 0 14px">Resta puntos a un participante y avisa a todos en su Home.</p>
+        <div id="sancionesAdmin"></div>
+      </div>
+
       <!-- Cuenta -->
       <div class="card" style="padding:16px">
         <h3 style="margin:0 0 14px;font-size:14px;font-weight:800;color:#f87171">⚠️ Cuenta</h3>
@@ -1389,8 +1399,8 @@ if (FIREBASE_CONFIG.apiKey === 'TU_API_KEY') {
 const RT = firebase.database();
 
 // ═══ CACHE local (espejo de Firebase) ═══
-const CACHE  = { users: [], matches: [], preds: [], podio: [], pending: [], settings: {} };
-const LOADED = { users: false, matches: false, preds: false, podio: false, messages: false };
+const CACHE  = { users: [], matches: [], preds: [], podio: [], pending: [], settings: {}, sanciones: [] };
+const LOADED = { users: false, matches: false, preds: false, podio: false, messages: false, sanciones: false };
 let dbReady     = false;
 let currentUser = null;
 let currentTab  = 'home';
@@ -1536,6 +1546,13 @@ function initFirebase() {
     if (dbReady) debouncedRefresh();
   });
 
+  // Sanciones (penalizaciones de puntos) → feed en Home + resta en ranking
+  RT.ref('pf/sanciones').on('value', snap => {
+    CACHE.sanciones = snap.val() ? Object.values(snap.val()) : [];
+    LOADED.sanciones = true;
+    if (dbReady) debouncedRefresh();
+  });
+
   // Messages → solo cargar mensajes del día actual (ahorra datos)
   const today = new Date().toLocaleDateString('es-CL', { timeZone: 'America/Santiago' });
   RT.ref('pf/messages').orderByChild('date').equalTo(today).on('value', snap => {
@@ -1568,7 +1585,7 @@ function initFirebase() {
 
 function onAllLoaded() {
   if (dbReady) return;
-  if (!LOADED.users || !LOADED.matches || !LOADED.preds || !LOADED.podio) return;
+  if (!LOADED.users || !LOADED.matches || !LOADED.preds || !LOADED.podio || !LOADED.sanciones) return;
   dbReady = true;
   // Migrate: add closesAtMs to existing matches that lack it
   CACHE.matches.forEach(m => {
@@ -1611,7 +1628,7 @@ function refreshActiveTab() {
   if (selectedStatsTournament !== '__all__' && isTournamentHidden(selectedStatsTournament)) {
     selectedStatsTournament = '__all__';
   }
-  if (currentTab === 'home')     { renderHomeStats(); renderFairPlay(); renderHomeMatchStrip(); renderUpcoming(); }
+  if (currentTab === 'home')     { renderHomeStats(); renderFairPlay(); renderHomeMatchStrip(); renderUpcoming(); renderSancionesHome(); }
   if (currentTab === 'partidos') renderMatches();
   if (currentTab === 'ranking')  renderRanking();
   if (currentTab === 'stats')    renderStats();
@@ -1752,6 +1769,103 @@ function _advanceAt(pred, m, allPreds, sh, sa){
   const n = preds.filter(p => p.matchId === m.id &&
     window.__scoring.playerAdvanceGuess(p, m) === adv).length || 1;
   return Math.round((getAdvancePool() / n) * 100) / 100;
+}
+
+// ═══ SANCIONES (penalizaciones de puntos) ═══
+// Nodo Firebase: pf/sanciones/{id} = { id, userId, userName, points, reason, byAdmin, ts }
+function escHtml(s) {
+  return (s == null ? '' : String(s))
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function getPenaltyTotal(uid) {
+  if (!CACHE.sanciones || !uid) return 0;
+  return CACHE.sanciones
+    .filter(s => s.userId === uid)
+    .reduce((acc, s) => acc + (Number(s.points) || 0), 0);
+}
+function isSancionado(uid) {
+  return !!(CACHE.sanciones && CACHE.sanciones.some(s => s.userId === uid));
+}
+function recentSanciones(days = 30) {
+  if (!CACHE.sanciones) return [];
+  const cutoff = Date.now() - days * 86400000;
+  return [...CACHE.sanciones]
+    .filter(s => (s.ts || 0) >= cutoff)
+    .sort((a, b) => (b.ts || 0) - (a.ts || 0));
+}
+async function applySanction(userId, userName, points, reason, byAdmin) {
+  const ref = RT.ref('pf/sanciones').push();
+  await ref.set({
+    id: ref.key,
+    userId, userName,
+    points: Number(points) || 0,
+    reason: (reason || '').toString().trim(),
+    byAdmin: byAdmin || '',
+    ts: Date.now()
+  });
+}
+async function removeSanction(id) {
+  if (!id) return;
+  await RT.ref('pf/sanciones/' + id).remove();
+}
+function renderSancionesHome() {
+  const el = document.getElementById('sancionesHome');
+  if (!el) return;
+  const list = recentSanciones(30).slice(0, 5);
+  if (!list.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.style.display = 'block';
+  el.innerHTML = list.map(s => `
+    <div style="background:#7f1d1d;border:1px solid #dc2626;border-radius:10px;padding:8px 12px;margin-bottom:6px;display:flex;align-items:flex-start;gap:8px">
+      <span style="font-size:16px;line-height:1.2">⚠️</span>
+      <div style="font-size:12px;color:#fecaca;line-height:1.35">
+        <b style="color:#fca5a5">${escHtml(s.userName)}</b> fue sancionado con <b style="color:#fca5a5">${escHtml(s.points)}</b> puntos debido a <i style="color:#fecaca">${escHtml(s.reason)}</i>
+      </div>
+    </div>`).join('');
+}
+function renderSancionesAdmin() {
+  const el = document.getElementById('sancionesAdmin');
+  if (!el) return;
+  const users = CACHE.users.filter(u => !u.isAdmin);
+  const opts = users.map(u => `<option value="${u.id}">${escHtml(u.name)}</option>`).join('');
+  const recent = [...(CACHE.sanciones || [])].sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  let listHtml = '';
+  if (recent.length) {
+    listHtml = `<div style="margin-top:14px">
+      <div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;margin-bottom:6px">Sanciones aplicadas (${recent.length})</div>` +
+      recent.map(s => `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:#0f172a;border-radius:8px;padding:8px 10px;margin-bottom:4px">
+          <div style="font-size:11px;color:#cbd5e1;line-height:1.3">
+            <b style="color:#fca5a5">${escHtml(s.userName)}</b> −${escHtml(s.points)} pts${s.reason ? ` · <i style="color:#94a3b8">${escHtml(s.reason)}</i>` : ''}
+            <div style="color:#475569;font-size:10px">por ${escHtml(s.byAdmin || '?')} · ${new Date(s.ts).toLocaleDateString('es-CL')}</div>
+          </div>
+          <button onclick="removeSanction('${s.id}')" class="btn-danger" style="padding:4px 8px;font-size:10px">🗑️</button>
+        </div>`).join('') + `</div>`;
+  }
+  el.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <select id="sanUser" class="auth-input" style="font-size:13px;padding:10px">${opts}</select>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <input id="sanPts" class="auth-input" type="number" min="1" max="500" placeholder="Puntos a restar" style="font-size:13px;padding:10px"/>
+        <input id="sanReason" class="auth-input" type="text" maxlength="60" placeholder="Motivo corto" style="font-size:13px;padding:10px"/>
+      </div>
+      <button class="btn-primary" style="background:#dc2626" onclick="aplicarSancion()">⚠️ Aplicar sanción</button>
+    </div>
+    ${listHtml}`;
+}
+async function aplicarSancion() {
+  const uid = document.getElementById('sanUser')?.value;
+  const pts = parseInt(document.getElementById('sanPts')?.value);
+  const reason = document.getElementById('sanReason')?.value.trim();
+  if (!uid) return toast('Selecciona un participante', 'err');
+  if (isNaN(pts) || pts <= 0) return toast('Ingresa puntos a restar (>0)', 'err');
+  if (pts > 500) return toast('Máximo 500 puntos', 'err');
+  if (!reason) return toast('Escribe un motivo corto', 'err');
+  const u = CACHE.users.find(x => x.id === uid);
+  await applySanction(uid, u?.name || uid, pts, reason, currentUser?.code || currentUser?.name);
+  logActivity(currentUser.code, 'AplicoSancion', `${u?.name || uid} -${pts} pts · ${reason}`);
+  toast(`⚠️ ${u?.name || 'Participante'} sancionado con ${pts} pts`);
+  renderAjustes();
 }
 
 function fmtDate(iso) {
@@ -1918,82 +2032,7 @@ function showHome() {
   renderFairPlay();
   renderHomeMatchStrip();
   renderUpcoming();
-  renderCheatAlert();
-  updateHomeAnalyticsVisibility();
-}
-
-// Jugadores marcados por uso excesivo de IA (match por substring del nombre, case-insensitive)
-const CHEAT_FLAGGED = ['saval'];
-// Castigo aplicado a los tramposos: puntos descontados del total
-const CHEAT_PENALTY = 100;
-function isCheater(name){
-  return CHEAT_FLAGGED.some(f => (name||'').trim().toLowerCase().includes(f));
-}
-function cheatPenalty(name){
-  return isCheater(name) ? CHEAT_PENALTY : 0;
-}
-function renderCheatAlert() {
-  const el = document.getElementById('homeCheatAlert');
-  if (!el) return;
-  const name = (currentUser?.name || '').trim().toLowerCase();
-  if (!isCheater(name)) {
-    // Banner público: informar al resto de la sanción a Saval
-    el.innerHTML = `
-      <div style="position:relative;margin:0 0 14px;padding:14px 16px;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,#1e1b4b,#0f172a);border:1px solid #6366f1">
-        <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.04em;color:#c7d2fe;text-transform:uppercase">📢 Comunicado oficial · Comité de Integridad</div>
-        <div style="font-size:17px;font-weight:900;color:#fff;margin-top:6px">🥷🤡 Saval fue pillado usando IA</div>
-        <div style="font-size:12.5px;font-weight:600;color:#e0e7ff;margin-top:6px;line-height:1.5">Tras revisión del VAR, se confirmó que <b style="color:#fca5a5">Saval hizo trampa con inteligencia artificial</b>. El Comité aplicó una sanción de <b style="color:#fca5a5">−100 puntos</b>, ya reflejada en la tabla. Ahora luce su ladrón 🥷 y su payaso 🤡 con orgullo. 🤡</div>
-        <div style="font-size:11.5px;font-weight:600;color:#a5b4fc;margin-top:8px;line-height:1.5">Que sirva de ejemplo: acá se pronostica con el corazón, no con el ChatGPT. Un aplauso para Saval, el primer campeón… en hacer el ridículo. 👏😂</div>
-      </div>`;
-    return;
-  }
-  // Versión "actualización del caso" (guardada para reutilizar más adelante):
-  // <div class="cheat">
-  //   <div class="c-whistle"><span class="c-live"></span> Comité de Integridad <span class="c-pill">ACTUALIZACIÓN DEL CASO</span></div>
-  //   <h2>Novedades sobre tu caso</h2>
-  //   <p class="c-deck">Hay avances en tu proceso. El Comité terminó de revisar los antecedentes y tomó una decisión.</p>
-  //   <p class="c-serious">Como parte de la resolución, el Comité te solicita cumplir <b>dos condiciones antes del próximo partido</b>.</p>
-  //   <p class="c-serious"><b>1.</b> Revela la herramienta de IA que utilizaste.<br><b>2.</b> Confirma por escrito que <b>no volverás a usarla</b>.<br><span style="display:block;margin-top:6px;opacity:.9">Ambas respuestas deben enviarse <b>al grupo</b>.</span></p>
-  //   <p class="c-serious">De no cumplir con lo anterior, el caso escala y <b>las sanciones podrían ser mayores.</b></p>
-  //   <div class="c-var">
-  //     <div class="c-vh">
-  //       <span class="c-tag">📋 Estado del caso · en seguimiento</span>
-  //       <span class="c-pct" id="cheatPct">0%</span>
-  //     </div>
-  //     <div class="c-track"><span class="c-scan"></span><i></i></div>
-  //   </div>
-  //   <div class="c-foot">Plazo vigente: responde en el grupo antes del próximo partido.</div>
-  //   <div class="c-card"></div>
-  // </div>
-  el.innerHTML = `
-    <div class="cheat">
-      <div class="c-whistle"><span class="c-live"></span> Comité de Integridad <span class="c-pill">CASTIGO APLICADO</span></div>
-      <h2>🥷🤡 −100 puntos, tramposo</h2>
-      <p class="c-deck">Se acabó la fiesta, Saval. El VAR ya no está revisando: ya falló.</p>
-      <p class="c-serious">Se confirmó tu uso de inteligencia artificial y el Comité <b>ya aplicó la sanción: −100 puntos</b> a tu marcador. Ahora apareces en la tabla con el ladrón 🥷 y el payaso 🤡 que te ganaste con tanto esfuerzo… de la IA. 🤖</p>
-      <p class="c-serious">Tranquilo, igual te dejamos jugar. Alguien tiene que ir último. 😂</p>
-      <div class="c-var">
-        <div class="c-vh">
-          <span class="c-tag">📺 VAR · trampa confirmada</span>
-          <span class="c-pct" id="cheatPct">0%</span>
-        </div>
-        <div class="c-track"><span class="c-scan"></span><i></i></div>
-      </div>
-      <div class="c-card"></div>
-    </div>`;
-  // contador animado sincronizado con la barra
-  const pct = document.getElementById('cheatPct');
-  if (!pct) return;
-  const target = 100;
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { pct.textContent = target + '%'; return; }
-  let start = null;
-  function step(ts){
-    if (!start) start = ts;
-    const t = Math.min((ts - start) / 1800, 1);
-    pct.textContent = Math.round((1 - Math.pow(1 - t, 3)) * target) + '%';
-    if (t < 1) requestAnimationFrame(step);
-  }
-  setTimeout(() => requestAnimationFrame(step), 400);
+  renderSancionesHome();
 }
 
 function showTab(tab) {
@@ -2152,11 +2191,11 @@ function renderHomeStats() {
 
   // KPIs for current user (incluye live)
   const myPreds = preds.filter(p => p.userId === uid);
-  const myDone  = myPreds.filter(p => doneOrLive.find(m => m.id === p.matchId));
-  const myPts   = myDone.reduce((s, p) => {
-    const m = doneOrLive.find(x => x.id === p.matchId);
-    return s + (m ? totalPoints(p, m, preds) : 0);
-  }, 0) - cheatPenalty(currentUser?.name);
+    const myDone  = myPreds.filter(p => doneOrLive.find(m => m.id === p.matchId));
+    const myPts   = myDone.reduce((s, p) => {
+      const m = doneOrLive.find(x => x.id === p.matchId);
+      return s + (m ? totalPoints(p, m, preds) : 0);
+    }, 0) - getPenaltyTotal(uid);
   const avg = myDone.length ? (myPts / myDone.length).toFixed(2) : '0.00';
   const exact = myDone.filter(p => {
     const m = doneOrLive.find(x => x.id === p.matchId);
@@ -2188,7 +2227,7 @@ function renderHomeStats() {
     const uPts = uDone.reduce((s, p) => {
       const m = doneOrLive.find(x => x.id === p.matchId);
       return s + (m ? totalPoints(p, m, preds) : 0);
-    }, 0) - cheatPenalty(u.name);
+    }, 0) - getPenaltyTotal(u.id);
     return { name: u.name, pts: uPts, id: u.id };
   }).sort((a, b) => b.pts - a.pts);
   const myPos = ranking.findIndex(r => r.id === uid) + 1;
@@ -2375,7 +2414,7 @@ function renderStatsChart() {
   const colors = ['#38bdf8','#60a5fa','#4ade80','#f87171','#c084fc','#fb923c','#2dd4bf','#e879f9','#a3e635','#fbbf24'];
   const datasets = done.length
     ? users.map((u, idx) => {
-        let cumul = 0;
+        let cumul = -getPenaltyTotal(u.id);
         const data = done.map(m => {
           const pred = preds.find(p => p.userId === u.id && p.matchId === m.id);
           cumul += pred ? totalPoints(pred, m, preds) : 0;
@@ -5026,9 +5065,8 @@ function renderRanking() {
       podioPts = calcPodioPoints(myPodio).total;
       pts += podioPts;
     }
-    const penalty = cheatPenalty(u.name);
-    pts -= penalty;
-    return { ...u, pts, exact, correct, played, podioPts, penalty };
+    const pen = getPenaltyTotal(u.id);
+    return { ...u, pts: Math.max(0, pts - pen), penalizado: pen > 0, exact, correct, played, podioPts };
   }).sort((a,b) => b.pts-a.pts || b.exact-a.exact);
 
   const total = doneOrLive.filter(m => m.realHome!=null).length;
@@ -5052,17 +5090,17 @@ function renderRanking() {
     const isMine = s.id===currentUser.id;
     const rowBg  = isMine ? 'background:#1e3a5f' : (i%2===0?'background:#1e293b':'background:#182030');
     const pagoHtml = last3 ? '<div style="font-size:9px;color:#f87171;font-weight:700;margin-top:2px">🍺 Pagando 24 pack</div>' : '';
-    const cheatTag = s.penalty ? ' <span title="Tramposo — castigo por uso de IA" style="font-size:13px">🥷🤡</span>' : '';
-    const cheatBadge = s.penalty ? `<div style="display:inline-block;font-size:9px;color:#fca5a5;font-weight:900;margin-top:2px;background:#450a0a;border:1px solid #b91c1c;border-radius:6px;padding:1px 6px">⚠️ CASTIGO −${s.penalty} pts por trampa</div>` : '';
+    const cheatTag = s.penalizado ? ' <span title="Sancionado" style="font-size:13px">🥷🤡</span>' : '';
+    const cheatBadge = s.penalizado ? `<div style="display:inline-block;font-size:9px;color:#fca5a5;font-weight:900;margin-top:2px;background:#450a0a;border:1px solid #b91c1c;border-radius:6px;padding:1px 6px">⚠️ SANCIÓN −${s.penalizado} pts</div>` : '';
     html += `<tr style="${rowBg}">
       <td style="padding:12px 10px;font-weight:800;font-size:14px">${medal||i+1}</td>
       <td style="padding:12px 4px">
-        <div style="font-weight:700;font-size:13px">${s.name}${cheatTag}${isMine?' <span style="color:#38bdf8;font-size:10px">(tú)</span>':''}</div>
+        <div style="font-weight:700;font-size:13px">${s.name}${isMine?' <span style="color:#facc15;font-size:10px">(tú)</span>':''}${s.penalizado?' <span style="color:#f87171;font-size:11px" title="Sancionado">⚠️</span>':''}</div>
         <div style="color:#475569;font-size:10px">@${s.code}</div>
         ${cheatBadge}
         ${pagoHtml}
       </td>
-      <td style="padding:12px 6px;text-align:center;font-weight:900;color:${s.penalty?'#f87171':(hasLiveMatch?'#fbbf24':'#38bdf8')};font-size:16px">${s.pts.toFixed(2)}${s.penalty?`<div style="font-size:9px;color:#f87171;font-weight:800">−${s.penalty}</div>`:''}</td>
+      <td style="padding:12px 6px;text-align:center;font-weight:900;color:${s.penalizado?'#f87171':(hasLiveMatch?'#fbbf24':'#38bdf8')};font-size:16px">${s.pts.toFixed(2)}${s.penalizado?`<div style="font-size:9px;color:#f87171;font-weight:800">−${s.penalizado}</div>`:''}</td>
       ${showPodioCol ? `<td style="padding:12px 6px;text-align:center;color:${s.podioPts>0?'#38bdf8':'#475569'};font-weight:700">${s.podioPts>0?('+'+s.podioPts):'—'}</td>` : ''}
       <td style="padding:12px 6px;text-align:center;color:#38bdf8">${s.exact}</td>
       <td style="padding:12px 6px;text-align:center;color:#4ade80">${s.correct}</td>
@@ -5152,7 +5190,7 @@ function renderStats() {
     const pct=pj?Math.round((ex+ok)/pj*100):0;
     const contPct=contTotal?Math.round(contrarian/contTotal*100):0;
     const streakIsLive = streak > 0 && streak === maxStreak;
-    return{...u,pts,ex,ok,no,pj,pct,contPct,maxStreak,streakIsLive};
+    return{...u,pts:Math.max(0,pts-getPenaltyTotal(u.id)),ex,ok,no,pj,pct,contPct,maxStreak,streakIsLive};
   }).sort((a,b)=>b.pts-a.pts);
 
   // Global contrarian & streak stats
@@ -5470,10 +5508,10 @@ function renderResultados() {
   const userPreds = preds.filter(p => p.userId === user.id);
 
   // Total pts
-  const totalPts = done.reduce((acc, m) => {
+  const totalPts = Math.max(0, done.reduce((acc, m) => {
     const p = userPreds.find(x => x.matchId === m.id);
     return acc + (p ? totalPoints(p, m, preds) : 0);
-  }, 0);
+  }, 0) - getPenaltyTotal(user.id));
 
   let html = `
   <div style="background:#1e293b;border-radius:12px;padding:10px 12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
@@ -6102,7 +6140,7 @@ function buildAdminGestion() {
   users.forEach(u => {
     const up    = preds.filter(p=>p.userId===u.id);
     const done2 = CACHE.matches.filter(m=>m.realHome!=null);
-    const pts   = up.reduce((acc,p)=>{const m=done2.find(x=>x.id===p.matchId);return acc+(m?totalPoints(p,m,preds):0);},0);
+    const pts   = Math.max(0, up.reduce((acc,p)=>{const m=done2.find(x=>x.id===p.matchId);return acc+(m?totalPoints(p,m,preds):0);},0) - getPenaltyTotal(u.id));
     html += `<div style="background:#0f172a;border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between">
       <div><div style="font-weight:700;font-size:13px">${u.name}</div><div style="font-size:11px;color:#64748b">@${u.code} · ${up.length} pred. · <span style="color:#38bdf8">${pts.toFixed(2)} pts</span></div></div>
       <button class="btn-danger" onclick="delUser('${u.id}')" style="padding:6px 10px">✕</button>
@@ -6581,6 +6619,8 @@ function renderAjustes() {
     return;
   }
   document.getElementById('credsCard').style.display = 'block';
+  document.getElementById('sancionesCard').style.display = 'block';
+  renderSancionesAdmin();
 
   // ══ Controls: registration lock + approval mode ══
   const s = CACHE.settings;
