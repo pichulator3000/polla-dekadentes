@@ -1400,6 +1400,14 @@ window.addEventListener('DOMContentLoaded', function () {
           window.__analytics.captureSession(RT, null);
         }
       }, 3000);
+      // Heartbeat: registra actividad en vivo mientras la pestaña está abierta,
+      // para que 'ultima hora' refleje uso real (no solo recargas/login).
+      window.__analyticsHeartbeat = setInterval(function () {
+        if (document.visibilityState === 'visible') {
+          const uid = (typeof CURRENT_USER !== 'undefined' && CURRENT_USER) ? CURRENT_USER.id : null;
+          window.__analytics.captureSession(RT, uid);
+        }
+      }, 5 * 60 * 1000);
     }
   } catch (e) { /* analytics no es crítico para el funcionamiento */ }
 });
