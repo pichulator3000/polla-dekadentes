@@ -1396,7 +1396,7 @@ window.addEventListener('DOMContentLoaded', function () {
   try {
     if (window.__analytics) {
       window.__anonTimer = setTimeout(function () {
-        if (!CURRENT_USER && !window.__analytics.getExistingSessionId()) {
+        if (!currentUser && !window.__analytics.getExistingSessionId()) {
           window.__analytics.captureSession(RT, null);
         }
       }, 3000);
@@ -1404,7 +1404,7 @@ window.addEventListener('DOMContentLoaded', function () {
       // para que 'ultima hora' refleje uso real (no solo recargas/login).
       window.__analyticsHeartbeat = setInterval(function () {
         if (document.visibilityState === 'visible') {
-          const uid = (typeof CURRENT_USER !== 'undefined' && CURRENT_USER) ? CURRENT_USER.id : null;
+          const uid = currentUser ? currentUser.id : null;
           window.__analytics.captureSession(RT, uid);
         }
       }, 5 * 60 * 1000);
