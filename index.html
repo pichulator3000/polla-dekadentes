@@ -1350,9 +1350,11 @@
   import { advancePoints, matchAdvanceOutcome, playerAdvanceGuess } from './scripts/scoring.mjs';
   import { buildBracketTree, KO_STAGES } from './scripts/bracket.mjs';
   import * as Analytics from './scripts/analytics.mjs';
+  import * as Simulator from './scripts/simulator.mjs';
   window.__scoring = { advancePoints, matchAdvanceOutcome, playerAdvanceGuess };
   window.__bracket = { buildBracketTree, KO_STAGES };
   window.__analytics = Analytics;
+  window.__simulator = Simulator;
 </script>
 
 <script>
@@ -4077,14 +4079,7 @@ function getPodioOficial() {
 
 function calcPodioPoints(userPodio) {
   if (!userPodio) return { total: 0, champion: 0, runner: 0, scorer: 0 };
-  const oficial = getPodioOficial();
-  const pts = getPodioPoints();
-  const eq = (a, b) => (a || '').trim().toLowerCase() === (b || '').trim().toLowerCase();
-  const result = { total: 0, champion: 0, runner: 0, scorer: 0 };
-  if (oficial.champion && eq(userPodio.champion, oficial.champion)) { result.champion = pts.champion; result.total += pts.champion; }
-  if (oficial.runner   && eq(userPodio.runner,   oficial.runner))   { result.runner   = pts.runner;   result.total += pts.runner;   }
-  if (oficial.scorer   && eq(userPodio.scorer,   oficial.scorer))   { result.scorer   = pts.scorer;   result.total += pts.scorer;   }
-  return result;
+  return window.__simulator.podioPointsFor(userPodio, getPodioOficial(), getPodioPoints());
 }
 
 // El podio aplica al torneo "Mundial" (mismo criterio que isPodioLocked)
