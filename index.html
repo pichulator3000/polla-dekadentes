@@ -5043,7 +5043,9 @@ function computeRankScores(doneOrLive, preds, users, incluyePodio, scenario) {
     let pp = 0;
     if (incluyePodio) {
       const myPodio = CACHE.podio.find(p => p.userId === u.id);
-      pp = window.__simulator.podioPointsFor(myPodio, oficial, podioPts).total;
+      // En un escenario simulado el goleador se compara de forma difusa (apellido/tildes),
+      // consistente con el dropdown deduplicado. El ranking real usa comparación estricta.
+      pp = window.__simulator.podioPointsFor(myPodio, oficial, podioPts, { fuzzyScorer: !!scenario }).total;
       pts += pp;
     }
     const penalty = cheatPenalty(u.name);

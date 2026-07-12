@@ -29,22 +29,47 @@ test('podioPointsFor: userPodio u oficial null -> ceros', () => {
   assert.deepEqual(podioPointsFor({ champion: 'Brasil' }, null, PTS), { total: 0, champion: 0, runner: 0, scorer: 0 });
 });
 
+test('podioPointsFor: sin fuzzyScorer el goleador es estricto (no colapsa tildes/apellido)', () => {
+  const user = { champion: '', runner: '', scorer: 'Kane' };
+  const of   = { champion: '', runner: '', scorer: 'Harry Kane' };
+  assert.deepEqual(podioPointsFor(user, of, PTS), { total: 0, champion: 0, runner: 0, scorer: 0 });
+});
+
+test('podioPointsFor: con fuzzyScorer colapsa tildes y apellido', () => {
+  const PTS2 = { champion: 100, runner: 50, scorer: 50 };
+  const of = { champion: '', runner: '', scorer: 'Harry Kane' };
+  assert.equal(podioPointsFor({ scorer: 'Kane'   }, of, PTS2, { fuzzyScorer: true }).scorer, 50);
+  assert.equal(podioPointsFor({ scorer: 'kane'   }, of, PTS2, { fuzzyScorer: true }).scorer, 50);
+  const of2 = { champion: '', runner: '', scorer: 'Mbappé' };
+  assert.equal(podioPointsFor({ scorer: 'Mbappe' }, of2, PTS2, { fuzzyScorer: true }).scorer, 50);
+  assert.equal(podioPointsFor({ scorer: 'Messi'  }, of2, PTS2, { fuzzyScorer: true }).scorer, 0);
+});
+
 import { aliveTeams, predictedScorers } from './simulator.mjs';
 
-test('aliveTeams: elimina perdedores de KO jugados, mantiene el resto', () => {
+test('aliveTeams: con KO iniciado, solo equipos del KO no eliminados (grupo fuera)', () => {
   const matches = [
-    // grupo: no elimina a nadie aunque haya resultado
+    // grupo: Serbia perdió y NO llegó al KO -> no debe aparecer como viva
     { stage: 'Grupo A', home: 'Brasil', away: 'Serbia', realHome: 2, realAway: 0 },
     // KO jugado: gana Brasil, elimina a Chile
     { stage: 'Octavos', home: 'Brasil', away: 'Chile', realHome: 1, realAway: 0 },
-    // KO por diferencia a favor de visita: elimina a Francia
+    // KO por diferencia a favor de local: elimina a Francia
     { stage: 'Octavos', home: 'Argentina', away: 'Francia', realHome: 3, realAway: 0 },
     // KO empate 90' -> decide advances: pasa Uruguay, elimina a España
     { stage: 'Cuartos de Final', home: 'España', away: 'Uruguay', realHome: 1, realAway: 1, advances: 'Uruguay' },
     // KO sin jugar: no elimina
     { stage: 'Semifinal', home: 'Por definir', away: 'Por definir', realHome: null, realAway: null },
   ];
-  assert.deepEqual(aliveTeams(matches), ['Argentina', 'Brasil', 'Serbia', 'Uruguay']);
+  assert.deepEqual(aliveTeams(matches), ['Argentina', 'Brasil', 'Uruguay']);
+});
+
+test('aliveTeams: aún en fase de grupos (sin KO real) muestra todos', () => {
+  const matches = [
+    { stage: 'Grupo A', home: 'Brasil', away: 'Serbia', realHome: 2, realAway: 0 },
+    { stage: 'Grupo B', home: 'Chile', away: 'Perú', realHome: null, realAway: null },
+    { stage: 'Octavos', home: 'Por definir', away: 'Por definir', realHome: null, realAway: null },
+  ];
+  assert.deepEqual(aliveTeams(matches), ['Brasil', 'Chile', 'Perú', 'Serbia']);
 });
 
 test('aliveTeams: ignora "Por definir" y no duplica', () => {
@@ -61,4 +86,13 @@ test('predictedScorers: distintos, sin vacíos, trim, ordenados', () => {
     { scorer: '  Haaland  ' }, { scorer: 'Mbappé' }, { scorer: '' }, { scorer: null }, {},
   ];
   assert.deepEqual(predictedScorers(podios), ['Haaland', 'Mbappé', 'Messi']);
+});
+
+test('predictedScorers: colapsa tildes y apellido, muestra el nombre más completo', () => {
+  const podios = [
+    { scorer: 'Kane' }, { scorer: 'Harry Kane' },       // apellido vs nombre completo
+    { scorer: 'Mbappe' }, { scorer: 'Mbappé' },          // sin tilde vs con tilde
+    { scorer: 'Julián Álvarez' }, { scorer: 'alvarez' }, // tilde + mayúsculas + apellido
+  ];
+  assert.deepEqual(predictedScorers(podios), ['Harry Kane', 'Julián Álvarez', 'Mbappé']);
 });
