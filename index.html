@@ -5021,6 +5021,36 @@ async function setBracketPredAdv(matchId, team) {
 }
 
 // ═══ RANKING ═══
+// Calcula los scores del ranking. scenario=null usa el podio oficial;
+// scenario={champion,runner,scorer} simula un podio hipotético.
+function computeRankScores(doneOrLive, preds, users, incluyePodio, scenario) {
+  const podioPts = getPodioPoints();
+  const oficial = scenario || getPodioOficial();
+  return users.map(u => {
+    const up = preds.filter(p => p.userId === u.id);
+    let pts = 0, exact = 0, correct = 0, played = 0;
+    up.forEach(p => {
+      const m = doneOrLive.find(x => x.id === p.matchId);
+      const rh = m ? (m.realHome ?? m.liveHome) : null;
+      const ra = m ? (m.realAway ?? m.liveAway) : null;
+      if (!m || rh == null) return;
+      played++;
+      pts += totalPoints(p, m, preds);
+      if (p.predHome === rh && p.predAway === ra) { exact++; correct++; }
+      else if (Math.sign(p.predHome - p.predAway) === Math.sign(rh - ra)) correct++;
+    });
+    let pp = 0;
+    if (incluyePodio) {
+      const myPodio = CACHE.podio.find(p => p.userId === u.id);
+      pp = window.__simulator.podioPointsFor(myPodio, oficial, podioPts).total;
+      pts += pp;
+    }
+    const penalty = cheatPenalty(u.name);
+    pts -= penalty;
+    return { ...u, pts, exact, correct, played, podioPts: pp, penalty };
+  }).sort((a, b) => b.pts - a.pts || b.exact - a.exact);
+}
+
 function renderRanking() {
   buildTournamentPills('rankingPills', selectedRankTournament, 'setRankTournament');
   const users   = CACHE.users.filter(u => !u.isAdmin);
@@ -5036,30 +5066,7 @@ function renderRanking() {
   const preds   = CACHE.preds;
   const incluyePodio = podioAplicaATorneo(selectedRankTournament);
 
-  const scores = users.map(u => {
-    const up = preds.filter(p => p.userId===u.id);
-    let pts=0, exact=0, correct=0, played=0;
-    up.forEach(p => {
-      const m = doneOrLive.find(x => x.id===p.matchId);
-      const rh = m ? (m.realHome ?? m.liveHome) : null;
-      const ra = m ? (m.realAway ?? m.liveAway) : null;
-      if (!m || rh == null) return;
-      played++;
-      const pt = totalPoints(p,m,preds);
-      pts += pt;
-      if (p.predHome===rh && p.predAway===ra) { exact++; correct++; }
-      else if (Math.sign(p.predHome-p.predAway)===Math.sign(rh-ra)) correct++;
-    });
-    let podioPts = 0;
-    if (incluyePodio) {
-      const myPodio = CACHE.podio.find(p => p.userId === u.id);
-      podioPts = calcPodioPoints(myPodio).total;
-      pts += podioPts;
-    }
-    const penalty = cheatPenalty(u.name);
-    pts -= penalty;
-    return { ...u, pts, exact, correct, played, podioPts, penalty };
-  }).sort((a,b) => b.pts-a.pts || b.exact-a.exact);
+  const scores = computeRankScores(doneOrLive, preds, users, incluyePodio, null);
 
   const total = doneOrLive.filter(m => m.realHome!=null).length;
   const showPodioCol = incluyePodio && scores.some(s => s.podioPts > 0);
