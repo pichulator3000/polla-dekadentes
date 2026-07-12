@@ -1112,6 +1112,7 @@
     <div id="tabRanking" style="display:none;padding-top:4px">
       <h2 style="margin:0 0 12px;font-size:17px;font-weight:900">🏆 Ranking</h2>
       <div id="rankingPills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
+      <button onclick="openSimulador()" style="width:100%;margin-bottom:10px;padding:11px;border-radius:10px;border:1px solid rgba(56,189,248,0.35);background:linear-gradient(135deg,#0e2a44,#0f1b2d);color:#7dd3fc;font-weight:800;font-size:13px;cursor:pointer">🔮 Simular tabla (campeón · subcampeón · goleador)</button>
       <div id="rankingTable"></div>
     </div>
 
@@ -5131,6 +5132,126 @@ function renderRanking() {
   html += `</div>`;
 
   document.getElementById('rankingTable').innerHTML = html;
+}
+
+// ══ Simulador de tabla (podio) ══
+function _simSelectedMatches() {
+  return selectedRankTournament === '__all__'
+    ? CACHE.matches.filter(m => !isTournamentHidden(m.tournament || 'Sin Torneo'))
+    : CACHE.matches.filter(m => (m.tournament || 'Sin Torneo') === selectedRankTournament && !isTournamentHidden(m.tournament || 'Sin Torneo'));
+}
+
+function _simOptions(list, selected) {
+  return ['<option value="">— sin elegir —</option>']
+    .concat(list.map(v => `<option value="${v.replace(/"/g, '&quot;')}"${v === selected ? ' selected' : ''}>${v}</option>`))
+    .join('');
+}
+
+function openSimulador() {
+  const matches = _simSelectedMatches();
+  const teams = window.__simulator.aliveTeams(matches);
+  const scorers = window.__simulator.predictedScorers(CACHE.podio);
+  const selStyle = 'width:100%;padding:9px 10px;border-radius:8px;border:1.5px solid rgba(56,189,248,0.25);background:#0a0f1c;color:#e8edf5;font-size:14px;box-sizing:border-box';
+
+  const overlay = document.createElement('div');
+  overlay.id = 'simuladorOverlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9998;display:flex;align-items:flex-start;justify-content:center;backdrop-filter:blur(4px);overflow-y:auto;padding:20px 0';
+  overlay.innerHTML =
+    '<div style="background:#0f1b2d;border:1px solid rgba(56,189,248,0.2);border-radius:16px;padding:20px;max-width:460px;width:92%;box-shadow:0 8px 32px rgba(0,0,0,0.5);margin:auto">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
+        '<div style="font-size:17px;font-weight:900;color:#7dd3fc">🔮 Simular tabla</div>' +
+        '<button onclick="closeSimulador()" style="background:transparent;border:none;color:#8899b0;font-size:20px;cursor:pointer;line-height:1">✕</button>' +
+      '</div>' +
+      '<div style="font-size:11.5px;color:#8899b0;margin-bottom:14px;line-height:1.5">Elige un escenario y mira cómo quedaría el ranking. No cambia nada real.</div>' +
+      '<label style="font-size:12px;font-weight:700;color:#38bdf8">🥇 Campeón</label>' +
+      `<select id="simChampion" style="${selStyle};margin:4px 0 12px">${_simOptions(teams, '')}</select>` +
+      '<label style="font-size:12px;font-weight:700;color:#94a3b8">🥈 Subcampeón</label>' +
+      `<select id="simRunner" style="${selStyle};margin:4px 0 12px">${_simOptions(teams, '')}</select>` +
+      '<label style="font-size:12px;font-weight:700;color:#4ade80">⚽ Goleador</label>' +
+      `<select id="simScorer" style="${selStyle};margin:4px 0 4px">${_simOptions(scorers, '')}</select>` +
+      '<div style="font-size:10.5px;color:#64748b;margin-bottom:14px">Solo goleadores pronosticados por la gente.</div>' +
+      '<div style="display:flex;gap:10px;margin-bottom:16px">' +
+        '<button onclick="runSimulador()" style="flex:2;padding:11px;border-radius:8px;border:none;background:#38bdf8;color:#0a0f1c;font-weight:800;cursor:pointer">Simular</button>' +
+        '<button onclick="resetSimulador()" style="flex:1;padding:11px;border-radius:8px;border:1px solid rgba(56,189,248,0.25);background:transparent;color:#8899b0;font-weight:700;cursor:pointer">Reiniciar</button>' +
+      '</div>' +
+      '<div id="simuladorResult"></div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.onclick = e => { if (e.target === overlay) closeSimulador(); };
+}
+
+function closeSimulador() {
+  const el = document.getElementById('simuladorOverlay');
+  if (el) el.remove();
+}
+
+function runSimulador() {
+  const scenario = {
+    champion: document.getElementById('simChampion').value,
+    runner:   document.getElementById('simRunner').value,
+    scorer:   document.getElementById('simScorer').value,
+  };
+  const out = document.getElementById('simuladorResult');
+  if (scenario.champion && scenario.runner && scenario.champion.toLowerCase() === scenario.runner.toLowerCase()) {
+    out.innerHTML = '<div style="color:#f87171;font-size:12px;padding:8px 0">Campeón y subcampeón no pueden ser el mismo equipo.</div>';
+    return;
+  }
+
+  const users = CACHE.users.filter(u => !u.isAdmin);
+  const matches = _simSelectedMatches();
+  const doneOrLive = matches.filter(m => m.realHome != null || (m.liveHome != null && m.liveAway != null));
+  const preds = CACHE.preds;
+  const incluyePodio = podioAplicaATorneo(selectedRankTournament);
+
+  // Baseline (podio oficial actual) para calcular el cambio de posición.
+  const base = computeRankScores(doneOrLive, preds, users, incluyePodio, null);
+  const basePos = {};
+  base.forEach((s, i) => { basePos[s.id] = i; });
+
+  const sim = computeRankScores(doneOrLive, preds, users, incluyePodio, scenario);
+
+  let rows = '';
+  sim.forEach((s, i) => {
+    const prev = basePos[s.id];
+    const delta = prev == null ? 0 : prev - i; // >0 sube, <0 baja
+    const deltaHtml = delta > 0
+      ? `<span style="color:#4ade80">▲${delta}</span>`
+      : delta < 0
+        ? `<span style="color:#f87171">▼${-delta}</span>`
+        : '<span style="color:#475569">=</span>';
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+    const isMine = s.id === currentUser.id;
+    const bg = isMine ? '#1e3a5f' : (i % 2 === 0 ? '#1e293b' : '#182030');
+    rows +=
+      `<tr style="background:${bg}">` +
+        `<td style="padding:9px 8px;font-weight:800">${medal}</td>` +
+        `<td style="padding:9px 6px;font-weight:700">${s.name}${isMine ? ' <span style="color:#38bdf8;font-size:10px">(tú)</span>' : ''}</td>` +
+        `<td style="padding:9px 6px;text-align:center;color:${s.podioPts > 0 ? '#38bdf8' : '#475569'};font-weight:700">${s.podioPts > 0 ? '+' + s.podioPts : '—'}</td>` +
+        `<td style="padding:9px 6px;text-align:center;font-weight:900;color:#7dd3fc">${s.pts.toFixed(2)}</td>` +
+        `<td style="padding:9px 8px;text-align:center;font-size:12px">${deltaHtml}</td>` +
+      `</tr>`;
+  });
+
+  out.innerHTML =
+    '<div style="font-size:12px;font-weight:800;color:#e8edf5;margin:6px 0 8px">Tabla simulada</div>' +
+    '<div style="border:1px solid rgba(56,189,248,0.15);border-radius:10px;overflow:hidden">' +
+      '<table style="width:100%;border-collapse:collapse;font-size:13px">' +
+        '<thead><tr style="background:#0f172a;color:#64748b;font-size:10.5px;text-transform:uppercase">' +
+          '<th style="padding:8px 8px;text-align:left">#</th>' +
+          '<th style="padding:8px 6px;text-align:left">Jugador</th>' +
+          '<th style="padding:8px 6px;text-align:center">🏅</th>' +
+          '<th style="padding:8px 6px;text-align:center">Pts</th>' +
+          '<th style="padding:8px 8px;text-align:center">Δ</th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+
+function resetSimulador() {
+  ['simChampion', 'simRunner', 'simScorer'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const out = document.getElementById('simuladorResult');
+  if (out) out.innerHTML = '';
 }
 
 // ═══ STATS ═══
