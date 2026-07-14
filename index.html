@@ -1452,6 +1452,15 @@ function normalize(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-
 for(const k in FLAGS_RAW){ FLAGS_NORM[normalize(k)] = FLAGS_RAW[k]; }
 function flagUrl(team){ const iso = FLAGS_RAW[team] || FLAGS_NORM[normalize(team)]; return iso ? 'https://flagcdn.com/w40/'+iso+'.png' : ''; }
 function flagImg(team, big){ const url = flagUrl(team); return url ? '<img src="'+url+'" style="'+(big?'width:36px;height:24px':'width:22px;height:15px')+';border-radius:3px;vertical-align:middle;margin:0 4px;object-fit:cover;box-shadow:0 1px 3px rgba(0,0,0,0.3)" alt="">' : ''; }
+// Clave canónica de un país (para el simulador): resuelve alias inglés→español y
+// solo acepta selecciones reales (con bandera). Devuelve '' para placeholders
+// ("Ganador 2A", "Por definir") y para texto libre que no es un país reconocido.
+function canonTeam(raw){
+  const s = (raw || '').trim();
+  if (!s) return '';
+  const base = (typeof TEAM_ALIASES_ESPN !== 'undefined' && TEAM_ALIASES_ESPN[s.toLowerCase()]) || s;
+  return flagUrl(base) ? normalize(base) : '';
+}
 
 const PREFS = {
   get: ()  => JSON.parse(localStorage.getItem('pf_prefs') || '{}'),
@@ -5043,9 +5052,11 @@ function computeRankScores(doneOrLive, preds, users, incluyePodio, scenario) {
     let pp = 0;
     if (incluyePodio) {
       const myPodio = CACHE.podio.find(p => p.userId === u.id);
-      // En un escenario simulado el goleador se compara de forma difusa (apellido/tildes),
-      // consistente con el dropdown deduplicado. El ranking real usa comparación estricta.
-      pp = window.__simulator.podioPointsFor(myPodio, oficial, podioPts, { fuzzyScorer: !!scenario }).total;
+      // En un escenario simulado estandarizamos los campos de texto libre: campeón/
+      // subcampeón por país canónico (alias/tildes/typos) y goleador por apellido.
+      // El ranking real usa comparación estricta (sin opts).
+      const simOpts = scenario ? { canonTeam, fuzzyScorer: true } : {};
+      pp = window.__simulator.podioPointsFor(myPodio, oficial, podioPts, simOpts).total;
       pts += pp;
     }
     const penalty = cheatPenalty(u.name);
@@ -5151,7 +5162,7 @@ function _simOptions(list, selected) {
 
 function openSimulador() {
   const matches = _simSelectedMatches();
-  const teams = window.__simulator.aliveTeams(matches);
+  const teams = window.__simulator.aliveTeams(matches, canonTeam);
   const scorers = window.__simulator.predictedScorers(CACHE.podio);
   const selStyle = 'width:100%;padding:9px 10px;border-radius:8px;border:1.5px solid rgba(56,189,248,0.25);background:#0a0f1c;color:#e8edf5;font-size:14px;box-sizing:border-box';
 

@@ -35,6 +35,20 @@ test('podioPointsFor: sin fuzzyScorer el goleador es estricto (no colapsa tildes
   assert.deepEqual(podioPointsFor(user, of, PTS), { total: 0, champion: 0, runner: 0, scorer: 0 });
 });
 
+test('podioPointsFor: con canonTeam estandariza campeón/subcampeón (alias/tildes/typos)', () => {
+  const canon = (raw) => {
+    const alias = { brazil: 'Brasil', espana: 'España', spain: 'España' };
+    const s = (raw || '').trim();
+    const base = alias[s.toLowerCase()] || s;
+    return base.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  };
+  const of = { champion: 'Brasil', runner: 'España', scorer: '' };
+  assert.equal(podioPointsFor({ champion: 'brazil' }, of, PTS, { canonTeam: canon }).champion, 100);
+  assert.equal(podioPointsFor({ runner: 'espana'   }, of, PTS, { canonTeam: canon }).runner, 50);
+  assert.equal(podioPointsFor({ runner: 'Spain'    }, of, PTS, { canonTeam: canon }).runner, 50);
+  assert.equal(podioPointsFor({ champion: 'Chile'  }, of, PTS, { canonTeam: canon }).champion, 0);
+});
+
 test('podioPointsFor: con fuzzyScorer colapsa tildes y apellido', () => {
   const PTS2 = { champion: 100, runner: 50, scorer: 50 };
   const of = { champion: '', runner: '', scorer: 'Harry Kane' };
@@ -61,6 +75,21 @@ test('aliveTeams: con KO iniciado, solo equipos del KO no eliminados (grupo fuer
     { stage: 'Semifinal', home: 'Por definir', away: 'Por definir', realHome: null, realAway: null },
   ];
   assert.deepEqual(aliveTeams(matches), ['Argentina', 'Brasil', 'Uruguay']);
+});
+
+test('aliveTeams: canonTeam excluye placeholders (Ganador/Perdedor/Por definir)', () => {
+  // canonTeam simula el de la app: '' para no-países, minúsculas para países.
+  const canon = (raw) => {
+    const t = (raw || '').trim();
+    if (!t || t === 'Por definir' || /^(Ganador|Perdedor)/i.test(t)) return '';
+    return t.toLowerCase();
+  };
+  const matches = [
+    { stage: 'Cuartos de Final', home: 'Brasil', away: 'Ganador 2A', realHome: null, realAway: null },
+    { stage: 'Cuartos de Final', home: 'Argentina', away: 'Uruguay', realHome: 2, realAway: 0 }, // Uruguay eliminado
+    { stage: 'Semifinal', home: 'Por definir', away: 'Por definir', realHome: null, realAway: null },
+  ];
+  assert.deepEqual(aliveTeams(matches, canon), ['Argentina', 'Brasil']);
 });
 
 test('aliveTeams: aún en fase de grupos (sin KO real) muestra todos', () => {
