@@ -74,20 +74,24 @@ export function aliveTeams(matches, canonTeam = defaultCanonTeam) {
     .sort((a, b) => a.localeCompare(b));
 }
 
-// Goleadores distintos (texto libre) pronosticados por los usuarios. Colapsa
-// variantes del mismo jugador (tildes / apellido) y muestra el nombre más completo.
-export function predictedScorers(podios) {
+// Goleadores distintos pronosticados por los usuarios, más una lista opcional de
+// candidatos reales que compiten por goleador aunque nadie los haya elegido (extra).
+// Colapsa variantes del mismo jugador (tildes / apellido) y muestra el nombre más
+// completo. Si un candidato extra sale, nadie acierta -> 0 puntos para todos.
+export function predictedScorers(podios, extra = []) {
   const byKey = new Map(); // clave -> display canónico
-  for (const p of (podios || [])) {
-    const s = ((p && p.scorer) || '').trim();
-    if (!s) continue;
-    const k = scorerKey(s);
-    if (!k) continue;
+  const add = (s) => {
+    const t = (s || '').trim();
+    if (!t) return;
+    const k = scorerKey(t);
+    if (!k) return;
     const cur = byKey.get(k);
     const better = !cur
-      || s.length > cur.length
-      || (s.length === cur.length && hasAccent(s) && !hasAccent(cur));
-    if (better) byKey.set(k, s);
-  }
+      || t.length > cur.length
+      || (t.length === cur.length && hasAccent(t) && !hasAccent(cur));
+    if (better) byKey.set(k, t);
+  };
+  for (const p of (podios || [])) add(p && p.scorer);
+  for (const s of (extra || [])) add(s);
   return [...byKey.values()].sort((a, b) => a.localeCompare(b));
 }

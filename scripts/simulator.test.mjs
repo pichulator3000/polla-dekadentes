@@ -117,6 +117,15 @@ test('predictedScorers: distintos, sin vacíos, trim, ordenados', () => {
   assert.deepEqual(predictedScorers(podios), ['Haaland', 'Mbappé', 'Messi']);
 });
 
+test('predictedScorers: incluye candidatos extra (no pronosticados) sin duplicar', () => {
+  const podios = [{ scorer: 'Mbappe' }, { scorer: 'Mbappé' }, { scorer: 'Kane' }];
+  // Messi no lo pronosticó nadie pero compite -> debe aparecer. Kane extra no duplica.
+  assert.deepEqual(
+    predictedScorers(podios, ['Messi', 'Harry Kane']),
+    ['Harry Kane', 'Mbappé', 'Messi']
+  );
+});
+
 test('predictedScorers: colapsa tildes y apellido, muestra el nombre más completo', () => {
   const podios = [
     { scorer: 'Kane' }, { scorer: 'Harry Kane' },       // apellido vs nombre completo

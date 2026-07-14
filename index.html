@@ -5154,6 +5154,10 @@ function _simSelectedMatches() {
     : CACHE.matches.filter(m => (m.tournament || 'Sin Torneo') === selectedRankTournament && !isTournamentHidden(m.tournament || 'Sin Torneo'));
 }
 
+// Candidatos reales al goleador que nadie pronosticó pero compiten por el premio.
+// Aparecen en el simulador; si sale uno, nadie acierta y esos puntos no se reparten.
+const EXTRA_SCORER_CANDIDATES = ['Messi'];
+
 function _simOptions(list, selected) {
   return ['<option value="">— sin elegir —</option>']
     .concat(list.map(v => `<option value="${v.replace(/"/g, '&quot;')}"${v === selected ? ' selected' : ''}>${v}</option>`))
@@ -5163,7 +5167,7 @@ function _simOptions(list, selected) {
 function openSimulador() {
   const matches = _simSelectedMatches();
   const teams = window.__simulator.aliveTeams(matches, canonTeam);
-  const scorers = window.__simulator.predictedScorers(CACHE.podio);
+  const scorers = window.__simulator.predictedScorers(CACHE.podio, EXTRA_SCORER_CANDIDATES);
   const selStyle = 'width:100%;padding:9px 10px;border-radius:8px;border:1.5px solid rgba(56,189,248,0.25);background:#0a0f1c;color:#e8edf5;font-size:14px;box-sizing:border-box';
 
   const overlay = document.createElement('div');
